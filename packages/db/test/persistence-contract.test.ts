@@ -4,15 +4,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 describe('DB-06: Persistence Contract Suite (SQLite Engine)', () => {
-  const testDbPath = path.resolve(process.cwd(), 'test-persistence.sqlite');
+  const testDbPath = path.resolve(__dirname, '../test-persistence.sqlite');
+  const migrationSql = path.resolve(__dirname, '../migrations/sqlite/001_initial_schema.sql');
+  const seedSql = path.resolve(__dirname, '../src/seeds/001_reference_seeds_sqlite.sql');
 
   beforeEach(() => {
     if (fs.existsSync(testDbPath)) {
       fs.unlinkSync(testDbPath);
     }
     // Apply migration and seeds
-    execSync(`sqlite3 ${testDbPath} < packages/db/migrations/sqlite/001_initial_schema.sql`);
-    execSync(`sqlite3 ${testDbPath} < packages/db/src/seeds/001_reference_seeds_sqlite.sql`);
+    execSync(`sqlite3 ${testDbPath} < "${migrationSql}"`);
+    execSync(`sqlite3 ${testDbPath} < "${seedSql}"`);
   });
 
   afterEach(() => {
@@ -47,7 +49,7 @@ describe('DB-06: Persistence Contract Suite (SQLite Engine)', () => {
 
   it('verifies seed operations are completely idempotent on repeated runs', () => {
     // Re-run the seed script
-    execSync(`sqlite3 ${testDbPath} < packages/db/src/seeds/001_reference_seeds_sqlite.sql`);
+    execSync(`sqlite3 ${testDbPath} < "${seedSql}"`);
 
     const count = execSync(`sqlite3 ${testDbPath} "SELECT count(*) FROM units;"`).toString().trim();
     expect(parseInt(count, 10)).toBe(10);
