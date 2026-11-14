@@ -1,0 +1,297 @@
+openapi: 3.1.0
+info:
+  title: vyapaarKhata REST API
+  description: Canonical OpenAPI 3.1 specification for vyapaarKhata offline-first SMB platform.
+  version: 0.1.0
+servers:
+  - url: http://127.0.0.1:4000
+    description: Local authoritative server instance
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    tenantHeader:
+      type: apiKey
+      in: header
+      name: x-tenant-id
+
+  parameters:
+    TenantIdHeader:
+      name: x-tenant-id
+      in: header
+      required: false
+      description: Tenant context UUID.
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKeyHeader:
+      name: idempotency-key
+      in: header
+      required: false
+      description: Client-generated idempotency key for safe duplicate retry.
+      schema:
+        type: string
+
+  schemas:
+    ApiResponse:
+      type: object
+      required:
+        - success
+        - requestId
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          $ref: '#/components/schemas/ApiError'
+        requestId:
+          type: string
+
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - NOT_FOUND
+            - CONFLICT
+            - INSUFFICIENT_STOCK
+            - TRANSACTION_FAILED
+            - INTERNAL_SERVER_ERROR
+        message:
+          type: string
+        details:
+          type: object
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+        version:
+          type: string
+
+    SalesInvoiceLineInput:
+      type: object
+      required:
+        - productId
+        - locationId
+        - quantity
+        - unitId
+        - unitPrice
+      properties:
+        productId:
+          type: string
+          format: uuid
+        variantId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+        unitId:
+          type: string
+          format: uuid
+        unitPrice:
+          type: number
+        taxRateId:
+          type: string
+          format: uuid
+
+    CreateSalesInvoiceRequest:
+      type: object
+      required:
+        - customerId
+        - lines
+      properties:
+        customerId:
+          type: string
+          format: uuid
+        businessLocationId:
+          type: string
+          format: uuid
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesInvoiceLineInput'
+
+    SalesInvoiceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+        status:
+          type: string
+          enum: [draft, posted, cancelled]
+        subtotal:
+          type: number
+        taxTotal:
+          type: number
+        grandTotal:
+          type: number
+        postedAt:
+          type: string
+          format: date-time
+
+paths:
+  /health:
+    get:
+      summary: Health check probe
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /ready:
+    get:
+      summary: Readiness probe
+      responses:
+        '200':
+          description: Server is ready to serve traffic
+
+  /api/v1/sales/invoices:
+    post:
+      summary: Create draft sales invoice
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSalesInvoiceRequest'
+      responses:
+        '201':
+          description: Invoice created in draft state
+
+  /api/v1/sales/invoices/{id}/post:
+    post:
+      summary: Post/finalize sales invoice atomically
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Invoice finalized and posted
+        '422':
+          description: Insufficient stock error
+
+  /api/v1/sales/invoices/{id}/cancel:
+    post:
+      summary: Cancel a posted sales invoice
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Invoice cancelled and movements reversed
+
+  /api/v1/purchasing/receipts/{id}/post:
+    post:
+      summary: Post goods receipt into inventory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Receipt posted and stock increased
+
+  /api/v1/purchasing/bills/{id}/post:
+    post:
+      summary: Post supplier bill liability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Bill posted and supplier ledger credited
+
+  /api/v1/payments/{id}/post:
+    post:
+      summary: Post customer collection or supplier payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allocations:
+                  type: array
+                  items:
+                    type: object
+                    required: [documentType, documentId, amount]
+                    properties:
+                      documentType:
+                        type: string
+                        enum: [sales_invoice, purchase_bill]
+                      documentId:
+                        type: string
+                        format: uuid
+                      amount:
+                        type: number
+      responses:
+        '200':
+          description: Payment posted and ledger updated
