@@ -4,3 +4,4 @@ export * from './inventory/inventory-strategy.js';
 export * from './services/invoice-posting-service.js';
 export * from './services/purchasing-service.js';
 export * from './services/payment-service.js';
+export * from './api-client.js';
