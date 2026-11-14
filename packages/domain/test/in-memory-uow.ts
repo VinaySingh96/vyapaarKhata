@@ -22,6 +22,11 @@ export class InMemoryUnitOfWork implements UnitOfWork {
   public movements: StockMovement[] = [];
   public partyLedger: PartyLedgerEntry[] = [];
   public outboxEvents: OutboxEvent[] = [];
+  public purchaseOrders = new Map<string, any>();
+  public purchaseReceipts = new Map<string, any>();
+  public purchaseBills = new Map<string, any>();
+  public paymentsList = new Map<string, any>();
+  public allocationsList: any[] = [];
 
   async runInTransaction<T>(work: (ctx: UnitOfWorkContext) => Promise<T>): Promise<T> {
     // Snapshot state before running transaction to simulate database rollback
@@ -90,12 +95,51 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       },
     };
 
+    const purchasingRepo = {
+      findOrderById: async (tenantId: string, id: string) => {
+        const o = this.purchaseOrders.get(id);
+        return o && o.tenantId === tenantId ? JSON.parse(JSON.stringify(o)) : null;
+      },
+      saveOrder: async (order: any) => {
+        this.purchaseOrders.set(order.id, JSON.parse(JSON.stringify(order)));
+      },
+      findReceiptById: async (tenantId: string, id: string) => {
+        const r = this.purchaseReceipts.get(id);
+        return r && r.tenantId === tenantId ? JSON.parse(JSON.stringify(r)) : null;
+      },
+      saveReceipt: async (receipt: any) => {
+        this.purchaseReceipts.set(receipt.id, JSON.parse(JSON.stringify(receipt)));
+      },
+      findBillById: async (tenantId: string, id: string) => {
+        const b = this.purchaseBills.get(id);
+        return b && b.tenantId === tenantId ? JSON.parse(JSON.stringify(b)) : null;
+      },
+      saveBill: async (bill: any) => {
+        this.purchaseBills.set(bill.id, JSON.parse(JSON.stringify(bill)));
+      },
+    };
+
+    const paymentRepo = {
+      findPaymentById: async (tenantId: string, id: string) => {
+        const p = this.paymentsList.get(id);
+        return p && p.tenantId === tenantId ? JSON.parse(JSON.stringify(p)) : null;
+      },
+      savePayment: async (payment: any) => {
+        this.paymentsList.set(payment.id, JSON.parse(JSON.stringify(payment)));
+      },
+      recordAllocation: async (alloc: any) => {
+        this.allocationsList.push(JSON.parse(JSON.stringify(alloc)));
+      },
+    };
+
     try {
       return await work({
         invoices: invoiceRepo,
         inventory: inventoryRepo,
         partyLedger: partyLedgerRepo,
         outbox: outboxRepo,
+        purchasing: purchasingRepo,
+        payments: paymentRepo,
       });
     } catch (error) {
       // Rollback: restore snapshots

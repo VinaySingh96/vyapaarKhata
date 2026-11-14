@@ -311,11 +311,211 @@ export class PgUnitOfWork implements UnitOfWork {
         },
       };
 
+      const purchasingRepo = {
+        findOrderById: async (tenantId: EntityId, id: EntityId) => {
+          const res = await client.query(
+            `SELECT id, tenant_id, supplier_id, business_location_id, order_number, status, subtotal, tax_amount, total_amount, created_at
+             FROM purchase_orders WHERE tenant_id = $1 AND id = $2`,
+            [tenantId, id]
+          );
+          if (res.rows.length === 0) return null;
+          const r = res.rows[0];
+          const linesRes = await client.query(
+            `SELECT id, purchase_order_id, variant_id, unit_id, quantity, received_quantity, unit_price, tax_amount, line_total
+             FROM purchase_order_lines WHERE purchase_order_id = $1`,
+            [id]
+          );
+          return {
+            id: r.id,
+            tenantId: r.tenant_id,
+            supplierId: r.supplier_id,
+            businessLocationId: r.business_location_id,
+            orderNumber: r.order_number,
+            status: r.status,
+            subtotal: parseFloat(r.subtotal || '0'),
+            taxAmount: parseFloat(r.tax_amount || '0'),
+            totalAmount: parseFloat(r.total_amount || '0'),
+            createdAt: new Date(r.created_at).toISOString(),
+            lines: linesRes.rows.map((l: any) => ({
+              id: l.id,
+              variantId: l.variant_id,
+              unitId: l.unit_id,
+              quantity: parseFloat(l.quantity),
+              receivedQuantity: parseFloat(l.received_quantity || '0'),
+              unitPrice: parseFloat(l.unit_price),
+              taxAmount: parseFloat(l.tax_amount || '0'),
+              lineTotal: parseFloat(l.line_total),
+            })),
+          };
+        },
+        saveOrder: async (order: any) => {
+          await client.query(
+            `UPDATE purchase_orders SET status = $1, updated_at = NOW() WHERE tenant_id = $2 AND id = $3`,
+            [order.status, order.tenantId, order.id]
+          );
+          for (const line of order.lines) {
+            await client.query(
+              `UPDATE purchase_order_lines SET received_quantity = $1 WHERE id = $2`,
+              [line.receivedQuantity, line.id]
+            );
+          }
+        },
+        findReceiptById: async (tenantId: EntityId, id: EntityId) => {
+          const res = await client.query(
+            `SELECT id, tenant_id, supplier_id, purchase_order_id, inventory_location_id, receipt_number, status, posted_at, created_at
+             FROM purchase_receipts WHERE tenant_id = $1 AND id = $2`,
+            [tenantId, id]
+          );
+          if (res.rows.length === 0) return null;
+          const r = res.rows[0];
+          const linesRes = await client.query(
+            `SELECT id, receipt_id, purchase_order_line_id, variant_id, unit_id, received_quantity, accepted_quantity, rejected_quantity, unit_cost
+             FROM purchase_receipt_lines WHERE receipt_id = $1`,
+            [id]
+          );
+          return {
+            id: r.id,
+            tenantId: r.tenant_id,
+            supplierId: r.supplier_id,
+            purchaseOrderId: r.purchase_order_id || undefined,
+            inventoryLocationId: r.inventory_location_id,
+            receiptNumber: r.receipt_number,
+            status: r.status,
+            postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
+            createdAt: new Date(r.created_at).toISOString(),
+            lines: linesRes.rows.map((l: any) => ({
+              id: l.id,
+              purchaseOrderLineId: l.purchase_order_line_id || undefined,
+              variantId: l.variant_id,
+              unitId: l.unit_id,
+              receivedQuantity: parseFloat(l.received_quantity),
+              acceptedQuantity: parseFloat(l.accepted_quantity),
+              rejectedQuantity: parseFloat(l.rejected_quantity || '0'),
+              unitCost: parseFloat(l.unit_cost || '0'),
+            })),
+          };
+        },
+        saveReceipt: async (receipt: any) => {
+          await client.query(
+            `UPDATE purchase_receipts SET status = $1, posted_at = $2 WHERE tenant_id = $3 AND id = $4`,
+            [receipt.status, receipt.postedAt || null, receipt.tenantId, receipt.id]
+          );
+        },
+        findBillById: async (tenantId: EntityId, id: EntityId) => {
+          const res = await client.query(
+            `SELECT id, tenant_id, supplier_id, business_location_id, bill_number, supplier_invoice_number, status, subtotal, tax_amount, total_amount, amount_paid, posted_at, created_at
+             FROM purchase_bills WHERE tenant_id = $1 AND id = $2`,
+            [tenantId, id]
+          );
+          if (res.rows.length === 0) return null;
+          const r = res.rows[0];
+          const linesRes = await client.query(
+            `SELECT id, purchase_bill_id, purchase_receipt_line_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
+             FROM purchase_bill_lines WHERE purchase_bill_id = $1`,
+            [id]
+          );
+          return {
+            id: r.id,
+            tenantId: r.tenant_id,
+            supplierId: r.supplier_id,
+            businessLocationId: r.business_location_id,
+            billNumber: r.bill_number,
+            supplierInvoiceNumber: r.supplier_invoice_number || undefined,
+            status: r.status,
+            subtotal: parseFloat(r.subtotal || '0'),
+            taxAmount: parseFloat(r.tax_amount || '0'),
+            totalAmount: parseFloat(r.total_amount || '0'),
+            amountPaid: parseFloat(r.amount_paid || '0'),
+            postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
+            createdAt: new Date(r.created_at).toISOString(),
+            lines: linesRes.rows.map((l: any) => ({
+              id: l.id,
+              purchaseReceiptLineId: l.purchase_receipt_line_id || undefined,
+              variantId: l.variant_id,
+              unitId: l.unit_id,
+              quantity: parseFloat(l.quantity),
+              unitPrice: parseFloat(l.unit_price),
+              taxAmount: parseFloat(l.tax_amount || '0'),
+              lineTotal: parseFloat(l.line_total),
+            })),
+          };
+        },
+        saveBill: async (bill: any) => {
+          await client.query(
+            `UPDATE purchase_bills SET status = $1, posted_at = $2 WHERE tenant_id = $3 AND id = $4`,
+            [bill.status, bill.postedAt || null, bill.tenantId, bill.id]
+          );
+        },
+      };
+
+      const paymentRepo = {
+        findPaymentById: async (tenantId: EntityId, id: EntityId) => {
+          const res = await client.query(
+            `SELECT id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, direction, status, amount, reference_number, posted_at, created_at
+             FROM payments WHERE tenant_id = $1 AND id = $2`,
+            [tenantId, id]
+          );
+          if (res.rows.length === 0) return null;
+          const r = res.rows[0];
+          const allocRes = await client.query(
+            `SELECT id, payment_id, document_type, document_id, allocated_amount, created_at
+             FROM payment_allocations WHERE payment_id = $1`,
+            [id]
+          );
+          return {
+            id: r.id,
+            tenantId: r.tenant_id,
+            partyId: r.party_id,
+            financialAccountId: r.financial_account_id || undefined,
+            paymentMethodId: r.payment_method_id || undefined,
+            paymentNumber: r.payment_number,
+            direction: r.direction,
+            status: r.status,
+            amount: parseFloat(r.amount),
+            referenceNumber: r.reference_number || undefined,
+            postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
+            createdAt: new Date(r.created_at).toISOString(),
+            allocations: allocRes.rows.map((a: any) => ({
+              id: a.id,
+              tenantId: r.tenant_id,
+              paymentId: a.payment_id,
+              documentType: a.document_type,
+              documentId: a.document_id,
+              allocatedAmount: parseFloat(a.allocated_amount),
+              createdAt: new Date(a.created_at).toISOString(),
+            })),
+          };
+        },
+        savePayment: async (payment: any) => {
+          await client.query(
+            `UPDATE payments SET status = $1, posted_at = $2 WHERE tenant_id = $3 AND id = $4`,
+            [payment.status, payment.postedAt || null, payment.tenantId, payment.id]
+          );
+        },
+        recordAllocation: async (alloc: any) => {
+          await client.query(
+            `INSERT INTO payment_allocations (
+               id, tenant_id, payment_id, document_type, document_id, allocated_amount, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+            [
+              ensureUuid(alloc.id),
+              alloc.tenantId,
+              ensureUuid(alloc.paymentId),
+              alloc.documentType,
+              ensureUuid(alloc.documentId),
+              alloc.allocatedAmount,
+            ]
+          );
+        },
+      };
+
       const result = await work({
         invoices: invoiceRepo,
         inventory: inventoryRepo,
         partyLedger: partyLedgerRepo,
         outbox: outboxRepo,
+        purchasing: purchasingRepo,
+        payments: paymentRepo,
       });
 
       await client.query('COMMIT');
