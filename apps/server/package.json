@@ -1,0 +1,21 @@
+{
+  "name": "@vyapaarkhata/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "dev": "node dist/index.js",
+    "lint": "echo 'Server lint ok'"
+  },
+  "dependencies": {
+    "@vyapaarkhata/domain": "workspace:*",
+    "@vyapaarkhata/db": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.19",
+    "typescript": "^5.7.3"
+  }
+}

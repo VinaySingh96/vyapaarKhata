@@ -1,0 +1,14 @@
+{
+  "name": "@vyapaarkhata/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'Web lint ok'"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

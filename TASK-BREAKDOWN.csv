@@ -1,0 +1,44 @@
+Task ID,Phase,Task,Owner Agent,Depends On,Can Run In Parallel,Primary Deliverables,Acceptance Gate
+P0-01,0,Repository and source-document audit,Coordinator,None,No,Repository inventory and source-of-truth manifest,All PRD HLD DBML files read and versions recorded
+P0-02,0,Requirements traceability matrix,Coordinator,P0-01,No,PRD to DBML API backend frontend tests map,Every MVP requirement has traceability entry
+P0-03,0,Architecture decisions register,Coordinator,P0-01,Yes,ADRs for open decisions,Confirmed provisional and open decisions separated
+P0-04,0,macOS developer environment baseline,Platform foundation agent,P0-01,Yes,Toolchain report and repeatable local setup,Core repository builds on macOS
+P0-05,0,Android embedded Node runtime feasibility spike,Android spike agent,P0-01,Yes,Prototype and feasibility report,Node server React assets SQLite LAN and lifecycle tested or blocker proved
+P0-06,0,CI and monorepo skeleton,Coordinator,P0-01,No,Workspace lint typecheck test CI baseline,Empty skeleton passes CI
+DB-01,1,Audit canonical DBML and freeze 96-table baseline,Schema agent,P0-01,No,DBML audit report and frozen schema,Exactly 96 tables and only approved removals/additions
+DB-02,1,Review data types constraints tenant keys and indexes,Data model agent,DB-01,No,Schema review ADR and proposed changes,No silent schema changes; all changes approved
+DB-03,1,PostgreSQL migration framework and migrations,Postgres agent,DB-02; P0-04,Yes,Postgres migrations and migration runner,Fresh DB migrates and constraints verified
+DB-04,1,SQLite migration framework and migrations,SQLite agent,DB-02; P0-05,Yes,SQLite migrations and migration runner,Fresh SQLite DB migrates with equivalent invariants
+DB-05,1,Seed and reference data,Seed-data agent,DB-03,Yes,Idempotent seeds and tenant bootstrap,Repeatable seed test passes
+DB-06,1,Repository adapter contract tests,Persistence test agent,DB-03; DB-04,No,Shared Postgres/SQLite contract suite,Same business invariants pass on both DBs
+BE-01,2,Node TypeScript backend skeleton,Backend foundation agent,DB-01; P0-06,Yes,Server bootstrap config errors logging health,Build lint typecheck tests pass on macOS
+BE-02,2,Repository ports and Unit of Work,Persistence foundation agent,DB-03; DB-04,No,Transaction and repository contracts,Commit rollback contract passes on both DBs
+BE-03,2,Auth tenant membership and RBAC,Identity agent,BE-01; BE-02,Yes,Auth APIs and tenant authorization,Cross-tenant access tests rejected
+BE-04,2,Audit and idempotency infrastructure,Platform backend agent,BE-01; BE-02,Yes,Audit hooks idempotency records,Duplicate commands are safe
+BE-05,2,Catalogue units pricing and tax configuration,Catalogue agent,BE-02; DB-06,Yes,Domain services and repository implementations,CRUD and validation tests pass
+BE-06,2,Party domain and opening balances,Party agent,BE-02; BE-03,Yes,Party roles contacts addresses credit settings,Party isolation and validation pass
+BE-07,2,Inventory ledger balances and operations,Inventory agent,BE-02; BE-03; BE-05,Yes,Movements balances adjustments transfers counts,Atomic stock and reconciliation tests pass
+BE-08,2,Purchasing workflows,Purchasing agent,BE-05; BE-06; BE-07,Yes,Orders receipts bills returns landed costs,Receipt updates stock exactly once
+BE-09,2,Sales workflows and invoice posting,Sales agent,BE-05; BE-06; BE-07; BE-04,Yes,Quotations orders invoices credits returns,Posting atomic idempotent and reversible
+BE-10,2,Payments allocations party ledger and expenses,Finance agent,BE-06; BE-08; BE-09,Yes,Payments allocations expenses cashbook,Partial and multi-document allocation tests pass
+BE-11,2,Accounting foundation,Accounting agent,BE-08; BE-09; BE-10,Yes,Accounts journals fiscal years opening balances,Balanced journal rule tested if enabled
+BE-12,2,Reports and analytics queries,Reporting agent,BE-07; BE-08; BE-09; BE-10; BE-11,Yes,Sales collection stock expense outstanding reports,Report definitions and totals reconciled
+BE-13,2,Outbox inbox sync core,Sync agent,BE-02; BE-04,Yes,Transactional outbox and sync worker core,Network retry and duplicate event tests pass
+API-01,3,OpenAPI 3.1 YAML design and freeze,API contract agent,BE-03..BE-13,No,Complete openapi.yaml generated types and mock server,Review and lint pass; contract frozen
+API-02,3,Generated client and contract test pipeline,API tooling agent,API-01,Yes,Generated TS client and API schema checks,Frontend/backend use same generated contract
+FE-01,4,React app shell auth navigation and layout,Frontend shell agent,API-01; API-02,Yes,Shared React/Vite shell,Builds using generated client and mock auth
+FE-02,4,Business onboarding settings and users,Frontend setup agent,FE-01; API-01,Yes,Setup settings and RBAC screens,Flows match OpenAPI
+FE-03,4,Catalogue and pricing screens,Frontend catalogue agent,FE-01; API-01,Yes,Categories products variants units prices,Mock contract and UI tests pass
+FE-04,4,Inventory screens,Frontend inventory agent,FE-01; API-01,Yes,Stock balances movements adjustments transfers counts,No delivery UI; contract tests pass
+FE-05,4,Purchasing screens,Frontend purchasing agent,FE-01; API-01,Yes,Purchase orders receipts bills returns,Separate PO receipt bill flows
+FE-06,4,Sales screens,Frontend sales agent,FE-01; API-01,Yes,Quotations orders invoices credits returns,Draft/post UX and idempotency key handling
+FE-07,4,Parties payments and expenses screens,Frontend finance agent,FE-01; API-01,Yes,Party ledger payment allocations expenses,Partial allocations represented correctly
+FE-08,4,Accounting and reports screens,Frontend accounting agent,FE-01; API-01,Yes,Journals and financial reports,Revenue collections profit distinguished
+FE-09,4,Sync backup server status screens,Frontend operations agent,FE-01; API-01,Yes,Connection sync health backup UI,Offline and server unavailable states visible
+INT-01,5,End-to-end integration and workflows,Integration agent,API-01; BE tasks; FE tasks,No,E2E suite for critical workflows,Sales purchase payment sync tests pass
+INT-02,5,Security tenant isolation and threat review,Security test agent,BE tasks; API-01,Yes,Security review and tests,No cross-tenant exposure or unauthenticated writes
+INT-03,5,Performance and workload benchmark,Performance agent,INT-01,Yes,Benchmark report and query tuning,Measured targets recorded and reviewed
+DEP-01,6,Windows laptop installer and WSL2 nerdctl deployment,Windows deployment agent,INT-01; P0-04,Yes,Installer service lifecycle and Go agent,Fresh install reboot LAN update backup tests pass
+DEP-02,6,Android runtime production packaging,Android deployment agent,P0-05; INT-01; DB-04,Yes,Android host service APK and SQLite packaging,Supported device lifecycle/LAN/recovery gates pass
+DEP-03,6,Release automation and documentation,Release agent,DEP-01; DEP-02,No,Versioned builds and release checklist,Artifacts reproducible and integrity checked
+DEP-04,6,Backup restore and device migration drills,Recovery agent,INT-01; DEP-01; DEP-02,No,Recovery test evidence,Restores and authority transfer verified
