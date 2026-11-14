@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "scripts": {
+    "dev": "vite",
     "build": "tsc -b",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'Web lint ok'"

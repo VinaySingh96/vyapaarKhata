@@ -204,7 +204,7 @@ export class PgUnitOfWork implements UnitOfWork {
             `SELECT p.id, p.tenant_id, p.category_id, c.name as category_name, p.product_type, p.name, p.description,
                     p.brand_name, p.hsn_sac_code, p.base_unit_id, u.name as unit_name, u.symbol as unit_symbol,
                     p.is_stock_tracked, p.tracking_method, p.valuation_method, p.is_active, p.created_at,
-                    COALESCE(SUM(sb.quantity_on_hand), 0) as total_stock,
+                    COALESCE(SUM(sb.quantity_on_hand::numeric), 0) as total_stock,
                     MIN(pv.purchase_price) as purchase_price,
                     MIN(pv.selling_price) as selling_price,
                     MIN(pv.sku) as sku,
@@ -264,7 +264,7 @@ export class PgUnitOfWork implements UnitOfWork {
 
           const variantsRes = await client.query(
             `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
-                    COALESCE(sb.quantity_on_hand, 0) as stock_on_hand
+                    COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
              WHERE pv.tenant_id = $1 AND pv.product_id = $2`,
@@ -436,7 +436,7 @@ export class PgUnitOfWork implements UnitOfWork {
         listTaxCategories: async (tenantId: EntityId): Promise<TaxCategory[]> => {
           const res = await client.query(
             `SELECT tc.id, tc.tenant_id, tc.name, tc.code, tc.tax_type, tc.is_exempt,
-                    tr.id as rate_id, tr.name as rate_name, tr.rate_percentage
+                    tr.id as rate_id, tr.name as rate_name, tr.rate as rate_percentage
              FROM tax_categories tc
              LEFT JOIN tax_rates tr ON tr.tax_category_id = tc.id AND tr.is_active = true
              WHERE tc.tenant_id = $1 OR tc.tenant_id = '00000000-0000-0000-0000-000000000001'
@@ -689,8 +689,8 @@ export class PgUnitOfWork implements UnitOfWork {
                  id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
                ) VALUES ($1, $2, $3, $4, $5, $5, NOW())
                ON CONFLICT (id) DO UPDATE SET
-                 quantity_on_hand = stock_balances.quantity_on_hand + EXCLUDED.quantity_on_hand,
-                 quantity_available = stock_balances.quantity_available + EXCLUDED.quantity_available,
+                 quantity_on_hand = (stock_balances.quantity_on_hand::numeric + EXCLUDED.quantity_on_hand::numeric)::text,
+                 quantity_available = (stock_balances.quantity_available::numeric + EXCLUDED.quantity_available::numeric)::text,
                  updated_at = NOW()`,
               [
                 randomUUID(),
@@ -725,7 +725,7 @@ export class PgUnitOfWork implements UnitOfWork {
             // Deduct from source
             await client.query(
               `UPDATE stock_balances
-               SET quantity_on_hand = quantity_on_hand - $1, quantity_available = quantity_available - $1, updated_at = NOW()
+               SET quantity_on_hand = (quantity_on_hand::numeric - $1)::text, quantity_available = (quantity_available::numeric - $1)::text, updated_at = NOW()
                WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4`,
               [line.quantity, transfer.tenantId, transfer.sourceLocationId, line.variantId]
             );
@@ -736,8 +736,8 @@ export class PgUnitOfWork implements UnitOfWork {
                  id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
                ) VALUES ($1, $2, $3, $4, $5, $5, NOW())
                ON CONFLICT (id) DO UPDATE SET
-                 quantity_on_hand = stock_balances.quantity_on_hand + EXCLUDED.quantity_on_hand,
-                 quantity_available = stock_balances.quantity_available + EXCLUDED.quantity_available,
+                 quantity_on_hand = (stock_balances.quantity_on_hand::numeric + EXCLUDED.quantity_on_hand::numeric)::text,
+                 quantity_available = (stock_balances.quantity_available::numeric + EXCLUDED.quantity_available::numeric)::text,
                  updated_at = NOW()`,
               [randomUUID(), transfer.tenantId, transfer.destinationLocationId, line.variantId, line.quantity]
             );
@@ -1386,10 +1386,10 @@ export class PgUnitOfWork implements UnitOfWork {
           const stockRes = await client.query(
             `SELECT 
                COUNT(pv.id) as low_stock_count,
-               COALESCE(SUM(sb.quantity_on_hand * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
+               COALESCE(SUM(sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
-             WHERE pv.tenant_id = $1 AND COALESCE(sb.quantity_on_hand, 0) <= COALESCE(pv.reorder_level::numeric, 0)`,
+             WHERE pv.tenant_id = $1 AND COALESCE(sb.quantity_on_hand::numeric, 0) <= COALESCE(pv.reorder_level::numeric, 0)`,
             [tenantId]
           );
 
@@ -1421,8 +1421,8 @@ export class PgUnitOfWork implements UnitOfWork {
         getStockValuation: async (tenantId: EntityId) => {
           const res = await client.query(
             `SELECT pv.id as variant_id, p.name as product_name,
-                    COALESCE(SUM(sb.quantity_on_hand), 0) as quantity,
-                    COALESCE(SUM(sb.quantity_on_hand * COALESCE(pv.purchase_price, 0)), 0) as valuation
+                    COALESCE(SUM(sb.quantity_on_hand::numeric), 0) as quantity,
+                    COALESCE(SUM(sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0)), 0) as valuation
              FROM products p
              JOIN product_variants pv ON pv.product_id = p.id
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id

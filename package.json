@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r --filter='./packages/*' --filter='./apps/*' run build",
+    "dev:server": "pnpm --filter @vyapaarkhata/server dev",
+    "dev:web": "pnpm --filter @vyapaarkhata/web dev",
     "test": "vitest run",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "lint": "pnpm -r run lint",
