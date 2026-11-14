@@ -174,6 +174,18 @@ paths:
           description: Server is ready to serve traffic
 
   /api/v1/sales/invoices:
+    get:
+      summary: List sales invoices
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of sales invoices
     post:
       summary: Create draft sales invoice
       parameters:
@@ -187,6 +199,23 @@ paths:
       responses:
         '201':
           description: Invoice created in draft state
+
+  /api/v1/sales/invoices/{id}:
+    get:
+      summary: Get sales invoice by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Sales invoice details
+        '404':
+          description: Invoice not found
 
   /api/v1/sales/invoices/{id}/post:
     post:
@@ -295,3 +324,288 @@ paths:
       responses:
         '200':
           description: Payment posted and ledger updated
+
+  /api/v1/products:
+    get:
+      summary: List catalog products
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of products with stock balances
+    post:
+      summary: Create catalog product and default variant
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Product created
+
+  /api/v1/products/{id}:
+    get:
+      summary: Get product details with variants
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Product details
+
+  /api/v1/products/categories:
+    get:
+      summary: List product categories
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: List of categories with product counts
+    post:
+      summary: Create product category
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Category created
+
+  /api/v1/products/units:
+    get:
+      summary: List system units of measurement
+      responses:
+        '200':
+          description: List of units
+
+  /api/v1/products/taxes:
+    get:
+      summary: List configured tax categories and GST rates
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: List of tax slabs
+
+  /api/v1/inventory/balances:
+    get:
+      summary: List stock balances across locations
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: locationId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Stock balances by location
+
+  /api/v1/inventory/movements:
+    get:
+      summary: List stock movements audit log
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Movement audit log
+
+  /api/v1/inventory/locations:
+    get:
+      summary: List inventory warehouse locations
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: List of locations
+    post:
+      summary: Create warehouse location
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Location created
+
+  /api/v1/inventory/adjustments:
+    post:
+      summary: Record stock adjustment (recount, damage, shrinkage)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Stock adjustment posted
+
+  /api/v1/inventory/transfers:
+    post:
+      summary: Record inter-warehouse stock transfer
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Stock transfer completed
+
+  /api/v1/parties:
+    get:
+      summary: List customer and supplier parties with net balances
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [customer, supplier, both]
+      responses:
+        '200':
+          description: List of parties
+    post:
+      summary: Create customer or supplier party
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Party created
+
+  /api/v1/parties/{id}:
+    get:
+      summary: Get party profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Party profile
+
+  /api/v1/parties/{id}/ledger:
+    get:
+      summary: List party ledger statement entries
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Party ledger statement
+
+  /api/v1/purchasing/orders:
+    get:
+      summary: List purchase orders
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Purchase orders
+    post:
+      summary: Create purchase order
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Order created
+
+  /api/v1/purchasing/receipts:
+    get:
+      summary: List goods receipts (GRN)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Goods receipts
+
+  /api/v1/purchasing/bills:
+    get:
+      summary: List purchase bills
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Purchase bills
+
+  /api/v1/payments:
+    get:
+      summary: List payments and receipts
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Payments list
+    post:
+      summary: Create payment draft
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Payment draft created
+
+  /api/v1/expenses:
+    get:
+      summary: List store expenses
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Expenses list
+    post:
+      summary: Record store expense
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Expense recorded
+
+  /api/v1/expenses/categories:
+    get:
+      summary: List expense categories
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Expense categories
+    post:
+      summary: Create expense category
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '201':
+          description: Category created
+
+  /api/v1/reports/dashboard:
+    get:
+      summary: Real-time dashboard KPI metrics
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+
+  /api/v1/reports/stock-valuation:
+    get:
+      summary: Real-time inventory valuation by product
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      responses:
+        '200':
+          description: Stock valuation breakdown

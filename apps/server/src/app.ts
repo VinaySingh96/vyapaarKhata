@@ -1,5 +1,8 @@
 import fastify, { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { AppError } from './errors/app-error.js';
 import { Config } from './config.js';
 import { UnitOfWork } from '@vyapaarkhata/domain';
@@ -11,6 +14,23 @@ import { purchasingRoutes } from './routes/purchasing-routes.js';
 import { paymentRoutes } from './routes/payment-routes.js';
 import { expenseRoutes } from './routes/expense-routes.js';
 import { reportRoutes } from './routes/report-routes.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function loadOpenApiSpec(): string {
+  const candidatePaths = [
+    path.resolve(process.cwd(), 'docs/spec/openapi.yaml'),
+    path.resolve(process.cwd(), '../../docs/spec/openapi.yaml'),
+    path.resolve(__dirname, '../../../docs/spec/openapi.yaml'),
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) {
+      return fs.readFileSync(p, 'utf8');
+    }
+  }
+  return 'openapi: 3.1.0\ninfo:\n  title: vyapaarKhata API\n  version: 0.1.0\npaths: {}';
+}
 
 export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
   const app = fastify({
@@ -77,6 +97,73 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
       timestamp: new Date().toISOString(),
       requestId: request.id,
     };
+  });
+
+  // OpenAPI Specification raw YAML
+  const openApiSpec = loadOpenApiSpec();
+  app.get('/openapi.yaml', async (request, reply) => {
+    return reply.type('text/yaml; charset=utf-8').send(openApiSpec);
+  });
+
+  // Swagger UI Interactive Documentation
+  app.get('/docs', async (request, reply) => {
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>vyapaarKhata API Docs | Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    body { margin: 0; background-color: #fafafa; font-family: sans-serif; }
+    .topbar { display: none; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: '/openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: "BaseLayout"
+      });
+    };
+  </script>
+</body>
+</html>`;
+    return reply.type('text/html; charset=utf-8').send(html);
+  });
+
+  // Alias /swagger to /docs
+  app.get('/swagger', async (request, reply) => {
+    return reply.redirect('/docs');
+  });
+
+  // Scalar UI (Modern interactive API client)
+  app.get('/scalar', async (request, reply) => {
+    const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>vyapaarKhata API Reference | Scalar</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <script
+      id="api-reference"
+      data-url="/openapi.yaml"
+      src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"
+    ></script>
+  </body>
+</html>`;
+    return reply.type('text/html; charset=utf-8').send(html);
   });
 
   // Register Core Domain API Routes
