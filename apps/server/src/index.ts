@@ -1,9 +1,11 @@
 import { loadConfig } from './config.js';
 import { buildApp } from './app.js';
+import { createPgUnitOfWork } from '@vyapaarkhata/db';
 
 async function main() {
   const config = loadConfig();
-  const app = buildApp(config);
+  const uow = config.DB_DRIVER === 'postgres' ? createPgUnitOfWork(config.DATABASE_URL) : undefined;
+  const app = buildApp(config, uow);
 
   try {
     const address = await app.listen({ port: config.PORT, host: config.HOST });

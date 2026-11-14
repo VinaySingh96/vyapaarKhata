@@ -212,3 +212,213 @@ export interface Payment {
   createdAt: string;
 }
 
+// === Product & Catalog Entities ===
+
+export interface ProductVariant {
+  id: EntityId;
+  tenantId: EntityId;
+  productId: EntityId;
+  sku: string;
+  barcode?: string;
+  variantName: string;
+  attributeCombination?: Record<string, string>;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  mrp?: number;
+  reorderLevel?: number;
+  isActive: boolean;
+  stockOnHand?: number;
+  createdAt: string;
+}
+
+export interface Product {
+  id: EntityId;
+  tenantId: EntityId;
+  name: string;
+  slug?: string;
+  description?: string;
+  categoryId?: EntityId;
+  categoryName?: string;
+  brandId?: EntityId;
+  productType: 'goods' | 'service';
+  sku?: string;
+  barcode?: string;
+  hsnSacCode?: string;
+  baseUnitId: EntityId;
+  baseUnitName?: string;
+  baseUnitSymbol?: string;
+  taxCategoryId?: EntityId;
+  isTaxInclusive: boolean;
+  purchasePrice: number;
+  sellingPrice: number;
+  mrp?: number;
+  minimumSellingPrice?: number;
+  reorderLevel: number;
+  reorderQuantity?: number;
+  isStockTracked: boolean;
+  trackingMethod: 'none' | 'batch' | 'serial';
+  valuationMethod: 'fifo' | 'moving_average' | 'standard';
+  isActive: boolean;
+  totalStock?: number;
+  variants?: ProductVariant[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ProductCategory {
+  id: EntityId;
+  tenantId: EntityId;
+  parentId?: EntityId;
+  name: string;
+  code?: string;
+  slug?: string;
+  description?: string;
+  isActive: boolean;
+  productCount?: number;
+  createdAt: string;
+}
+
+export interface UnitOfMeasure {
+  id: EntityId;
+  name: string;
+  symbol: string;
+  code?: string;
+  unitType?: string;
+  isActive: boolean;
+}
+
+export interface TaxRate {
+  id: EntityId;
+  taxCategoryId: EntityId;
+  name: string;
+  ratePercentage: number;
+  isActive: boolean;
+}
+
+export interface TaxCategory {
+  id: EntityId;
+  tenantId?: EntityId;
+  name: string;
+  code: string;
+  taxType: string;
+  isExempt: boolean;
+  rates?: TaxRate[];
+}
+
+// === Inventory & Warehouse Management ===
+
+export interface InventoryLocation {
+  id: EntityId;
+  tenantId: EntityId;
+  businessLocationId?: EntityId;
+  name: string;
+  code: string;
+  locationType?: string;
+  isDefault: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface StockAdjustmentLine {
+  id: EntityId;
+  adjustmentId?: EntityId;
+  variantId: EntityId;
+  unitId: EntityId;
+  adjustmentType: 'increase' | 'decrease';
+  quantity: number;
+  unitCost?: number;
+}
+
+export interface StockAdjustment {
+  id: EntityId;
+  tenantId: EntityId;
+  inventoryLocationId: EntityId;
+  adjustmentNumber: string;
+  reason: string;
+  status: 'draft' | 'posted';
+  lines: StockAdjustmentLine[];
+  createdAt: string;
+}
+
+export interface StockTransferLine {
+  id: EntityId;
+  transferId?: EntityId;
+  variantId: EntityId;
+  unitId: EntityId;
+  quantity: number;
+}
+
+export interface StockTransfer {
+  id: EntityId;
+  tenantId: EntityId;
+  sourceLocationId: EntityId;
+  destinationLocationId: EntityId;
+  transferNumber: string;
+  status: 'draft' | 'in_transit' | 'completed' | 'cancelled';
+  transferDate: string;
+  lines: StockTransferLine[];
+  createdAt: string;
+}
+
+// === Party & CRM ===
+
+export type PartyType = 'customer' | 'supplier' | 'both' | 'transporter';
+
+export interface Party {
+  id: EntityId;
+  tenantId: EntityId;
+  partyType: PartyType;
+  displayName: string;
+  legalName?: string;
+  phone?: string;
+  email?: string;
+  pan?: string;
+  gstin?: string;
+  openingBalance: number;
+  openingBalanceType: 'debit' | 'credit';
+  currentBalance?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// === Expenses & Financial Master ===
+
+export interface ExpenseCategory {
+  id: EntityId;
+  tenantId: EntityId;
+  name: string;
+  code?: string;
+  isActive: boolean;
+}
+
+export interface Expense {
+  id: EntityId;
+  tenantId: EntityId;
+  expenseCategoryId: EntityId;
+  categoryName?: string;
+  businessLocationId?: EntityId;
+  expenseNumber: string;
+  expenseDate: string;
+  amount: number;
+  taxAmount: number;
+  paymentMode: string;
+  payee?: string;
+  description?: string;
+  createdAt: string;
+}
+
+// === Dashboard & Reports ===
+
+export interface DashboardMetrics {
+  todaySales: number;
+  todayInvoicesCount: number;
+  totalReceivables: number;
+  totalPayables: number;
+  lowStockCount: number;
+  totalProductsCount: number;
+  totalStockValuation: number;
+  recentInvoices: SalesInvoice[];
+  recentMovements: StockMovement[];
+}
+
+

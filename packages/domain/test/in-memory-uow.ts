@@ -45,6 +45,9 @@ export class InMemoryUnitOfWork implements UnitOfWork {
         const inv = this.invoices.get(id);
         return inv && inv.tenantId === tenantId ? JSON.parse(JSON.stringify(inv)) : null;
       },
+      list: async (tenantId: EntityId) => {
+        return Array.from(this.invoices.values()).filter((i) => i.tenantId === tenantId);
+      },
       save: async (invoice: SalesInvoice) => {
         this.invoices.set(invoice.id, JSON.parse(JSON.stringify(invoice)));
       },
@@ -64,8 +67,14 @@ export class InMemoryUnitOfWork implements UnitOfWork {
         const bal = this.balances.get(key);
         return bal ? JSON.parse(JSON.stringify(bal)) : null;
       },
+      listBalances: async (tenantId: EntityId) => {
+        return Array.from(this.balances.values()).filter((b) => b.tenantId === tenantId);
+      },
       recordMovement: async (movement: StockMovement) => {
         this.movements.push(JSON.parse(JSON.stringify(movement)));
+      },
+      listMovements: async (tenantId: EntityId) => {
+        return this.movements.filter((m) => m.tenantId === tenantId);
       },
       updateBalance: async (balance: StockBalance) => {
         const key = `${balance.tenantId}-${balance.productId}-${balance.locationId}`;
@@ -76,6 +85,10 @@ export class InMemoryUnitOfWork implements UnitOfWork {
           (m) => m.tenantId === tenantId && m.referenceDocumentId === documentId
         );
       },
+      listLocations: async () => [],
+      saveLocation: async () => {},
+      saveAdjustment: async () => {},
+      saveTransfer: async () => {},
     };
 
     const partyLedgerRepo: PartyLedgerRepository = {
@@ -96,6 +109,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     };
 
     const purchasingRepo = {
+      listOrders: async (tenantId: string) => Array.from(this.purchaseOrders.values()).filter(o => o.tenantId === tenantId),
       findOrderById: async (tenantId: string, id: string) => {
         const o = this.purchaseOrders.get(id);
         return o && o.tenantId === tenantId ? JSON.parse(JSON.stringify(o)) : null;
@@ -103,6 +117,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       saveOrder: async (order: any) => {
         this.purchaseOrders.set(order.id, JSON.parse(JSON.stringify(order)));
       },
+      listReceipts: async (tenantId: string) => Array.from(this.purchaseReceipts.values()).filter(r => r.tenantId === tenantId),
       findReceiptById: async (tenantId: string, id: string) => {
         const r = this.purchaseReceipts.get(id);
         return r && r.tenantId === tenantId ? JSON.parse(JSON.stringify(r)) : null;
@@ -110,6 +125,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       saveReceipt: async (receipt: any) => {
         this.purchaseReceipts.set(receipt.id, JSON.parse(JSON.stringify(receipt)));
       },
+      listBills: async (tenantId: string) => Array.from(this.purchaseBills.values()).filter(b => b.tenantId === tenantId),
       findBillById: async (tenantId: string, id: string) => {
         const b = this.purchaseBills.get(id);
         return b && b.tenantId === tenantId ? JSON.parse(JSON.stringify(b)) : null;
@@ -120,6 +136,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     };
 
     const paymentRepo = {
+      list: async (tenantId: string) => Array.from(this.paymentsList.values()).filter(p => p.tenantId === tenantId),
       findPaymentById: async (tenantId: string, id: string) => {
         const p = this.paymentsList.get(id);
         return p && p.tenantId === tenantId ? JSON.parse(JSON.stringify(p)) : null;
@@ -132,14 +149,58 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       },
     };
 
+    const productRepo = {
+      list: async () => [],
+      findById: async () => null,
+      save: async () => {},
+      listCategories: async () => [],
+      saveCategory: async () => {},
+      listUnits: async () => [],
+      listTaxCategories: async () => [],
+    };
+
+    const partyRepo = {
+      list: async () => [],
+      findById: async () => null,
+      save: async () => {},
+      getBalance: async () => 0,
+      listLedgerEntries: async () => [],
+    };
+
+    const expenseRepo = {
+      list: async () => [],
+      save: async () => {},
+      listCategories: async () => [],
+      saveCategory: async () => {},
+    };
+
+    const reportRepo = {
+      getDashboardMetrics: async () => ({
+        todaySales: 0,
+        todayInvoicesCount: 0,
+        totalReceivables: 0,
+        totalPayables: 0,
+        lowStockCount: 0,
+        totalProductsCount: 0,
+        totalStockValuation: 0,
+        recentInvoices: [],
+        recentMovements: [],
+      }),
+      getStockValuation: async () => [],
+    };
+
     try {
       return await work({
         invoices: invoiceRepo,
+        products: productRepo,
         inventory: inventoryRepo,
+        parties: partyRepo,
         partyLedger: partyLedgerRepo,
         outbox: outboxRepo,
         purchasing: purchasingRepo,
         payments: paymentRepo,
+        expenses: expenseRepo,
+        reports: reportRepo,
       });
     } catch (error) {
       // Rollback: restore snapshots

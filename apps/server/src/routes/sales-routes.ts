@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { InvoicePostingService, TenantContext } from '@vyapaarkhata/domain';
-import { UnitOfWork } from '@vyapaarkhata/domain';
+import { InvoicePostingService, TenantContext, UnitOfWork, SalesInvoice } from '@vyapaarkhata/domain';
+import { randomUUID } from 'node:crypto';
 
 export interface SalesRoutesOptions {
   uow: UnitOfWork;
@@ -17,6 +17,73 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
       userId: req.headers['x-user-id'] as string | undefined,
     };
   }
+
+  // GET /api/v1/sales/invoices
+  app.get<{ Querystring: { limit?: string } }>('/invoices', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+
+    const invoices = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.invoices.list(tenantContext.tenantId, limit);
+    });
+
+    return reply.status(200).send({
+      success: true,
+      data: invoices,
+      requestId: req.id,
+    });
+  });
+
+  // GET /api/v1/sales/invoices/:id
+  app.get<{ Params: { id: string } }>('/invoices/:id', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const invoice = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.invoices.findById(tenantContext.tenantId, req.params.id);
+    });
+
+    if (!invoice) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Invoice ${req.params.id} not found` },
+        requestId: req.id,
+      });
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: invoice,
+      requestId: req.id,
+    });
+  });
+
+  // POST /api/v1/sales/invoices
+  app.post<{ Body: Partial<SalesInvoice> }>('/invoices', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const body = req.body || {};
+
+    const invoice: SalesInvoice = {
+      id: body.id || randomUUID(),
+      tenantId: tenantContext.tenantId,
+      businessLocationId: body.businessLocationId || 'b0000000-0000-0000-0000-000000000000',
+      invoiceNumber: body.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+      customerId: body.customerId || 'c0000000-0000-0000-0000-000000000001',
+      status: 'draft',
+      subtotal: body.subtotal || 0,
+      taxTotal: body.taxTotal || 0,
+      grandTotal: body.grandTotal || 0,
+      lines: body.lines || [],
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.invoices.save(invoice);
+    });
+
+    return reply.status(201).send({
+      success: true,
+      data: invoice,
+      requestId: req.id,
+    });
+  });
 
   // POST /api/v1/sales/invoices/:id/post
   app.post<{ Params: { id: string } }>('/invoices/:id/post', async (req, reply) => {

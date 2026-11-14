@@ -17,11 +17,14 @@ export const Layout: React.FC<LayoutProps> = ({
   const navItems = [
     { id: 'dashboard', label: '📊 Dashboard' },
     { id: 'sales', label: '🧾 POS & Billing' },
+    { id: 'products', label: '🏷️ Products & Catalog' },
     { id: 'inventory', label: '📦 Inventory & Stock' },
-    { id: 'purchasing', label: '🛒 Purchasing & GRN' },
+    { id: 'purchasing', label: '🛒 Purchasing & Bills' },
     { id: 'parties', label: '👥 Parties (Khata)' },
-    { id: 'accounting', label: '📈 Reports & P&L' },
-    { id: 'settings', label: '⚙️ Settings & Backup' },
+    { id: 'payments', label: '💳 Payments & Cash' },
+    { id: 'expenses', label: '💸 Expenses' },
+    { id: 'reports', label: '📈 Reports & Valuation' },
+    { id: 'settings', label: '⚙️ Master Settings' },
   ];
 
   return (

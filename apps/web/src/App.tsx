@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { Layout } from './components/Layout.js';
 import { DashboardScreen } from './screens/DashboardScreen.js';
 import { SalesBillingScreen } from './screens/SalesBillingScreen.js';
+import { ProductsScreen } from './screens/ProductsScreen.js';
+import { InventoryScreen } from './screens/InventoryScreen.js';
+import { PurchasingScreen } from './screens/PurchasingScreen.js';
+import { PartiesScreen } from './screens/PartiesScreen.js';
+import { PaymentsScreen } from './screens/PaymentsScreen.js';
+import { ExpensesScreen } from './screens/ExpensesScreen.js';
+import { ReportsScreen } from './screens/ReportsScreen.js';
+import { SettingsScreen } from './screens/SettingsScreen.js';
 
 export const App: React.FC = () => {
   const [activeNav, setActiveNav] = useState('dashboard');
@@ -10,14 +18,14 @@ export const App: React.FC = () => {
     <Layout activeNav={activeNav} onNavigate={setActiveNav}>
       {activeNav === 'dashboard' && <DashboardScreen />}
       {activeNav === 'sales' && <SalesBillingScreen />}
-      {activeNav !== 'dashboard' && activeNav !== 'sales' && (
-        <div style={{ backgroundColor: '#ffffff', padding: '32px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <h3 style={{ margin: 0, textTransform: 'capitalize' }}>{activeNav} Module</h3>
-          <p style={{ color: '#6b7280', marginTop: '8px' }}>
-            Module is backed by frozen OpenAPI 3.1 contracts and local database repositories.
-          </p>
-        </div>
-      )}
+      {activeNav === 'products' && <ProductsScreen />}
+      {activeNav === 'inventory' && <InventoryScreen />}
+      {activeNav === 'purchasing' && <PurchasingScreen />}
+      {activeNav === 'parties' && <PartiesScreen />}
+      {activeNav === 'payments' && <PaymentsScreen />}
+      {activeNav === 'expenses' && <ExpensesScreen />}
+      {activeNav === 'reports' && <ReportsScreen />}
+      {activeNav === 'settings' && <SettingsScreen />}
     </Layout>
   );
 };
