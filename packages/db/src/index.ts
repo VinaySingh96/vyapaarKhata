@@ -1,3 +1,5 @@
+export * from './uow/pg-uow.js';
+
 export interface PersistenceConfig {
   driver: 'postgres' | 'sqlite';
   connectionString?: string;

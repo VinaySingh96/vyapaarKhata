@@ -2,8 +2,10 @@ import fastify, { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { AppError } from './errors/app-error.js';
 import { Config } from './config.js';
+import { UnitOfWork } from '@vyapaarkhata/domain';
+import { salesRoutes } from './routes/sales-routes.js';
 
-export function buildApp(config: Config): FastifyInstance {
+export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
   const app = fastify({
     logger: config.NODE_ENV !== 'test',
     genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
@@ -69,6 +71,11 @@ export function buildApp(config: Config): FastifyInstance {
       requestId: request.id,
     };
   });
+
+  // Sales API routes
+  if (uow) {
+    app.register(salesRoutes, { prefix: '/api/v1/sales', uow });
+  }
 
   return app;
 }
