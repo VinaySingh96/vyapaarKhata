@@ -49,9 +49,11 @@ export interface TenantDashboardMetrics {
   // Daily Metrics
   todaySales: number;
   todayEarnings: number;
+  todayInvoicesCount?: number;
   // Monthly Metrics
   thisMonthSales: number;
   thisMonthEarnings: number;
+  thisMonthInvoicesCount?: number;
   // All-time Totals
   totalSales: number;
   totalEarnings: number;

@@ -367,7 +367,7 @@ export function renderTenantDashboardPage(tenantId: string): string {
                 <div style="font-size: 1.85rem; font-weight: 800; color: #047857; margin-top: 6px;">
                   ₹ \${Number(d.todaySales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.775rem; color: #059669; margin-top: 4px;">Daily net billed volume</div>
+                <div style="font-size: 0.775rem; color: #059669; margin-top: 4px;">\${d.todayInvoicesCount !== undefined ? d.todayInvoicesCount + ' Invoices posted • ' : ''}Daily net billed volume</div>
               </div>
 
               <!-- Today Earnings -->
@@ -385,7 +385,7 @@ export function renderTenantDashboardPage(tenantId: string): string {
                 <div style="font-size: 1.85rem; font-weight: 800; color: #1d4ed8; margin-top: 6px;">
                   ₹ \${Number(d.thisMonthSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.775rem; color: #2563eb; margin-top: 4px;">Monthly billing volume</div>
+                <div style="font-size: 0.775rem; color: #2563eb; margin-top: 4px;">\${d.thisMonthInvoicesCount !== undefined ? d.thisMonthInvoicesCount + ' Invoices posted • ' : ''}Monthly billing volume</div>
               </div>
 
               <!-- This Month Earnings -->

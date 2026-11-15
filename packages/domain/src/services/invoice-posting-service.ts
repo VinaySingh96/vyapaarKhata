@@ -277,6 +277,8 @@ export class InvoicePostingService {
         payload: {
           invoiceId: invoice.id,
           invoiceNumber: invoice.invoiceNumber,
+          totalAmount: invoice.grandTotal,
+          grandTotal: invoice.grandTotal,
           reason,
           cancelledAt: now,
         },

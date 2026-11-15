@@ -156,10 +156,10 @@ export class TenantService {
     const t = tRes.rows[0];
 
     const eventsRes = await this.db.query(
-      `SELECT event_type, payload, received_at
+      `SELECT event_type, payload, received_at, sequence_number
        FROM central_sync_inbox
        WHERE tenant_id = $1
-       ORDER BY received_at DESC`,
+       ORDER BY sequence_number ASC, received_at ASC`,
       [tenantId]
     );
 
@@ -169,8 +169,10 @@ export class TenantService {
 
     let todaySales = 0;
     let todayEarnings = 0;
+    let todayInvoicesCount = 0;
     let thisMonthSales = 0;
     let thisMonthEarnings = 0;
+    let thisMonthInvoicesCount = 0;
     let totalSales = 0;
     let totalEarnings = 0;
     let totalInvoicesCount = 0;
@@ -195,15 +197,38 @@ export class TenantService {
       return monthlyMap[month];
     }
 
+    // 1. Scan and index invoice state (deduplicating and handling cancellations)
+    const invoiceMap = new Map<string, {
+      invoiceId: string;
+      invoiceNumber: string;
+      status: 'posted' | 'cancelled';
+      grandTotal: number;
+      date: string;
+      month: string;
+    }>();
+
+    const cancelledInvoices = new Set<string>();
+
+    // 2. Scan and index payment state (deduplicating)
+    const paymentMap = new Map<string, {
+      paymentId: string;
+      paymentNumber: string;
+      direction: string;
+      amount: number;
+      date: string;
+      month: string;
+    }>();
+
     for (const r of eventsRes.rows) {
-      if (!lastSyncedAt) {
-        lastSyncedAt = new Date(r.received_at).toISOString();
+      const recTime = new Date(r.received_at).toISOString();
+      if (!lastSyncedAt || recTime > lastSyncedAt) {
+        lastSyncedAt = recTime;
       }
       const type = r.event_type;
       eventsByType[type] = (eventsByType[type] || 0) + 1;
 
       const payload = typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload || {};
-      const rawDate = payload.postedAt || payload.createdAt || r.received_at;
+      const rawDate = payload.postedAt || payload.invoiceDate || payload.paymentDate || payload.createdAt || r.received_at;
       let evDate = todayStr;
       try {
         const parsed = new Date(rawDate);
@@ -216,54 +241,96 @@ export class TenantService {
       const evMonth = evDate.slice(0, 7);
 
       if (type === 'sales.invoice.posted') {
+        const invId = payload.invoiceId || payload.id || payload.invoiceNumber || r.id;
         const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
-        totalInvoicesCount++;
-        totalSales += grandTotal;
-        if (evDate === todayStr) {
-          todaySales += grandTotal;
-        }
-        if (evMonth === thisMonthStr) {
-          thisMonthSales += grandTotal;
-        }
-        const dRec = getOrCreateDaily(evDate);
-        dRec.sales += grandTotal;
-        dRec.invoicesCount++;
-
-        const mRec = getOrCreateMonthly(evMonth);
-        mRec.sales += grandTotal;
-        mRec.invoicesCount++;
+        invoiceMap.set(invId, {
+          invoiceId: invId,
+          invoiceNumber: payload.invoiceNumber || '',
+          status: 'posted',
+          grandTotal,
+          date: evDate,
+          month: evMonth,
+        });
       } else if (type === 'sales.invoice.cancelled') {
-        const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
-        totalSales = Math.max(0, totalSales - grandTotal);
-        if (evDate === todayStr) {
-          todaySales = Math.max(0, todaySales - grandTotal);
-        }
-        if (evMonth === thisMonthStr) {
-          thisMonthSales = Math.max(0, thisMonthSales - grandTotal);
-        }
-        const dRec = getOrCreateDaily(evDate);
-        dRec.sales = Math.max(0, dRec.sales - grandTotal);
+        const invId = payload.invoiceId || payload.id;
+        if (invId) cancelledInvoices.add(invId);
+        if (payload.invoiceNumber) cancelledInvoices.add(payload.invoiceNumber);
 
-        const mRec = getOrCreateMonthly(evMonth);
-        mRec.sales = Math.max(0, mRec.sales - grandTotal);
+        let found = invId ? invoiceMap.get(invId) : undefined;
+        if (!found && payload.invoiceNumber) {
+          for (const item of invoiceMap.values()) {
+            if (item.invoiceNumber === payload.invoiceNumber) {
+              found = item;
+              break;
+            }
+          }
+        }
+        if (found) {
+          found.status = 'cancelled';
+        }
       } else if (type === 'payment.posted') {
+        const payId = payload.paymentId || payload.id || payload.paymentNumber || r.id;
         const amount = Number(payload.amount || 0);
-        totalEarnings += amount;
-        totalPaymentsCount++;
-        if (evDate === todayStr) {
-          todayEarnings += amount;
-        }
-        if (evMonth === thisMonthStr) {
-          thisMonthEarnings += amount;
-        }
-        const dRec = getOrCreateDaily(evDate);
-        dRec.earnings += amount;
-        dRec.paymentsCount++;
-
-        const mRec = getOrCreateMonthly(evMonth);
-        mRec.earnings += amount;
-        mRec.paymentsCount++;
+        const direction = (payload.direction || 'inbound').toLowerCase();
+        paymentMap.set(payId, {
+          paymentId: payId,
+          paymentNumber: payload.paymentNumber || '',
+          direction,
+          amount,
+          date: evDate,
+          month: evMonth,
+        });
       }
+    }
+
+    // Aggregate only active, non-cancelled invoices
+    for (const [invId, inv] of invoiceMap.entries()) {
+      if (inv.status === 'cancelled' || cancelledInvoices.has(invId) || cancelledInvoices.has(inv.invoiceNumber)) {
+        continue; // Definitely cancelled!
+      }
+
+      totalInvoicesCount++;
+      totalSales += inv.grandTotal;
+
+      if (inv.date === todayStr) {
+        todaySales += inv.grandTotal;
+        todayInvoicesCount++;
+      }
+      if (inv.month === thisMonthStr) {
+        thisMonthSales += inv.grandTotal;
+        thisMonthInvoicesCount++;
+      }
+
+      const dRec = getOrCreateDaily(inv.date);
+      dRec.sales += inv.grandTotal;
+      dRec.invoicesCount++;
+
+      const mRec = getOrCreateMonthly(inv.month);
+      mRec.sales += inv.grandTotal;
+      mRec.invoicesCount++;
+    }
+
+    // Aggregate inbound customer collections (earnings)
+    for (const pay of paymentMap.values()) {
+      if (pay.direction !== 'inbound') continue; // only incoming customer receipts count as collections
+
+      totalPaymentsCount++;
+      totalEarnings += pay.amount;
+
+      if (pay.date === todayStr) {
+        todayEarnings += pay.amount;
+      }
+      if (pay.month === thisMonthStr) {
+        thisMonthEarnings += pay.amount;
+      }
+
+      const dRec = getOrCreateDaily(pay.date);
+      dRec.earnings += pay.amount;
+      dRec.paymentsCount++;
+
+      const mRec = getOrCreateMonthly(pay.month);
+      mRec.earnings += pay.amount;
+      mRec.paymentsCount++;
     }
 
     const dailyBreakdown = Object.values(dailyMap).sort((a, b) => b.date.localeCompare(a.date));
@@ -278,8 +345,10 @@ export class TenantService {
       lastSyncedAt,
       todaySales,
       todayEarnings,
+      todayInvoicesCount,
       thisMonthSales,
       thisMonthEarnings,
+      thisMonthInvoicesCount,
       totalSales,
       totalEarnings,
       totalInvoicesCount,
