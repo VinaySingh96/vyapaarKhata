@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
@@ -57,7 +57,7 @@ export const PaymentsScreen: React.FC = () => {
   const [direction, setDirection] = useState<'inbound' | 'outbound'>('inbound');
   const [selectedPartyId, setSelectedPartyId] = useState('');
   const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
-  const [amount, setAmount] = useState('1000');
+  const [amount, setAmount] = useState('');
   const [adjustmentAmount, setAdjustmentAmount] = useState('0');
   const [adjustmentType, setAdjustmentType] = useState('round_off');
   const [reference, setReference] = useState('');
@@ -128,12 +128,14 @@ export const PaymentsScreen: React.FC = () => {
     .reduce((sum, p) => sum + (p.adjustmentAmount || 0), 0);
 
   // Filter invoices for selected party
-  const partyPendingInvoices = invoices.filter(
-    (inv) =>
-      inv.customerId === selectedPartyId &&
-      inv.status === 'posted' &&
-      (inv.balanceDue === undefined || inv.balanceDue > 0.001)
-  );
+  const partyPendingInvoices = useMemo(() => {
+    return invoices.filter(
+      (inv) =>
+        inv.customerId === selectedPartyId &&
+        inv.status === 'posted' &&
+        (inv.balanceDue === undefined || inv.balanceDue > 0.001)
+    );
+  }, [invoices, selectedPartyId]);
 
   const handleSelectInvoice = (invId: string) => {
     setSelectedInvoiceId(invId);
@@ -144,26 +146,62 @@ export const PaymentsScreen: React.FC = () => {
           inv.balanceDue !== undefined
             ? inv.balanceDue
             : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
-        setAmount(bal.toFixed(2));
+        setAmount(bal > 0 ? bal.toFixed(2) : '0');
         setAdjustmentAmount('0');
+      }
+    } else {
+      setAmount('');
+      setAdjustmentAmount('0');
+    }
+  };
+
+  const selectedInv = useMemo(() => {
+    return invoices.find((i) => i.id === selectedInvoiceId);
+  }, [invoices, selectedInvoiceId]);
+
+  const curBal = useMemo(() => {
+    if (!selectedInv) return 0;
+    return selectedInv.balanceDue !== undefined
+      ? selectedInv.balanceDue
+      : Math.max(
+          0,
+          (selectedInv.grandTotal || 0) -
+            ((selectedInv.amountPaid || 0) + (selectedInv.adjustmentAmount || 0))
+        );
+  }, [selectedInv]);
+
+  const invTotal = selectedInv ? selectedInv.grandTotal || 0 : 0;
+  const payAmt = parseFloat(amount) || 0;
+  const payAdj = parseFloat(adjustmentAmount) || 0;
+  const totalSettling = payAmt + payAdj;
+  const remainingLeft = Math.max(0, curBal - totalSettling);
+  const isOverLimit = selectedInv ? totalSettling > curBal + 0.01 : false;
+
+  const isFormSubmitDisabled =
+    isSubmitting ||
+    (direction === 'inbound' && !selectedInvoiceId) ||
+    (direction === 'inbound' && isOverLimit) ||
+    totalSettling <= 0 ||
+    !selectedPartyId;
+
+  const handleSetAutoKasar = () => {
+    if (selectedInv) {
+      if (payAmt < curBal) {
+        setAdjustmentAmount((curBal - payAmt).toFixed(2));
       }
     }
   };
 
-  const handleSetAutoKasar = () => {
-    if (selectedInvoiceId) {
-      const inv = invoices.find((i) => i.id === selectedInvoiceId);
-      if (inv) {
-        const bal =
-          inv.balanceDue !== undefined
-            ? inv.balanceDue
-            : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
-        const pay = parseFloat(amount) || 0;
-        if (pay < bal) {
-          setAdjustmentAmount((bal - pay).toFixed(2));
-        }
-      }
-    }
+  const handleOpenRecordModal = () => {
+    setDirection('inbound');
+    setSelectedInvoiceId('');
+    setAmount('');
+    setAdjustmentAmount('0');
+    setAdjustmentType('round_off');
+    setPaymentMode('cash');
+    setReference('');
+    setNotes('');
+    setShowRecordModal(true);
   };
 
   const handleRecordPayment = async (e: React.FormEvent) => {
@@ -177,6 +215,14 @@ export const PaymentsScreen: React.FC = () => {
     }
     if (!selectedPartyId) {
       toast.warning('Please select a party');
+      return;
+    }
+    if (direction === 'inbound' && !selectedInvoiceId) {
+      toast.warning('Please select an invoice number to record customer payment');
+      return;
+    }
+    if (direction === 'inbound' && isOverLimit) {
+      toast.error(`Total settlement (₹${totalSettling.toFixed(2)}) cannot exceed balance due (₹${curBal.toFixed(2)})`);
       return;
     }
 
@@ -262,7 +308,7 @@ export const PaymentsScreen: React.FC = () => {
       }
 
       setShowRecordModal(false);
-      setAmount('1000');
+      setAmount('');
       setAdjustmentAmount('0');
       setSelectedInvoiceId('');
       setReference('');
@@ -298,7 +344,7 @@ export const PaymentsScreen: React.FC = () => {
         </div>
         <button
           id="btn-record-payment"
-          onClick={() => setShowRecordModal(true)}
+          onClick={handleOpenRecordModal}
           style={{
             padding: '10px 18px',
             backgroundColor: '#059669',
@@ -554,17 +600,26 @@ export const PaymentsScreen: React.FC = () => {
             <button
               type="submit"
               form="form-record-payment"
-              disabled={isSubmitting}
+              disabled={isFormSubmitDisabled}
               style={{
                 padding: '8px 18px',
-                backgroundColor: '#059669',
+                backgroundColor: isFormSubmitDisabled ? '#9ca3af' : '#059669',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '6px',
                 fontWeight: 600,
                 fontSize: '13px',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                cursor: isFormSubmitDisabled ? 'not-allowed' : 'pointer',
+                opacity: isFormSubmitDisabled ? 0.7 : 1,
+                transition: 'all 0.15s ease',
               }}
+              title={
+                direction === 'inbound' && !selectedInvoiceId
+                  ? 'Invoice selection is required to post customer payment'
+                  : isOverLimit
+                  ? 'Settlement amount exceeds invoice balance due'
+                  : undefined
+              }
             >
               {isSubmitting ? 'Posting...' : 'Post to Ledger'}
             </button>
@@ -627,6 +682,8 @@ export const PaymentsScreen: React.FC = () => {
               onChange={(e) => {
                 setSelectedPartyId(e.target.value);
                 setSelectedInvoiceId('');
+                setAmount('');
+                setAdjustmentAmount('0');
               }}
               required
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
@@ -639,30 +696,65 @@ export const PaymentsScreen: React.FC = () => {
             </select>
           </div>
 
-          {/* If Inbound and customer has unpaid invoices, show invoice selector */}
-          {direction === 'inbound' && partyPendingInvoices.length > 0 && (
+          {/* When receiving customer payment, invoice selection is MANDATORY */}
+          {direction === 'inbound' && (
             <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#1e40af', display: 'block', marginBottom: '4px' }}>
-                🧾 Link to Sales Invoice (Optional)
-              </label>
-              <select
-                value={selectedInvoiceId}
-                onChange={(e) => handleSelectInvoice(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff' }}
-              >
-                <option value="">-- General Account Receipt (No Specific Invoice) --</option>
-                {partyPendingInvoices.map((inv) => {
-                  const bal =
-                    inv.balanceDue !== undefined
-                      ? inv.balanceDue
-                      : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
-                  return (
-                    <option key={inv.id} value={inv.id}>
-                      {inv.invoiceNumber} — Total ₹{inv.grandTotal.toLocaleString()} (Due: ₹{bal.toLocaleString()})
-                    </option>
-                  );
-                })}
-              </select>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: 700, color: '#1e40af', display: 'block' }}>
+                  🧾 Invoice ID / Number *
+                </label>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  {partyPendingInvoices.length > 0 ? `${partyPendingInvoices.length} open bill(s)` : 'Required'}
+                </span>
+              </div>
+
+              {partyPendingInvoices.length === 0 ? (
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    color: '#991b1b',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>⚠️</span>
+                  <span>This customer has no open or pending invoices. Customer payment requires an open invoice.</span>
+                </div>
+              ) : (
+                <select
+                  value={selectedInvoiceId}
+                  onChange={(e) => handleSelectInvoice(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    border: !selectedInvoiceId ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                    fontSize: '13px',
+                    backgroundColor: '#ffffff',
+                    fontWeight: selectedInvoiceId ? 600 : 400,
+                    color: '#1e293b',
+                  }}
+                >
+                  <option value="">-- Select Invoice (Required) --</option>
+                  {partyPendingInvoices.map((inv) => {
+                    const bal =
+                      inv.balanceDue !== undefined
+                        ? inv.balanceDue
+                        : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
+                    return (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.invoiceNumber} — Total ₹{inv.grandTotal.toLocaleString()} (Due: ₹{bal.toLocaleString()})
+                      </option>
+                    );
+                  })}
+                </select>
+              )}
             </div>
           )}
 
@@ -780,32 +872,125 @@ export const PaymentsScreen: React.FC = () => {
             </div>
           </div>
 
-          {/* Settlement Calculation Preview */}
-          {(() => {
-            const pAmt = parseFloat(amount) || 0;
-            const pAdj = parseFloat(adjustmentAmount) || 0;
-            return (
-              <div
-                style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  padding: '10px 14px',
-                  fontSize: '12.5px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ color: '#4b5563' }}>
-                  Net Khata Credit: <strong>₹ {pAmt.toFixed(2)}</strong> paid {pAdj > 0 ? `+ ₹ ${pAdj.toFixed(2)} Kasar` : ''}
-                </span>
-                <span style={{ fontWeight: 800, color: '#059669', fontSize: '14px' }}>
-                  Total Settlement: ₹ {(pAmt + pAdj).toFixed(2)}
-                </span>
-              </div>
-            );
-          })()}
+          {/* Dynamic Information Banners: Red if amount left, Green if settled against invoice */}
+          {direction === 'inbound' && (
+            <div>
+              {!selectedInvoiceId ? (
+                <div
+                  style={{
+                    backgroundColor: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    fontSize: '12.5px',
+                    color: '#92400e',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span style={{ fontSize: '16px' }}>ℹ️</span>
+                  <span>Please select an <strong>Invoice ID / Number</strong> above to link payment. "Post to Ledger" is disabled until an invoice is selected.</span>
+                </div>
+              ) : isOverLimit ? (
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1.5px solid #ef4444',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '13.5px' }}>
+                    <span style={{ fontSize: '16px' }}>⚠️</span>
+                    <span>Settlement exceeds invoice #{selectedInv?.invoiceNumber} balance due!</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '24px' }}>
+                    Total settlement of ₹ {totalSettling.toFixed(2)} exceeds balance due of ₹ {curBal.toFixed(2)} by ₹ {(totalSettling - curBal).toFixed(2)}. Please reduce payment amount or kasar.
+                  </div>
+                </div>
+              ) : remainingLeft > 0.01 ? (
+                /* RED INFORMATION BANNER */
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1.5px solid #ef4444',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '14px' }}>
+                    <span style={{ fontSize: '18px' }}>⚠️</span>
+                    <span>Amount ₹ {remainingLeft.toFixed(2)} is still left on invoice #{selectedInv?.invoiceNumber}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    <span>Total Bill: <strong>₹ {invTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></span>
+                    <span>•</span>
+                    <span>Current Due: <strong>₹ {curBal.toFixed(2)}</strong></span>
+                    <span>•</span>
+                    <span>Paying Now: <strong>₹ {payAmt.toFixed(2)}</strong></span>
+                    {payAdj > 0 && (
+                      <>
+                        <span>•</span>
+                        <span>Kasar: <strong>₹ {payAdj.toFixed(2)}</strong></span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* GREEN INFORMATION BANNER */
+                <div
+                  style={{
+                    backgroundColor: '#ecfdf5',
+                    border: '1.5px solid #10b981',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '5px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontWeight: 700, fontSize: '14px' }}>
+                    <span style={{ fontSize: '18px' }}>✓</span>
+                    <span>Settled against invoice #{selectedInv?.invoiceNumber} of ₹ {invTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    <span>Full Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> received {payAdj > 0 ? `+ <strong>₹ ${payAdj.toFixed(2)}</strong> Kasar` : ''}</span>
+                    <span>•</span>
+                    <span>Remaining Balance: <strong>₹ 0.00 (Fully Settled)</strong></span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {direction === 'outbound' && (
+            <div
+              style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '10px 14px',
+                fontSize: '12.5px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ color: '#4b5563' }}>
+                Net Supplier Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> {payAdj > 0 ? `+ ₹ ${payAdj.toFixed(2)} Discount` : ''}
+              </span>
+              <span style={{ fontWeight: 800, color: '#dc2626', fontSize: '14px' }}>
+                Total Debit: ₹ {totalSettling.toFixed(2)}
+              </span>
+            </div>
+          )}
         </form>
       </Modal>
     </div>
