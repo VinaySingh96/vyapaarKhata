@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { TenantService } from '../services/tenant-service.js';
 import { SyncService } from '../services/sync-service.js';
-import { TenantStatus, PlanTier } from '../types/index.js';
+import { TenantStatus, PlanTier, StoreType } from '../types/index.js';
 
 export interface AdminRoutesOptions {
   tenantService: TenantService;
@@ -38,6 +38,9 @@ export const adminRoutes: FastifyPluginAsync<AdminRoutesOptions> = async (app, o
       name: string;
       legalName?: string;
       slug?: string;
+      storeType?: StoreType;
+      licenseNumber?: string;
+      secretKey?: string;
       gstin?: string;
       contactEmail?: string;
       contactPhone?: string;
@@ -60,6 +63,24 @@ export const adminRoutes: FastifyPluginAsync<AdminRoutesOptions> = async (app, o
       success: true,
       data: tenant,
       message: 'Tenant created successfully',
+      requestId: req.id,
+    });
+  });
+
+  // GET /api/v1/admin/tenants/:id/dashboard
+  app.get<{ Params: { id: string } }>('/tenants/:id/dashboard', async (req, reply) => {
+    const metrics = await tenantService.getTenantDashboardMetrics(req.params.id);
+    if (!metrics) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Tenant ${req.params.id} not found` },
+        requestId: req.id,
+      });
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: metrics,
       requestId: req.id,
     });
   });

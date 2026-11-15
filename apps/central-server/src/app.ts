@@ -7,6 +7,7 @@ import { SyncService } from './services/sync-service.js';
 import { adminRoutes } from './routes/admin-routes.js';
 import { syncRoutes } from './routes/sync-routes.js';
 import { installationRoutes } from './routes/installation-routes.js';
+import { authRoutes } from './routes/auth-routes.js';
 import { uiRoutes } from './routes/ui-routes.js';
 
 export function buildCentralApp(config: CentralConfig, db: CentralDatabase): FastifyInstance {
@@ -81,6 +82,7 @@ export function buildCentralApp(config: CentralConfig, db: CentralDatabase): Fas
   app.register(uiRoutes);
 
   // Register API Routes
+  app.register(authRoutes, { prefix: '/api/v1/auth', tenantService, jwtSecret: config.JWT_SECRET });
   app.register(adminRoutes, { prefix: '/api/v1/admin', tenantService, syncService });
   app.register(syncRoutes, { prefix: '/api/v1/sync', syncService });
   app.register(installationRoutes, { prefix: '/api/v1/installations', db });

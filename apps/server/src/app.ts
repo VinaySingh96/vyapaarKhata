@@ -16,6 +16,7 @@ import { expenseRoutes } from './routes/expense-routes.js';
 import { reportRoutes } from './routes/report-routes.js';
 import { settingsRoutes } from './routes/settings-routes.js';
 import { localSyncRoutes } from './routes/sync-routes.js';
+import { localAuthRoutes } from './routes/auth-routes.js';
 import { registerAuditHook } from './plugins/audit-hook.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -232,8 +233,20 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     app.register(paymentRoutes, { prefix: '/api/v1/payments', uow });
     app.register(expenseRoutes, { prefix: '/api/v1/expenses', uow });
     app.register(reportRoutes, { prefix: '/api/v1/reports', uow });
+    const centralTenantId =
+      config.CENTRAL_TENANT_ID ||
+      (config.DATABASE_URL.includes('jewellery')
+        ? '00000000-0000-0000-0000-000000000002'
+        : config.TENANT_ID);
+
     app.register(settingsRoutes, { prefix: '/api/v1/settings', uow });
-    app.register(localSyncRoutes, { prefix: '/api/v1/sync', uow });
+    app.register(localSyncRoutes, {
+      prefix: '/api/v1/sync',
+      uow,
+      centralServerUrl: config.CENTRAL_SERVER_URL,
+      centralTenantId,
+    });
+    app.register(localAuthRoutes, { prefix: '/api/v1/auth', centralServerUrl: config.CENTRAL_SERVER_URL });
 
     // Register Automated Global Audit Logging Hook
     registerAuditHook(app, uow);

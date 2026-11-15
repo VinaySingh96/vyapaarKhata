@@ -1,5 +1,6 @@
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'cancelled';
 export type PlanTier = 'starter' | 'standard' | 'enterprise';
+export type StoreType = 'jewellery' | 'building_materials' | 'general';
 export type InstallationType = 'primary_laptop' | 'secondary_laptop' | 'android';
 export type InstallationStatus = 'active' | 'pending_approval' | 'revoked';
 
@@ -8,6 +9,9 @@ export interface CentralTenant {
   slug: string;
   name: string;
   legalName?: string;
+  storeType: StoreType;
+  licenseNumber?: string;
+  secretKey?: string;
   gstin?: string;
   contactEmail?: string;
   contactPhone?: string;
@@ -17,6 +21,21 @@ export interface CentralTenant {
   maxInstallations: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TenantDashboardMetrics {
+  tenantId: string;
+  tenantName: string;
+  storeType: StoreType;
+  licenseNumber?: string;
+  totalSyncEvents: number;
+  lastSyncedAt?: string;
+  todaySales: number;
+  thisMonthSales: number;
+  totalEarnings: number;
+  totalInvoicesCount: number;
+  totalPaymentsCount: number;
+  eventsByType: Record<string, number>;
 }
 
 export interface CentralInstallation {

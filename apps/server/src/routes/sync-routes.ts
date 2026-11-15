@@ -4,6 +4,7 @@ import { UnitOfWork, TenantContext } from '@vyapaarkhata/domain';
 export interface LocalSyncRoutesOptions {
   uow: UnitOfWork;
   centralServerUrl?: string;
+  centralTenantId?: string;
 }
 
 export const localSyncRoutes: FastifyPluginAsync<LocalSyncRoutesOptions> = async (app, opts) => {
@@ -41,6 +42,11 @@ export const localSyncRoutes: FastifyPluginAsync<LocalSyncRoutesOptions> = async
   // POST /api/v1/sync/push-to-cloud
   app.post('/push-to-cloud', async (req, reply) => {
     const tenant = resolveTenant(req);
+    const targetCentralTenantId =
+      (req.headers['x-central-tenant-id'] as string) ||
+      opts.centralTenantId ||
+      process.env.CENTRAL_TENANT_ID ||
+      tenant.tenantId;
 
     // 1. Fetch pending outbox events
     const pendingEvents = await opts.uow.runInTransaction(async (ctx) => {
@@ -58,7 +64,7 @@ export const localSyncRoutes: FastifyPluginAsync<LocalSyncRoutesOptions> = async
 
     const batchId = `BATCH-${Date.now()}`;
     const payload = {
-      tenantId: tenant.tenantId,
+      tenantId: targetCentralTenantId,
       installationId: tenant.installationId,
       batchId,
       events: pendingEvents.map((e) => ({

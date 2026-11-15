@@ -344,7 +344,8 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         <table>
           <thead>
             <tr>
-              <th>Business Name & Info</th>
+              <th>Business Name & Store Type</th>
+              <th>License Number</th>
               <th>Plan</th>
               <th>Terminals</th>
               <th>Synced Events</th>
@@ -354,7 +355,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
             </tr>
           </thead>
           <tbody id="tenantsTableBody">
-            <tr><td colspan="7" style="text-align:center; padding: 2rem;">Loading tenants...</td></tr>
+            <tr><td colspan="8" style="text-align:center; padding: 2rem;">Loading tenants...</td></tr>
           </tbody>
         </table>
       </div>
@@ -423,9 +424,18 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       </div>
       <form id="createTenantForm" onsubmit="handleCreateTenant(event)">
         <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Business / Trade Name *</label>
-            <input type="text" class="form-control" name="name" required placeholder="e.g. Balaji Hardware & Electricals">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Business / Trade Name *</label>
+              <input type="text" class="form-control" name="name" required placeholder="e.g. Janardan Swarn Kala">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Store / Business Industry Type *</label>
+              <select class="form-control" name="storeType" required>
+                <option value="building_materials">🏗️ Building Materials & Hardware</option>
+                <option value="jewellery">💍 Jewellery & Bullion Showroom</option>
+              </select>
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -543,24 +553,38 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         const json = await res.json();
         const tbody = document.getElementById('tenantsTableBody');
         if (!json.success || json.data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No tenants found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">No tenants found.</td></tr>';
           return;
         }
 
-        tbody.innerHTML = json.data.map(t => \`
+        tbody.innerHTML = json.data.map(t => {
+          const isJewel = t.storeType === 'jewellery';
+          return \`
           <tr>
             <td>
-              <div style="font-weight: 700; color: #1e293b;">\${t.name}</div>
-              <div style="font-size: 0.775rem; color: #64748b;">
-                \${t.legalName ? t.legalName + ' • ' : ''}\${t.contactPhone || 'No phone'}
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.1rem;">\${isJewel ? '💍' : '🏗️'}</span>
+                <div>
+                  <div style="font-weight: 700; color: #1e293b;">\${t.name}</div>
+                  <div style="font-size: 0.775rem; color: #64748b;">
+                    \${t.legalName ? t.legalName + ' • ' : ''}\${t.contactPhone || 'No phone'}
+                  </div>
+                </div>
               </div>
-              <div style="font-size: 0.7rem; color: #94a3b8; font-family: monospace;">
-                ID: \${t.id}
+              <div style="margin-top: 4px;">
+                <span class="badge" style="background: \${isJewel ? '#fef3c7' : '#e0e7ff'}; color: \${isJewel ? '#92400e' : '#3730a3'}; font-size: 0.7rem;">
+                  \${isJewel ? '💍 Jewellery & Bullion' : '🏗️ Building Materials & Hardware'}
+                </span>
               </div>
+            </td>
+            <td>
+              <code style="font-size: 0.825rem; font-weight: 700; color: #0284c7; background: #f0f9ff; padding: 3px 6px; border-radius: 4px; border: 1px solid #bae6fd;">
+                \${t.licenseNumber || 'UNASSIGNED'}
+              </code>
             </td>
             <td><span class="badge badge-plan">\${t.plan}</span></td>
             <td><strong>\${t.activeInstallationCount}</strong> / \${t.maxInstallations}</td>
-            <td>\${t.syncEventsCount} events</td>
+            <td><strong>\${t.syncEventsCount}</strong> events</td>
             <td style="font-size: 0.8rem; color: #64748b;">
               \${t.lastSyncedAt ? new Date(t.lastSyncedAt).toLocaleString() : 'Never'}
             </td>
@@ -568,14 +592,15 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
               <span class="badge badge-\${t.status}">\${t.status}</span>
             </td>
             <td>
-              <button class="btn btn-secondary btn-sm" onclick="viewTenantDetails('\${t.id}')">View</button>
+              <button class="btn btn-primary btn-sm" onclick="viewTenantDetails('\${t.id}')">📊 View Dashboard</button>
               \${t.status === 'active' ? 
-                \`<button class="btn btn-danger btn-sm" onclick="toggleTenantStatus('\${t.id}', 'suspended')">Suspend</button>\` :
-                \`<button class="btn btn-success btn-sm" onclick="toggleTenantStatus('\${t.id}', 'active')">Activate</button>\`
+                \`<button class="btn btn-danger btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'suspended')">Suspend</button>\` :
+                \`<button class="btn btn-success btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'active')">Activate</button>\`
               }
             </td>
           </tr>
-        \`).join('');
+        \`;
+        }).join('');
       } catch (err) {
         console.error('Failed to load tenants', err);
       }
@@ -612,6 +637,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       const form = e.target;
       const data = {
         name: form.name.value,
+        storeType: form.storeType.value,
         legalName: form.legalName.value,
         gstin: form.gstin.value,
         contactPhone: form.contactPhone.value,
@@ -633,6 +659,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           form.reset();
           loadTenants();
           loadMetrics();
+          alert(\`Tenant onboarded successfully!\\n\\nLicense Number: \${json.data.licenseNumber}\\nSecret Key: \${json.data.secretKey}\\nIndustry Mode: \${json.data.storeType}\`);
         } else {
           alert('Failed to create tenant: ' + json.error?.message);
         }
@@ -641,41 +668,148 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    // View Tenant Details
+    function copyToClipboard(text, label) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(label + ' copied to clipboard!');
+      }).catch(() => {
+        prompt('Copy manually:', text);
+      });
+    }
+
+    // View Tenant Details & Dashboard
     async function viewTenantDetails(id) {
       document.getElementById('tenantDetailsModal').style.display = 'flex';
       const body = document.getElementById('detailsModalBody');
-      body.innerHTML = 'Loading details...';
+      body.innerHTML = '<div style="text-align:center; padding: 2rem;">Loading tenant analytics & credentials...</div>';
 
       try {
-        const res = await fetch(\`/api/v1/admin/tenants/\${id}\`);
-        const json = await res.json();
-        if (!json.success) {
-          body.innerHTML = '<div style="color:red;">Error loading details</div>';
+        const [tenantRes, dashRes] = await Promise.all([
+          fetch(\`/api/v1/admin/tenants/\${id}\`),
+          fetch(\`/api/v1/admin/tenants/\${id}/dashboard\`)
+        ]);
+
+        const tJson = await tenantRes.json();
+        const dJson = await dashRes.json();
+
+        if (!tJson.success) {
+          body.innerHTML = '<div style="color:red; padding: 1rem;">Error loading tenant details</div>';
           return;
         }
 
-        const t = json.data;
-        document.getElementById('detailsTenantName').textContent = t.name;
+        const t = tJson.data;
+        const d = dJson.success ? dJson.data : { todaySales: 0, thisMonthSales: 0, totalEarnings: 0, totalSyncEvents: 0, totalInvoicesCount: 0, totalPaymentsCount: 0, eventsByType: {} };
+
+        const isJewel = t.storeType === 'jewellery';
+        document.getElementById('detailsTenantName').innerHTML = \`
+          <span style="font-size: 1.25rem; margin-right: 6px;">\${isJewel ? '💍' : '🏗️'}</span>
+          \${t.name}
+          <span class="badge" style="margin-left: 8px; background: \${isJewel ? '#fef3c7' : '#e0e7ff'}; color: \${isJewel ? '#92400e' : '#3730a3'};">
+            \${isJewel ? 'Jewellery Showroom' : 'Building Materials & Depot'}
+          </span>
+        \`;
 
         let instHtml = (t.installations && t.installations.length > 0) ? t.installations.map(i => \`
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div style="font-weight: 600;">\${i.deviceName} (\${i.installationType})</div>
               <div style="font-size: 0.75rem; color: #64748b;">
-                HW: \${i.hardwareFingerprint || 'N/A'} • App v\${i.appVersion || '0.1.0'}
+                HW Fingerprint: \${i.hardwareFingerprint || 'Auto-Detected Terminal'} • App v\${i.appVersion || '0.1.0'}
               </div>
               <div style="font-size: 0.75rem; color: #94a3b8;">
-                Last Sync: \${i.lastSyncedAt ? new Date(i.lastSyncedAt).toLocaleString() : 'Never'}
+                Last Heartbeat: \${i.lastHeartbeatAt ? new Date(i.lastHeartbeatAt).toLocaleString() : 'Never'}
               </div>
             </div>
             <div>
               <span class="badge badge-\${i.status}">\${i.status}</span>
             </div>
           </div>
-        \`).join('') : '<div style="color: #94a3b8; font-size: 0.85rem;">No terminals registered yet.</div>';
+        \`).join('') : '<div style="color: #94a3b8; font-size: 0.85rem;">No local terminals registered yet.</div>';
+
+        let eventsBreakdownHtml = Object.entries(d.eventsByType || {}).map(([evt, count]) => \`
+          <span style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace;">
+            <strong>\${evt}</strong>: \${count}
+          </span>
+        \`).join(' ') || '<span style="color:#94a3b8; font-size: 0.8rem;">No events synced yet</span>';
 
         body.innerHTML = \`
+          <!-- Store Credentials & License Card -->
+          <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Tenant License & Access Credentials</div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                  <span style="font-family: monospace; font-size: 1.15rem; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 4px;">
+                    \${t.licenseNumber || 'NO LICENSE ASSIGNED'}
+                  </span>
+                  \${t.licenseNumber ? \`<button class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none; font-size: 0.75rem;" onclick="copyToClipboard('\${t.licenseNumber}', 'License Number')">📋 Copy</button>\` : ''}
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Secret Key (Store Token Auth)</div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                  <span style="font-family: monospace; font-size: 0.85rem; color: #facc15; background: rgba(250, 204, 21, 0.15); padding: 4px 8px; border-radius: 4px;">
+                    \${t.secretKey ? t.secretKey.slice(0, 10) + '••••••••' : 'NO SECRET KEY'}
+                  </span>
+                  \${t.secretKey ? \`<button class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none; font-size: 0.75rem;" onclick="copyToClipboard('\${t.secretKey}', 'Secret Key')">📋 Copy Key</button>\` : ''}
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.775rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between;">
+              <span>🔑 Validity: <strong>7 Days (JWT Bearer Token with Refresh)</strong></span>
+              <span>🎨 Target UI Profile: <strong>\${isJewel ? '💍 Jewellery Specialized POS' : '🏗️ Building Materials & Hardware POS'}</strong></span>
+            </div>
+          </div>
+
+          <!-- Financial Dashboard Cards (From Synced Data) -->
+          <div style="margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <span>📈 Synced Store Financial Performance</span>
+              <span style="font-size: 0.75rem; color: #64748b; font-weight: 400;">Aggregated securely from sync inbox</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 0.75rem; color: #065f46; font-weight: 600; text-transform: uppercase;">Today's Sales</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #047857; margin-top: 4px;">
+                  ₹ \${Number(d.todaySales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+                <div style="font-size: 0.725rem; color: #065f46; margin-top: 2px;">Confirmed posted invoices today</div>
+              </div>
+
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">This Month's Sales</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #1d4ed8; margin-top: 4px;">
+                  ₹ \${Number(d.thisMonthSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+                <div style="font-size: 0.725rem; color: #1e40af; margin-top: 2px;">Monthly net billing volume</div>
+              </div>
+
+              <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 0.75rem; color: #6b21a8; font-weight: 600; text-transform: uppercase;">Total Collections / Earnings</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: #7e22ce; margin-top: 4px;">
+                  ₹ \${Number(d.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+                <div style="font-size: 0.725rem; color: #6b21a8; margin-top: 2px;">Cash/UPI/Cheque received</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sync Telemetry Overview -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 0.825rem; font-weight: 700; color: #1e293b;">⚡ Sync Volume & Data Transferred</span>
+              <span style="font-size: 0.775rem; color: #64748b;">
+                Last Synced: <strong>\${d.lastSyncedAt ? new Date(d.lastSyncedAt).toLocaleString() : 'Never'}</strong>
+              </span>
+            </div>
+            <div style="font-size: 0.8rem; color: #475569; margin-bottom: 8px;">
+              Total Ingested Events: <strong style="color: #2563eb;">\${d.totalSyncEvents}</strong> (\${d.totalInvoicesCount} invoices, \${d.totalPaymentsCount} settlements)
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              \${eventsBreakdownHtml}
+            </div>
+          </div>
+
+          <!-- Basic Info Grid -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
             <div>
               <div style="font-size: 0.8rem; color: #64748b;">Tenant UUID</div>
@@ -688,9 +822,9 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
             <div>
               <div style="font-size: 0.8rem; color: #64748b;">Plan Tier</div>
               <div style="font-weight: 600; text-transform: uppercase;">\${t.plan}</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Total Synced Events</div>
-              <div style="font-weight: 700; color: #2563eb;">\${t.syncStats?.totalEvents || 0} events</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Address</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Contact Info</div>
+              <div style="font-size: 0.85rem;">\${t.contactPhone || 'No phone'} • \${t.contactEmail || 'No email'}</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Store Address</div>
               <div style="font-size: 0.85rem;">\${t.address || 'N/A'}</div>
             </div>
           </div>
@@ -701,8 +835,9 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           \${instHtml}
         \`;
       } catch (err) {
-        body.innerHTML = '<div style="color:red;">Error: ' + err.message + '</div>';
+        body.innerHTML = '<div style="color:red; padding: 1rem;">Error: ' + err.message + '</div>';
       }
+    }
     }
 
     // Load Sync Stream

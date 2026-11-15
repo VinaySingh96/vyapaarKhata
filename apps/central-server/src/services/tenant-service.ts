@@ -7,6 +7,8 @@ import {
   PlatformMetrics,
   TenantStatus,
   PlanTier,
+  StoreType,
+  TenantDashboardMetrics,
 } from '../types/index.js';
 
 export class TenantService {
@@ -40,7 +42,7 @@ export class TenantService {
 
     if (filter?.search) {
       params.push(`%${filter.search}%`);
-      sql += ` AND (t.name ILIKE $${params.length} OR t.slug ILIKE $${params.length} OR t.gstin ILIKE $${params.length} OR t.contact_phone ILIKE $${params.length})`;
+      sql += ` AND (t.name ILIKE $${params.length} OR t.slug ILIKE $${params.length} OR t.gstin ILIKE $${params.length} OR t.contact_phone ILIKE $${params.length} OR t.license_number ILIKE $${params.length})`;
     }
 
     sql += ` GROUP BY t.id ORDER BY t.created_at DESC`;
@@ -51,6 +53,9 @@ export class TenantService {
       slug: r.slug,
       name: r.name,
       legalName: r.legal_name || undefined,
+      storeType: (r.store_type || 'building_materials') as StoreType,
+      licenseNumber: r.license_number || undefined,
+      secretKey: r.secret_key || undefined,
       gstin: r.gstin || undefined,
       contactEmail: r.contact_email || undefined,
       contactPhone: r.contact_phone || undefined,
@@ -124,6 +129,9 @@ export class TenantService {
       slug: t.slug,
       name: t.name,
       legalName: t.legal_name || undefined,
+      storeType: (t.store_type || 'building_materials') as StoreType,
+      licenseNumber: t.license_number || undefined,
+      secretKey: t.secret_key || undefined,
       gstin: t.gstin || undefined,
       contactEmail: t.contact_email || undefined,
       contactPhone: t.contact_phone || undefined,
@@ -142,10 +150,113 @@ export class TenantService {
     };
   }
 
+  public async getTenantDashboardMetrics(tenantId: string): Promise<TenantDashboardMetrics | null> {
+    const tRes = await this.db.query('SELECT id, name, store_type, license_number FROM central_tenants WHERE id = $1', [tenantId]);
+    if (tRes.rows.length === 0) return null;
+    const t = tRes.rows[0];
+
+    const eventsRes = await this.db.query(
+      `SELECT event_type, payload, received_at
+       FROM central_sync_inbox
+       WHERE tenant_id = $1
+       ORDER BY received_at DESC`,
+      [tenantId]
+    );
+
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const thisMonthStr = now.toISOString().slice(0, 7);
+
+    let todaySales = 0;
+    let thisMonthSales = 0;
+    let totalEarnings = 0;
+    let totalInvoicesCount = 0;
+    let totalPaymentsCount = 0;
+    const eventsByType: Record<string, number> = {};
+    let lastSyncedAt: string | undefined = undefined;
+
+    for (const r of eventsRes.rows) {
+      if (!lastSyncedAt) {
+        lastSyncedAt = new Date(r.received_at).toISOString();
+      }
+      const type = r.event_type;
+      eventsByType[type] = (eventsByType[type] || 0) + 1;
+
+      const payload = typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload || {};
+      const evDate = (payload.postedAt || payload.createdAt || r.received_at).toString().slice(0, 10);
+      const evMonth = evDate.slice(0, 7);
+
+      if (type === 'sales.invoice.posted') {
+        const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
+        totalInvoicesCount++;
+        if (evDate === todayStr) {
+          todaySales += grandTotal;
+        }
+        if (evMonth === thisMonthStr) {
+          thisMonthSales += grandTotal;
+        }
+      } else if (type === 'sales.invoice.cancelled') {
+        const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
+        if (evDate === todayStr) {
+          todaySales = Math.max(0, todaySales - grandTotal);
+        }
+        if (evMonth === thisMonthStr) {
+          thisMonthSales = Math.max(0, thisMonthSales - grandTotal);
+        }
+      } else if (type === 'payment.posted') {
+        const amount = Number(payload.amount || 0);
+        totalEarnings += amount;
+        totalPaymentsCount++;
+      }
+    }
+
+    return {
+      tenantId: t.id,
+      tenantName: t.name,
+      storeType: (t.store_type || 'building_materials') as StoreType,
+      licenseNumber: t.license_number || undefined,
+      totalSyncEvents: eventsRes.rows.length,
+      lastSyncedAt,
+      todaySales,
+      thisMonthSales,
+      totalEarnings,
+      totalInvoicesCount,
+      totalPaymentsCount,
+      eventsByType,
+    };
+  }
+
+  public async getTenantByLicense(licenseNumber: string): Promise<CentralTenant | null> {
+    const res = await this.db.query('SELECT * FROM central_tenants WHERE license_number = $1', [licenseNumber]);
+    if (res.rows.length === 0) return null;
+    const t = res.rows[0];
+    return {
+      id: t.id,
+      slug: t.slug,
+      name: t.name,
+      legalName: t.legal_name || undefined,
+      storeType: (t.store_type || 'building_materials') as StoreType,
+      licenseNumber: t.license_number || undefined,
+      secretKey: t.secret_key || undefined,
+      gstin: t.gstin || undefined,
+      contactEmail: t.contact_email || undefined,
+      contactPhone: t.contact_phone || undefined,
+      address: t.address || undefined,
+      status: t.status,
+      plan: t.plan,
+      maxInstallations: t.max_installations,
+      createdAt: new Date(t.created_at).toISOString(),
+      updatedAt: new Date(t.updated_at).toISOString(),
+    };
+  }
+
   public async createTenant(data: {
     name: string;
     legalName?: string;
     slug?: string;
+    storeType?: StoreType;
+    licenseNumber?: string;
+    secretKey?: string;
     gstin?: string;
     contactEmail?: string;
     contactPhone?: string;
@@ -154,6 +265,7 @@ export class TenantService {
     maxInstallations?: number;
   }): Promise<CentralTenant> {
     const id = randomUUID();
+    const storeType: StoreType = data.storeType || 'building_materials';
     const slug =
       data.slug ||
       data.name
@@ -164,20 +276,29 @@ export class TenantService {
     const plan = data.plan || 'standard';
     const maxInstallations = data.maxInstallations || (plan === 'enterprise' ? 10 : plan === 'standard' ? 3 : 1);
 
+    const prefix = storeType === 'jewellery' ? 'JW' : 'BM';
+    const licenseNumber =
+      data.licenseNumber ||
+      `LIC-${prefix}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const secretKey = data.secretKey || `sk_live_${randomUUID().replace(/-/g, '')}`;
+
     const client = await this.db.getPool().connect();
     try {
       await client.query('BEGIN');
 
       const res = await client.query(
         `INSERT INTO central_tenants (
-           id, slug, name, legal_name, gstin, contact_email, contact_phone, address, status, plan, max_installations
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10)
+           id, slug, name, legal_name, store_type, license_number, secret_key, gstin, contact_email, contact_phone, address, status, plan, max_installations
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'active', $12, $13)
          RETURNING *`,
         [
           id,
           slug,
           data.name,
           data.legalName || null,
+          storeType,
+          licenseNumber,
+          secretKey,
           data.gstin || null,
           data.contactEmail || null,
           data.contactPhone || null,
@@ -218,6 +339,9 @@ export class TenantService {
         slug: r.slug,
         name: r.name,
         legalName: r.legal_name || undefined,
+        storeType: (r.store_type || 'building_materials') as StoreType,
+        licenseNumber: r.license_number || undefined,
+        secretKey: r.secret_key || undefined,
         gstin: r.gstin || undefined,
         contactEmail: r.contact_email || undefined,
         contactPhone: r.contact_phone || undefined,
@@ -303,6 +427,9 @@ export class TenantService {
       slug: r.slug,
       name: r.name,
       legalName: r.legal_name || undefined,
+      storeType: (r.store_type || 'building_materials') as StoreType,
+      licenseNumber: r.license_number || undefined,
+      secretKey: r.secret_key || undefined,
       gstin: r.gstin || undefined,
       contactEmail: r.contact_email || undefined,
       contactPhone: r.contact_phone || undefined,

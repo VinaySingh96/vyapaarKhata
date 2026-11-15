@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { SyncStatusBadge } from './SyncStatusBadge.js';
 import { DailyMetalRatesBar } from './DailyMetalRatesBar.js';
+import { LicenseLoginModal } from './LicenseLoginModal.js';
 import { useI18n, Language } from '../i18n/index.js';
+import { useStore } from '../context/StoreContext.js';
 
 export interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +19,9 @@ export const Layout: React.FC<LayoutProps> = ({
   storeName,
 }) => {
   const { t, language, setLanguage } = useI18n();
+  const { storeType, licenseNumber, isLicenseLoggedIn } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: t('nav.dashboard') },
@@ -180,9 +184,33 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
 
           {/* Daily Metal Rates Bar (Gold, Silver, Diamond) - Only for Jewellery Shops */}
-          <DailyMetalRatesBar />
+          <DailyMetalRatesBar isJewelleryShop={storeType === 'jewellery'} />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Store License Auth Badge / Modal Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsLicenseModalOpen(true)}
+              title="Click to view or switch store license"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                backgroundColor: isLicenseLoggedIn ? (storeType === 'jewellery' ? '#fef3c7' : '#e0e7ff') : '#f1f5f9',
+                color: isLicenseLoggedIn ? (storeType === 'jewellery' ? '#92400e' : '#3730a3') : '#475569',
+                border: `1px solid ${isLicenseLoggedIn ? (storeType === 'jewellery' ? '#fde68a' : '#c7d2fe') : '#cbd5e1'}`,
+                padding: '4px 10px',
+                borderRadius: '16px',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span>{isLicenseLoggedIn ? (storeType === 'jewellery' ? '💍' : '🏗️') : '🔑'}</span>
+              <span>{licenseNumber || 'License Auth'}</span>
+            </button>
+
             {/* Language Switcher */}
             <div
               style={{
@@ -250,6 +278,12 @@ export const Layout: React.FC<LayoutProps> = ({
         >
           {children}
         </section>
+
+        {/* License Authentication Modal */}
+        <LicenseLoginModal
+          isOpen={isLicenseModalOpen}
+          onClose={() => setIsLicenseModalOpen(false)}
+        />
       </main>
     </div>
   );

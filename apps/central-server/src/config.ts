@@ -6,6 +6,7 @@ export const centralConfigSchema = z.object({
   HOST: z.string().default('127.0.0.1'),
   DATABASE_URL: z.string().default('postgresql://localhost:5432/vyapaarkhata_central'),
   ADMIN_API_KEY: z.string().default('central-admin-secret-key-2026'),
+  JWT_SECRET: z.string().default('vyapaarkhata-central-cloud-jwt-secure-key-2026'),
   ALLOW_AUTO_SEED: z.coerce.boolean().default(true),
 });
 
