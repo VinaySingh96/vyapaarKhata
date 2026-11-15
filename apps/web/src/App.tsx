@@ -13,6 +13,7 @@ import { PaymentsScreen } from './screens/PaymentsScreen.js';
 import { ExpensesScreen } from './screens/ExpensesScreen.js';
 import { ReportsScreen } from './screens/ReportsScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
+import { LicenseLoginScreen } from './screens/LicenseLoginScreen.js';
 
 const VALID_ROUTES = [
   'dashboard',
@@ -47,7 +48,7 @@ function getRouteFromLocation(): RouteId {
 
 const AppContent: React.FC = () => {
   const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
-  const { storeSettings } = useStore();
+  const { storeSettings, isLicenseLoggedIn } = useStore();
 
   // Listen to popstate (back/forward browser buttons) and hashchange
   useEffect(() => {
@@ -73,6 +74,11 @@ const AppContent: React.FC = () => {
       window.history.pushState({ route: targetRoute }, '', targetPath);
     }
   }, []);
+
+  // Restrict any UI before valid store license login
+  if (!isLicenseLoggedIn) {
+    return <LicenseLoginScreen />;
+  }
 
   return (
     <Layout activeNav={activeNav} onNavigate={handleNavigate} storeName={storeSettings.storeName}>

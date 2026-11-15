@@ -66,7 +66,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [jwtToken, setJwtToken] = useState<string | null>(() => {
-    return localStorage.getItem('vk_jwt_token') || null;
+    const token = localStorage.getItem('vk_jwt_token');
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          localStorage.removeItem('vk_jwt_token');
+          localStorage.removeItem('vk_refresh_token');
+          localStorage.removeItem('vk_license_number');
+          return null;
+        }
+      }
+    } catch {
+      return null;
+    }
+    return token;
   });
 
   const [licenseNumber, setLicenseNumber] = useState<string | null>(() => {
