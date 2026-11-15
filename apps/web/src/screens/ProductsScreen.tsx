@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
+import * as XLSX from 'xlsx';
 
 interface ProductItem {
   id: string;
@@ -44,6 +47,7 @@ interface UnitItem {
 export const ProductsScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,12 +86,113 @@ export const ProductsScreen: React.FC = () => {
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
 
+  // Excel Bulk Import State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedImportItems, setParsedImportItems] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFile(file);
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (!rawJson || rawJson.length === 0) {
+          setImportError('The uploaded Excel sheet contains no rows.');
+          setParsedImportItems([]);
+          return;
+        }
+
+        const mapped = rawJson.map((row) => {
+          const getVal = (...keys: string[]) => {
+            for (const k of keys) {
+              const matchedKey = Object.keys(row).find(
+                (rk) => rk.trim().toLowerCase() === k.toLowerCase()
+              );
+              if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== '') {
+                return row[matchedKey];
+              }
+            }
+            return '';
+          };
+
+          const category = getVal('Category', 'category', 'CATEGORY', 'Category Name', 'श्रेणी');
+          const name = getVal('Item Name', 'name', 'Product Name', 'Item', 'सामग्री');
+          const sku = getVal('Item Code / SKU', 'sku', 'Item Code', 'SKU', 'Code');
+          const unit = getVal('Unit', 'unit', 'UOM', 'इकाई') || 'pcs';
+          const stock = Number(getVal('Initial Stock', 'Stock', 'Quantity', 'stock', 'qty', 'स्टॉक') || 0);
+          const purchasePrice = Number(getVal('Purchase Rate (Asset Cost)', 'Purchase Rate', 'Purchase Price', 'Cost', 'Asset Cost', 'खरीद मूल्य') || 0);
+          const sellingPrice = Number(getVal('Daily Rental Rate (Sell Rate)', 'Daily Rental Rate', 'Sell Rate', 'Daily Rent', 'Rent', 'Rate', 'Selling Price', 'दैनिक किराया') || 0);
+          const description = getVal('Description', 'description', 'Notes', 'विवरण');
+
+          return {
+            category,
+            name,
+            sku,
+            unit,
+            stock,
+            purchasePrice,
+            sellingPrice,
+            description,
+          };
+        }).filter((item) => item.name && String(item.name).trim() !== '');
+
+        if (mapped.length === 0) {
+          setImportError('Could not find valid items with an "Item Name" column.');
+          setParsedImportItems([]);
+          return;
+        }
+
+        setParsedImportItems(mapped);
+      } catch (err: any) {
+        setImportError(`Failed to parse Excel file: ${err.message}`);
+        setParsedImportItems([]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleConfirmImport = async () => {
+    if (parsedImportItems.length === 0) return;
+    setIsImporting(true);
+    setImportError(null);
+    try {
+      const res = await apiFetch('/api/v1/products/bulk-import', {
+        method: 'POST',
+        body: JSON.stringify({ items: parsedImportItems }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Bulk import failed');
+      }
+      toast.success(json.message || `Successfully imported ${parsedImportItems.length} items!`);
+      setShowImportModal(false);
+      setParsedImportItems([]);
+      setImportFile(null);
+      loadProducts();
+      loadCategories();
+    } catch (err: any) {
+      setImportError(err.message || 'Import failed');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   // Load products from backend
   const loadProducts = () => {
     setLoading(true);
-    fetch('/api/v1/products', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -119,9 +224,7 @@ export const ProductsScreen: React.FC = () => {
 
   // Load categories from backend
   const loadCategories = () => {
-    fetch('/api/v1/products/categories', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products/categories')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -136,9 +239,7 @@ export const ProductsScreen: React.FC = () => {
 
   // Load units from backend
   const loadUnits = () => {
-    fetch('/api/v1/products/units', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products/units')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -155,7 +256,7 @@ export const ProductsScreen: React.FC = () => {
     loadProducts();
     loadCategories();
     loadUnits();
-  }, []);
+  }, [tenantId]);
 
   // Filtered Products
   const filteredProducts = products.filter((p) => {
@@ -195,11 +296,10 @@ export const ProductsScreen: React.FC = () => {
       const generatedSku = newSku.trim() || `SKU-${Date.now().toString().slice(-6)}`;
       const prodId = crypto.randomUUID();
 
-      const res = await fetch('/api/v1/products', {
+      const res = await apiFetch('/api/v1/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: prodId,
@@ -249,11 +349,10 @@ export const ProductsScreen: React.FC = () => {
 
     setIsSubmittingCategory(true);
     try {
-      const res = await fetch('/api/v1/products/categories', {
+      const res = await apiFetch('/api/v1/products/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           name: catName.trim(),
@@ -305,11 +404,10 @@ export const ProductsScreen: React.FC = () => {
 
     setIsSubmittingCategory(true);
     try {
-      const res = await fetch(`/api/v1/products/categories/${categoryToEdit.id}`, {
+      const res = await apiFetch(`/api/v1/products/categories/${categoryToEdit.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           name: catName.trim(),
@@ -342,11 +440,8 @@ export const ProductsScreen: React.FC = () => {
 
     setIsDeletingCategory(true);
     try {
-      const res = await fetch(`/api/v1/products/categories/${categoryToDelete.id}`, {
+      const res = await apiFetch(`/api/v1/products/categories/${categoryToDelete.id}`, {
         method: 'DELETE',
-        headers: {
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-        },
       });
 
       const json = await res.json();
@@ -418,26 +513,54 @@ export const ProductsScreen: React.FC = () => {
               + Add New Category
             </button>
           ) : (
-            <button
-              id="btn-add-new-product"
-              onClick={() => setShowAddModal(true)}
-              style={{
-                padding: '9px 16px',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: 600,
-                fontSize: '13px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
-              }}
-            >
-              {t('products.addNew')}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                id="btn-import-excel"
+                type="button"
+                onClick={() => {
+                  setImportFile(null);
+                  setParsedImportItems([]);
+                  setImportError(null);
+                  setShowImportModal(true);
+                }}
+                style={{
+                  padding: '9px 14px',
+                  backgroundColor: '#ffffff',
+                  color: '#15803d',
+                  border: '1px solid #86efac',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                📊 Import Excel / CSV
+              </button>
+              <button
+                id="btn-add-new-product"
+                onClick={() => setShowAddModal(true)}
+                style={{
+                  padding: '9px 16px',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+                }}
+              >
+                {t('products.addNew')}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -1354,6 +1477,260 @@ export const ProductsScreen: React.FC = () => {
               }}
             >
               ✓ This category has 0 assigned products and can be safely removed.
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* EXCEL / CSV BULK IMPORT MODAL */}
+      <Modal
+        isOpen={showImportModal}
+        onClose={() => {
+          if (!isImporting) {
+            setShowImportModal(false);
+            setParsedImportItems([]);
+            setImportFile(null);
+            setImportError(null);
+          }
+        }}
+        title="📊 Bulk Import Products & Rental Fleet from Excel"
+        subtitle="Upload Category, Product Name, Stock Count, Daily Rental Rate, and Purchase Cost"
+        size="lg"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ fontSize: '12px', color: '#6b7280' }}>
+              {parsedImportItems.length > 0 && (
+                <span>
+                  Ready to import: <strong>{parsedImportItems.length} items</strong>
+                </span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setParsedImportItems([]);
+                  setImportFile(null);
+                  setImportError(null);
+                }}
+                disabled={isImporting}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #d1d5db',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  cursor: isImporting ? 'not-allowed' : 'pointer',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                }}
+              >
+                {t('btn.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmImport}
+                disabled={isImporting || parsedImportItems.length === 0}
+                style={{
+                  backgroundColor: isImporting || parsedImportItems.length === 0 ? '#93c5fd' : '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 18px',
+                  borderRadius: '6px',
+                  cursor: isImporting || parsedImportItems.length === 0 ? 'not-allowed' : 'pointer',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {isImporting ? 'Importing Products...' : `Confirm & Upload (${parsedImportItems.length} Items)`}
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Template Download & Help Banner */}
+          <div
+            style={{
+              backgroundColor: '#eff6ff',
+              border: '1px solid #bfdbfe',
+              borderRadius: '8px',
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: '13.5px', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📥 Pre-formatted Excel Spreadsheets Ready for Download:</span>
+            </div>
+            <p style={{ margin: 0, fontSize: '12.5px', color: '#3b82f6', lineHeight: 1.5 }}>
+              Download our ready-made Excel sheets, edit the rates or quantities, and upload them back.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '4px' }}>
+              <a
+                href="/patel_centring_store_items.xlsx"
+                download="patel_centring_store_items.xlsx"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#ffffff',
+                  color: '#1d4ed8',
+                  border: '1px solid #93c5fd',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                📋 Download Patel Centring Store Catalog (.xlsx)
+              </a>
+              <a
+                href="/sample_product_import_template.xlsx"
+                download="sample_product_import_template.xlsx"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#ffffff',
+                  color: '#4b5563',
+                  border: '1px solid #d1d5db',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                📄 Blank Sample Template (.xlsx)
+              </a>
+            </div>
+          </div>
+
+          {/* File Upload Drop Zone */}
+          <div
+            style={{
+              border: '2px dashed #cbd5e1',
+              borderRadius: '8px',
+              padding: '24px',
+              textAlign: 'center',
+              backgroundColor: importFile ? '#f8fafc' : '#ffffff',
+              cursor: 'pointer',
+              position: 'relative',
+            }}
+          >
+            <input
+              type="file"
+              accept=".xlsx, .xls, .csv"
+              onChange={handleFileUpload}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                opacity: 0,
+                cursor: 'pointer',
+              }}
+            />
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📂</div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>
+              {importFile ? importFile.name : 'Click to select or drag & drop an Excel file (.xlsx, .xls, .csv)'}
+            </div>
+            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+              {importFile
+                ? `${(importFile.size / 1024).toFixed(1)} KB — Click to choose a different file`
+                : 'Supports columns: Category, Item Name, Initial Stock, Daily Rental Rate, Purchase Rate (Asset Cost), Unit'}
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {importError && (
+            <div
+              style={{
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                padding: '10px 14px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: '#b91c1c',
+              }}
+            >
+              ⚠️ {importError}
+            </div>
+          )}
+
+          {/* Parsed Preview Table */}
+          {parsedImportItems.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>
+                  Preview: {parsedImportItems.length} items parsed from file
+                </span>
+                <span style={{ fontSize: '11.5px', color: '#15803d', fontWeight: 600 }}>
+                  ✓ All rows validated
+                </span>
+              </div>
+              <div
+                style={{
+                  maxHeight: '260px',
+                  overflowY: 'auto',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                }}
+              >
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #cbd5e1', position: 'sticky', top: 0 }}>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>#</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Category</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Item Name</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Daily Rent</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Purchase Cost</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Initial Stock</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Unit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedImportItems.map((item, idx) => (
+                      <tr
+                        key={idx}
+                        style={{
+                          borderBottom: '1px solid #f1f5f9',
+                          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#fafafa',
+                        }}
+                      >
+                        <td style={{ padding: '6px 10px', color: '#94a3b8' }}>{idx + 1}</td>
+                        <td style={{ padding: '6px 10px', fontWeight: 600, color: '#2563eb' }}>
+                          {item.category || 'General'}
+                        </td>
+                        <td style={{ padding: '6px 10px', fontWeight: 600, color: '#0f172a' }}>
+                          {item.name}
+                        </td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
+                          ₹{formatIndianNumber(item.sellingPrice || 0)} / day
+                        </td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', color: '#64748b' }}>
+                          ₹{formatIndianNumber(item.purchasePrice || 0)}
+                        </td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                          {formatIndianNumber(item.stock || 0)}
+                        </td>
+                        <td style={{ padding: '6px 10px', color: '#64748b' }}>
+                          {item.unit || 'pcs'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

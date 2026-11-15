@@ -1,0 +1,21 @@
+Category,Item Name,Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
+Bamboo & Wooden Balli,Bamboo (10-12 ft),BAMBOO-10FT,pcs,50,120,10,Construction bamboo pole (10-12 ft) for scaffolding and support
+Bamboo & Wooden Balli,Balli (8-9 ft),BALLI-8-9FT,pcs,300,80,1,Wooden support balli 8 to 9 feet
+Bamboo & Wooden Balli,Balli (10-11 ft),BALLI-10-11FT,pcs,400,120,2,Wooden support balli 10 to 11 feet
+Bamboo & Wooden Balli,Balli (12 ft),BALLI-12FT,pcs,200,160,13,Wooden support balli 12 feet heavy duty
+Bamboo & Wooden Balli,Balli (15 ft),BALLI-15FT,pcs,50,220,5,Wooden support balli 15 feet extra length
+Pillar Farma (Iron Frame),Farma 9x9 (4 ft),FARMA-9X9-4FT,pcs,10,800,20,"Pillar shuttering iron frame size 9 inch x 9 inch, height 4 ft"
+Pillar Farma (Iron Frame),Farma 9x9 (5 ft),FARMA-9X9-5FT,pcs,5,1000,25,"Pillar shuttering iron frame size 9 inch x 9 inch, height 5 ft"
+Pillar Farma (Iron Frame),Farma 9x9 (6 ft),FARMA-9X9-6FT,pcs,10,1200,30,"Pillar shuttering iron frame size 9 inch x 9 inch, height 6 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (4 ft),FARMA-9X12-4FT,pcs,8,1000,25,"Pillar shuttering iron frame size 9 inch x 12 inch, height 4 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (5 ft),FARMA-9X12-5FT,pcs,10,1250,30,"Pillar shuttering iron frame size 9 inch x 12 inch, height 5 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (6 ft),FARMA-9X12-6FT,pcs,10,1500,40,"Pillar shuttering iron frame size 9 inch x 12 inch, height 6 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (7 ft),FARMA-9X12-7FT,pcs,4,1750,45,"Pillar shuttering iron frame size 9 inch x 12 inch, height 7 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (10 ft),FARMA-9X12-10FT,pcs,8,2500,80,"Pillar shuttering iron frame size 9 inch x 12 inch, height 10 ft"
+Pillar Farma (Iron Frame),Farma 9x15 (7 ft),FARMA-9X15-7FT,pcs,3,2200,50,"Pillar shuttering iron frame size 9 inch x 15 inch, height 7 ft"
+Centring Plates & Plywood,Patra (Centring Steel Plate),PATRA-STEEL-PLATE,pcs,500,350,1,Heavy MS centring / shuttering slab sheet plate
+Scaffolding & Grating,Chali (Iron Scaffolding Grating),CHALI-GRATING,pcs,30,1200,10,Iron mesh walkway / scaffolding platform chali
+Centring Plates & Plywood,Ply (Centring Plywood Sheet),PLY-SHUTTERING,pcs,40,850,20,Waterproof film-faced shuttering plywood board
+Centring Machinery & Tools,Concrete Vibrator Machine,VIBRATOR-MACHINE,pcs,1,7500,250,Electric concrete needle vibrator machine with 35mm needle
+Scaffolding & Grating,Chowkardiya (4-Way Support Stool),CHOWKARDIYA-STOOL,pcs,8,600,20,4-legged heavy duty iron centring base stool / connector
+Site Equipment & Storage,Water Storage Drum (200L),DRUM-WATER-200L,pcs,4,800,20,Heavy plastic / HDPE 200 Litre water storage drum for construction curing
