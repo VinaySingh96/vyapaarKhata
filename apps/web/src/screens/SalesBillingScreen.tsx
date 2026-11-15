@@ -70,6 +70,10 @@ export const SalesBillingScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
   const { storeSettings } = useStore();
+  const isJewelleryShop =
+    storeSettings.storeName?.toLowerCase().includes('jewel') ||
+    storeSettings.tradeName?.toLowerCase().includes('jewel') ||
+    (typeof window !== 'undefined' && (window.location.port === '3003' || window.location.port === '4003'));
 
   const [activeTab, setActiveTab] = useState<'billing' | 'history'>('billing');
 
@@ -1288,7 +1292,9 @@ export const SalesBillingScreen: React.FC = () => {
                     <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '12px' }}>
                       <th style={{ padding: '10px 12px' }}>{t('sales.itemDesc')}</th>
                       <th style={{ padding: '10px 12px', width: '100px' }}>{t('sales.available')}</th>
-                      <th style={{ padding: '10px 12px', width: '110px', textAlign: 'center' }}>{t('sales.qty')}</th>
+                      <th style={{ padding: '10px 12px', width: '130px', textAlign: 'center' }}>
+                        {isJewelleryShop ? 'Qty / Wt (g/pcs)' : t('sales.qty')}
+                      </th>
                       <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>{t('sales.rate')}</th>
                       <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>{t('sales.total')}</th>
                       <th style={{ padding: '10px 8px', width: '40px', textAlign: 'center' }}></th>
@@ -1328,27 +1334,31 @@ export const SalesBillingScreen: React.FC = () => {
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              {line.availableStock} {line.unit}
+                              {line.unit === 'g' || line.unit === 'kg' ? Number(line.availableStock).toFixed(3) : line.availableStock} {line.unit}
                             </td>
                             <td style={{ padding: '8px 12px' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={line.availableStock}
-                                  value={line.quantity}
-                                  onChange={(e) => handleUpdateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
-                                  style={{
-                                    width: '75px',
-                                    padding: '6px 8px',
-                                    borderRadius: '4px',
-                                    border: hasRowError ? '1.5px solid #dc2626' : '1px solid #d1d5db',
-                                    backgroundColor: hasRowError ? '#fef2f2' : '#ffffff',
-                                    textAlign: 'center',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                  }}
-                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step={line.unit === 'g' || line.unit === 'kg' || line.unit === 'ratti' || line.unit === 'ct' ? '0.001' : '1'}
+                                    max={line.availableStock}
+                                    value={line.quantity}
+                                    onChange={(e) => handleUpdateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                    style={{
+                                      width: '85px',
+                                      padding: '6px 8px',
+                                      borderRadius: '4px',
+                                      border: hasRowError ? '1.5px solid #dc2626' : '1px solid #d1d5db',
+                                      backgroundColor: hasRowError ? '#fef2f2' : '#ffffff',
+                                      textAlign: 'center',
+                                      fontSize: '13px',
+                                      fontWeight: 600,
+                                    }}
+                                  />
+                                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>{line.unit}</span>
+                                </div>
                                 {isOutOfStock ? (
                                   <span style={{ color: '#dc2626', fontSize: '10.5px', fontWeight: 600, marginTop: '3px', whiteSpace: 'nowrap' }}>
                                     ❌ Out of stock
@@ -1359,7 +1369,7 @@ export const SalesBillingScreen: React.FC = () => {
                                   </span>
                                 ) : line.quantity <= 0 ? (
                                   <span style={{ color: '#dc2626', fontSize: '10.5px', fontWeight: 600, marginTop: '3px', whiteSpace: 'nowrap' }}>
-                                    ⚠️ Min: 1
+                                    ⚠️ Min: {line.unit === 'g' ? '0.001' : '1'}
                                   </span>
                                 ) : null}
                               </div>
@@ -2044,11 +2054,17 @@ export const SalesBillingScreen: React.FC = () => {
                       <div style={{ fontSize: '10.5px', color: '#64748b' }}>SKU: {line.sku}</div>
                     </td>
                     <td style={{ padding: '8px', textAlign: 'center' }}>{line.unit}</td>
-                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>{line.quantity}</td>
+                    <td style={{ padding: '8px', textAlign: 'center', fontWeight: 700 }}>
+                      {line.unit === 'g' || line.unit === 'kg' || (Number(line.quantity) % 1 !== 0)
+                        ? Number(line.quantity).toFixed(3)
+                        : line.quantity}
+                    </td>
                     <td style={{ padding: '8px', textAlign: 'right' }}>₹{line.price?.toFixed(2)}</td>
-                    <td style={{ padding: '8px', textAlign: 'right', color: '#64748b' }}>18%</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: '#64748b' }}>
+                      {line.taxRate !== undefined ? `${line.taxRate}%` : isJewelleryShop ? '3%' : '18%'}
+                    </td>
                     <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>
-                      ₹{(line.lineTotal || line.quantity * line.price * 1.18).toFixed(2)}
+                      ₹{(line.lineTotal || line.quantity * line.price * (1 + (line.taxRate || (isJewelleryShop ? 3 : 18)) / 100)).toFixed(2)}
                     </td>
                   </tr>
                 ))}

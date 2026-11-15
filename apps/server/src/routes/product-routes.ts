@@ -44,18 +44,49 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
     });
   });
 
+  // GET /api/v1/products/categories/:id
+  app.get<{ Params: { id: string } }>('/categories/:id', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const category = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.products.findCategoryById(tenant.tenantId, req.params.id);
+    });
+
+    if (!category) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Category ${req.params.id} not found` },
+        requestId: req.id,
+      });
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: category,
+      requestId: req.id,
+    });
+  });
+
   // POST /api/v1/products/categories
   app.post<{ Body: Partial<ProductCategory> }>('/categories', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    if (!body.name || !body.name.trim()) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Category name is required' },
+        requestId: req.id,
+      });
+    }
+
     const category: ProductCategory = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       parentId: body.parentId,
-      name: body.name || 'General Category',
-      code: body.code,
-      description: body.description,
-      isActive: true,
+      name: body.name.trim(),
+      code: body.code ? body.code.trim() : `CAT-${body.name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 16)}`,
+      description: body.description ? body.description.trim() : undefined,
+      isActive: body.isActive !== false,
       createdAt: new Date().toISOString(),
     };
 
@@ -66,8 +97,75 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
     return reply.status(201).send({
       success: true,
       data: category,
+      message: 'Category created successfully',
       requestId: req.id,
     });
+  });
+
+  // PUT /api/v1/products/categories/:id
+  app.put<{ Params: { id: string }; Body: Partial<ProductCategory> }>(
+    '/categories/:id',
+    async (req, reply) => {
+      const tenant = resolveTenant(req);
+      const catId = req.params.id;
+      const body = req.body || {};
+
+      const existing = await opts.uow.runInTransaction(async (ctx) => {
+        return ctx.products.findCategoryById(tenant.tenantId, catId);
+      });
+
+      if (!existing) {
+        return reply.status(404).send({
+          success: false,
+          error: { code: 'NOT_FOUND', message: `Category ${catId} not found` },
+          requestId: req.id,
+        });
+      }
+
+      const updated: ProductCategory = {
+        ...existing,
+        name: body.name !== undefined ? body.name.trim() : existing.name,
+        code: body.code !== undefined ? body.code?.trim() : existing.code,
+        description: body.description !== undefined ? body.description?.trim() : existing.description,
+        parentId: body.parentId !== undefined ? body.parentId : existing.parentId,
+        isActive: body.isActive !== undefined ? body.isActive : existing.isActive,
+      };
+
+      await opts.uow.runInTransaction(async (ctx) => {
+        await ctx.products.saveCategory(updated);
+      });
+
+      return reply.status(200).send({
+        success: true,
+        data: updated,
+        message: 'Category updated successfully',
+        requestId: req.id,
+      });
+    }
+  );
+
+  // DELETE /api/v1/products/categories/:id
+  app.delete<{ Params: { id: string } }>('/categories/:id', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const catId = req.params.id;
+
+    try {
+      await opts.uow.runInTransaction(async (ctx) => {
+        await ctx.products.deleteCategory(tenant.tenantId, catId);
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: 'Category deleted successfully',
+        requestId: req.id,
+      });
+    } catch (err: any) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'CATEGORY_IN_USE', message: err.message || 'Cannot delete category' },
+        requestId: req.id,
+      });
+    }
   });
 
   // GET /api/v1/products/units
@@ -154,6 +252,53 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
     return reply.status(201).send({
       success: true,
       data: product,
+      requestId: req.id,
+    });
+  });
+
+  // PUT /api/v1/products/:id
+  app.put<{ Params: { id: string }; Body: Partial<Product> }>('/:id', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const productId = req.params.id;
+    const body = req.body || {};
+
+    const existing = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.products.findById(tenant.tenantId, productId);
+    });
+
+    if (!existing) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Product ${productId} not found` },
+        requestId: req.id,
+      });
+    }
+
+    const updated: Product = {
+      ...existing,
+      name: body.name !== undefined ? body.name : existing.name,
+      nameHi: body.nameHi !== undefined ? body.nameHi : existing.nameHi,
+      description: body.description !== undefined ? body.description : existing.description,
+      categoryId: body.categoryId !== undefined ? body.categoryId : existing.categoryId,
+      productType: body.productType !== undefined ? body.productType : existing.productType,
+      sku: body.sku !== undefined ? body.sku : existing.sku,
+      barcode: body.barcode !== undefined ? body.barcode : existing.barcode,
+      hsnSacCode: body.hsnSacCode !== undefined ? body.hsnSacCode : existing.hsnSacCode,
+      baseUnitId: body.baseUnitId !== undefined ? body.baseUnitId : existing.baseUnitId,
+      purchasePrice: body.purchasePrice !== undefined ? body.purchasePrice : existing.purchasePrice,
+      sellingPrice: body.sellingPrice !== undefined ? body.sellingPrice : existing.sellingPrice,
+      reorderLevel: body.reorderLevel !== undefined ? body.reorderLevel : existing.reorderLevel,
+      isActive: body.isActive !== undefined ? body.isActive : existing.isActive,
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.products.save(updated);
+    });
+
+    return reply.status(200).send({
+      success: true,
+      data: updated,
+      message: 'Product updated successfully',
       requestId: req.id,
     });
   });

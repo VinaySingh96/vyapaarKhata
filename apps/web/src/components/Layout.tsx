@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SyncStatusBadge } from './SyncStatusBadge.js';
+import { DailyMetalRatesBar } from './DailyMetalRatesBar.js';
 import { useI18n, Language } from '../i18n/index.js';
 
 export interface LayoutProps {
@@ -177,6 +178,9 @@ export const Layout: React.FC<LayoutProps> = ({
               {activeTitle}
             </div>
           </div>
+
+          {/* Daily Metal Rates Bar (Gold, Silver, Diamond) - Only for Jewellery Shops */}
+          <DailyMetalRatesBar />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Language Switcher */}

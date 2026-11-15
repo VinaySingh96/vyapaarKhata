@@ -30,6 +30,14 @@ export interface StockMovementItem {
   createdAt: string;
 }
 
+const formatUnitQty = (val: number | string | undefined, unit?: string) => {
+  const num = typeof val === 'number' ? val : parseFloat(val || '0') || 0;
+  if (unit === 'g' || unit === 'kg' || (num % 1 !== 0 && num > 0)) {
+    return num.toFixed(3);
+  }
+  return num.toString();
+};
+
 export const InventoryScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
@@ -440,7 +448,7 @@ export const InventoryScreen: React.FC = () => {
                     fontWeight: 700,
                   }}
                 >
-                  {item.quantityAvailable} {item.unit}
+                  {formatUnitQty(item.quantityAvailable, item.unit)} {item.unit}
                 </span>
                 <span style={{ color: '#2563eb', marginLeft: '2px', fontSize: '11px' }}>✏️</span>
               </button>
@@ -651,10 +659,10 @@ export const InventoryScreen: React.FC = () => {
                           color: onHand === 0 ? '#9ca3af' : '#111827',
                         }}
                       >
-                        {onHand} {unit}
+                        {formatUnitQty(onHand, unit)} {unit}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
-                        {reserved} {unit}
+                        {formatUnitQty(reserved, unit)} {unit}
                       </td>
                       <td
                         style={{
@@ -664,7 +672,7 @@ export const InventoryScreen: React.FC = () => {
                           color: isOutOfStock ? '#dc2626' : isLow ? '#d97706' : '#059669',
                         }}
                       >
-                        {available} {unit}
+                        {formatUnitQty(available, unit)} {unit}
                       </td>
                       <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                         <span
@@ -896,7 +904,7 @@ export const InventoryScreen: React.FC = () => {
                       color: (editingItem.quantityAvailable ?? 0) <= 0 ? '#dc2626' : '#059669',
                     }}
                   >
-                    {editingItem.quantityAvailable ?? 0} {editingItem.unit}
+                    {formatUnitQty(editingItem.quantityAvailable, editingItem.unit)} {editingItem.unit}
                   </div>
                 </div>
               </div>

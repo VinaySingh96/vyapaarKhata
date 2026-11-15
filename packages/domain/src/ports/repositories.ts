@@ -37,7 +37,9 @@ export interface ProductRepository {
   findById(tenantId: EntityId, id: EntityId): Promise<Product | null>;
   save(product: Product): Promise<void>;
   listCategories(tenantId: EntityId): Promise<ProductCategory[]>;
+  findCategoryById(tenantId: EntityId, id: EntityId): Promise<ProductCategory | null>;
   saveCategory(category: ProductCategory): Promise<void>;
+  deleteCategory(tenantId: EntityId, id: EntityId): Promise<void>;
   listUnits(): Promise<UnitOfMeasure[]>;
   listTaxCategories(tenantId: EntityId): Promise<TaxCategory[]>;
 }

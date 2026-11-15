@@ -564,6 +564,31 @@ export class PgUnitOfWork implements UnitOfWork {
           }));
         },
 
+        findCategoryById: async (tenantId: EntityId, id: EntityId): Promise<ProductCategory | null> => {
+          const res = await client.query(
+            `SELECT c.id, c.tenant_id, c.parent_id, c.name, c.code, c.description, c.is_active, c.created_at,
+                    COUNT(p.id) as product_count
+             FROM product_categories c
+             LEFT JOIN products p ON p.category_id = c.id
+             WHERE c.tenant_id = $1 AND c.id = $2
+             GROUP BY c.id`,
+            [tenantId, ensureUuid(id)]
+          );
+          if (res.rows.length === 0) return null;
+          const r = res.rows[0];
+          return {
+            id: r.id,
+            tenantId: r.tenant_id,
+            parentId: r.parent_id || undefined,
+            name: r.name,
+            code: r.code || undefined,
+            description: r.description || undefined,
+            isActive: r.is_active,
+            productCount: parseInt(r.product_count, 10),
+            createdAt: new Date(r.created_at).toISOString(),
+          };
+        },
+
         saveCategory: async (category: ProductCategory): Promise<void> => {
           await client.query(
             `INSERT INTO product_categories (
@@ -584,6 +609,22 @@ export class PgUnitOfWork implements UnitOfWork {
               category.description || null,
               category.isActive !== false,
             ]
+          );
+        },
+
+        deleteCategory: async (tenantId: EntityId, id: EntityId): Promise<void> => {
+          const catId = ensureUuid(id);
+          const pRes = await client.query(
+            `SELECT COUNT(*) as count FROM products WHERE tenant_id = $1 AND category_id = $2`,
+            [tenantId, catId]
+          );
+          const count = parseInt(pRes.rows[0]?.count || '0', 10);
+          if (count > 0) {
+            throw new Error(`Cannot delete category: ${count} product(s) are currently assigned to this category. Please reassign or delete the products first.`);
+          }
+          await client.query(
+            `DELETE FROM product_categories WHERE tenant_id = $1 AND id = $2`,
+            [tenantId, catId]
           );
         },
 
