@@ -59,6 +59,10 @@ export const ReportsScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load dashboard metrics:', err));
 
     // 3. Fetch automated audit logs
+    fetchAuditLogs();
+  };
+
+  const fetchAuditLogs = () => {
     fetch('/api/v1/reports/audit-logs?limit=50', {
       headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
     })
@@ -75,6 +79,12 @@ export const ReportsScreen: React.FC = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (activeReportTab === 'audit') {
+      fetchAuditLogs();
+    }
+  }, [activeReportTab]);
 
   const totalInventoryValuation = valuationData.reduce((acc, s) => acc + (s.valuation || 0), 0);
   const totalPhysicalQuantity = valuationData.reduce((acc, s) => acc + (s.quantity || 0), 0);
@@ -317,7 +327,7 @@ export const ReportsScreen: React.FC = () => {
 
       {activeReportTab === 'audit' && (
         <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#111827' }}>
                 Automated Audit Trail & Event Log
@@ -326,19 +336,40 @@ export const ReportsScreen: React.FC = () => {
                 Immutable system audit records automatically captured by server hooks for every transaction and catalog change.
               </p>
             </div>
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                color: '#059669',
-                backgroundColor: '#ecfdf5',
-                padding: '4px 10px',
-                borderRadius: '12px',
-                border: '1px solid #a7f3d0',
-              }}
-            >
-              🔒 Tamper-Evident Active
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={fetchAuditLogs}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 Refresh Logs
+              </button>
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#059669',
+                  backgroundColor: '#ecfdf5',
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  border: '1px solid #a7f3d0',
+                }}
+              >
+                🔒 Tamper-Evident Active
+              </span>
+            </div>
           </div>
 
           <div className="vk-table-responsive">
@@ -348,14 +379,15 @@ export const ReportsScreen: React.FC = () => {
                   <th style={{ padding: '12px 16px', textAlign: 'left' }}>Timestamp</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left' }}>Action Event</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left' }}>Entity Type</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Target ID / Key</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Summary / Target</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Target ID</th>
                   <th style={{ padding: '12px 16px', textAlign: 'left' }}>IP / Origin</th>
                 </tr>
               </thead>
               <tbody>
                 {auditLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                    <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
                       No audit events recorded yet. New sales, purchasing, and catalog actions will automatically log here.
                     </td>
                   </tr>
@@ -363,6 +395,30 @@ export const ReportsScreen: React.FC = () => {
                   auditLogs.map((log) => {
                     const isDangerous = log.action.includes('CANCEL') || log.action.includes('VOID') || log.action.includes('DELETE');
                     const isSuccess = log.action.includes('POST') || log.action.includes('CREATE') || log.action.includes('PAYMENT');
+
+                    let summaryText = '-';
+                    if (log.newValues) {
+                      if (log.newValues.invoiceNumber) {
+                        summaryText = `Invoice #${log.newValues.invoiceNumber}${
+                          log.newValues.grandTotal !== undefined
+                            ? ` • ₹ ${Number(log.newValues.grandTotal).toLocaleString('en-IN')}`
+                            : log.newValues.amount !== undefined
+                            ? ` • ₹ ${Number(log.newValues.amount).toLocaleString('en-IN')}`
+                            : ''
+                        }`;
+                      } else if (log.newValues.receiptNumber) {
+                        summaryText = `Receipt #${log.newValues.receiptNumber}`;
+                      } else if (log.newValues.billNumber) {
+                        summaryText = `Bill #${log.newValues.billNumber}`;
+                      } else if (log.newValues.name || log.newValues.displayName) {
+                        summaryText = String(log.newValues.name || log.newValues.displayName);
+                      } else if (log.newValues.amount !== undefined) {
+                        summaryText = `₹ ${Number(log.newValues.amount).toLocaleString('en-IN')}${
+                          log.newValues.paymentMode ? ` (${log.newValues.paymentMode})` : ''
+                        }`;
+                      }
+                    }
+
                     return (
                       <tr key={log.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13px' }}>
                         <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>
@@ -390,7 +446,10 @@ export const ReportsScreen: React.FC = () => {
                         <td style={{ padding: '12px 16px', fontWeight: 600, color: '#374151' }}>
                           {log.entityType || 'system'}
                         </td>
-                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '12px', color: '#4b5563' }}>
+                        <td style={{ padding: '12px 16px', fontWeight: 500, color: '#111827' }}>
+                          {summaryText}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '12px', color: '#6b7280' }}>
                           {log.entityId ? `${log.entityId.slice(0, 8)}...${log.entityId.slice(-4)}` : '-'}
                         </td>
                         <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px' }}>

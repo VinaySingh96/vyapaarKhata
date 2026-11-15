@@ -76,6 +76,21 @@ export function parseAuditAction(
 export function registerAuditHook(app: FastifyInstance, uow?: UnitOfWork) {
   if (!uow) return;
 
+  app.addHook('onSend', async (request: FastifyRequest, _reply: FastifyReply, payload: any) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && payload) {
+      try {
+        if (typeof payload === 'string') {
+          (request as any).__auditPayload = JSON.parse(payload);
+        } else if (typeof payload === 'object') {
+          (request as any).__auditPayload = payload;
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
+    return payload;
+  });
+
   app.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     // Only audit mutating methods that succeeded
     if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) return;
@@ -110,13 +125,32 @@ export function registerAuditHook(app: FastifyInstance, uow?: UnitOfWork) {
       delete newValues.token;
     }
 
+    const responseData = (request as any).__auditPayload?.data;
+    const responseId =
+      responseData && typeof responseData.id === 'string' && uuidRegex.test(responseData.id)
+        ? responseData.id
+        : responseData && typeof responseData.invoiceId === 'string' && uuidRegex.test(responseData.invoiceId)
+        ? responseData.invoiceId
+        : undefined;
+
+    if (responseData && typeof responseData === 'object' && !Array.isArray(responseData)) {
+      if (!newValues) newValues = {};
+      if (responseData.invoiceNumber && !newValues.invoiceNumber) {
+        newValues.invoiceNumber = responseData.invoiceNumber;
+      }
+      if (responseData.displayName && !newValues.name) {
+        newValues.name = responseData.displayName;
+      }
+    }
+
     const resolvedEntityId =
       (entityId && uuidRegex.test(entityId) ? entityId : undefined) ||
       (request.body &&
       typeof (request.body as any).id === 'string' &&
       uuidRegex.test((request.body as any).id)
         ? (request.body as any).id
-        : undefined);
+        : undefined) ||
+      responseId;
 
     try {
       if (typeof (uow as any).recordAuditLog === 'function') {
