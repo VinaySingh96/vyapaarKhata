@@ -1,0 +1,5 @@
+Party Name,Phone / Mobile,Party Type,Opening Balance,Balance Type (To Receive / To Pay),Billing Address,GSTIN,PAN,Email
+Ramesh Construction,9826012345,Customer,15000,To Receive,"Plot 45, Near Highway, Bhopal",23AAAAA1234A1Z5,AAAAA1234A,ramesh.const@example.com
+Sharma Contractors,9893054321,Customer,8500,To Receive,"Ward 12, Main Road, Sehore",,,
+Jai Maa Sharda Builders,9425098765,Customer,0,To Receive,"Station Road, Vidisha",23BBBBB5678B1Z2,BBBBB5678B,sharda.builders@example.com
+Gupta Timber & Bamboo Supplier,9827011223,Supplier,25000,To Pay,"Timber Market, Raisen Road, Bhopal",23CCCCC9999C1Z1,CCCCC9999C,guptatimber@example.com

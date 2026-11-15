@@ -1209,8 +1209,8 @@ export class PgUnitOfWork implements UnitOfWork {
               const debitAmount = isDebit ? Math.abs(party.openingBalance) : 0;
               const creditAmount = !isDebit ? Math.abs(party.openingBalance) : 0;
               await client.query(
-                `INSERT INTO party_ledger_entries (id, tenant_id, party_id, document_type, document_id, debit_amount, credit_amount, created_at)
-                 VALUES ($1, $2, $3, 'opening_balance', $1, $4, $5, NOW())`,
+                `INSERT INTO party_ledger_entries (id, tenant_id, party_id, entry_date, document_type, document_id, debit_amount, credit_amount, created_at)
+                 VALUES ($1, $2, $3, CURRENT_DATE, 'opening_balance', $1, $4, $5, NOW())`,
                 [randomUUID(), party.tenantId, partyId, debitAmount, creditAmount]
               );
             }

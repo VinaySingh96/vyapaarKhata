@@ -241,6 +241,54 @@ const sampleTemplate = [
   }
 ];
 
+// Sample customer import rows
+const sampleCustomers = [
+  {
+    "Party Name": "Ramesh Construction",
+    "Phone / Mobile": "9826012345",
+    "Party Type": "Customer",
+    "Opening Balance": 15000,
+    "Balance Type (To Receive / To Pay)": "To Receive",
+    "Billing Address": "Plot 45, Near Highway, Bhopal",
+    "GSTIN": "23AAAAA1234A1Z5",
+    "PAN": "AAAAA1234A",
+    "Email": "ramesh.const@example.com"
+  },
+  {
+    "Party Name": "Sharma Contractors",
+    "Phone / Mobile": "9893054321",
+    "Party Type": "Customer",
+    "Opening Balance": 8500,
+    "Balance Type (To Receive / To Pay)": "To Receive",
+    "Billing Address": "Ward 12, Main Road, Sehore",
+    "GSTIN": "",
+    "PAN": "",
+    "Email": ""
+  },
+  {
+    "Party Name": "Jai Maa Sharda Builders",
+    "Phone / Mobile": "9425098765",
+    "Party Type": "Customer",
+    "Opening Balance": 0,
+    "Balance Type (To Receive / To Pay)": "To Receive",
+    "Billing Address": "Station Road, Vidisha",
+    "GSTIN": "23BBBBB5678B1Z2",
+    "PAN": "BBBBB5678B",
+    "Email": "sharda.builders@example.com"
+  },
+  {
+    "Party Name": "Gupta Timber & Bamboo Supplier",
+    "Phone / Mobile": "9827011223",
+    "Party Type": "Supplier",
+    "Opening Balance": 25000,
+    "Balance Type (To Receive / To Pay)": "To Pay",
+    "Billing Address": "Timber Market, Raisen Road, Bhopal",
+    "GSTIN": "23CCCCC9999C1Z1",
+    "PAN": "CCCCC9999C",
+    "Email": "guptatimber@example.com"
+  }
+];
+
 function createXlsx(data, sheetName) {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
@@ -263,7 +311,12 @@ const wbSample = createXlsx(sampleTemplate, 'Items Template');
 saveWorkbook(wbSample, path.resolve('sample_product_import_template.xlsx'));
 saveWorkbook(wbSample, path.resolve('apps/web/public/sample_product_import_template.xlsx'));
 
-// 3. Also write CSV versions
+// 3. Sample Customer Import Excel
+const wbCustomers = createXlsx(sampleCustomers, 'Customers Template');
+saveWorkbook(wbCustomers, path.resolve('sample_customer_import_template.xlsx'));
+saveWorkbook(wbCustomers, path.resolve('apps/web/public/sample_customer_import_template.xlsx'));
+
+// 4. CSV versions
 const wsPatel = XLSX.utils.json_to_sheet(rentalItems);
 fs.writeFileSync('patel_centring_store_items.csv', XLSX.utils.sheet_to_csv(wsPatel));
 fs.writeFileSync('apps/web/public/patel_centring_store_items.csv', XLSX.utils.sheet_to_csv(wsPatel));
@@ -272,5 +325,10 @@ const wsSample = XLSX.utils.json_to_sheet(sampleTemplate);
 fs.writeFileSync('sample_product_import_template.csv', XLSX.utils.sheet_to_csv(wsSample));
 fs.writeFileSync('apps/web/public/sample_product_import_template.csv', XLSX.utils.sheet_to_csv(wsSample));
 
+const wsCustomers = XLSX.utils.json_to_sheet(sampleCustomers);
+fs.writeFileSync('sample_customer_import_template.csv', XLSX.utils.sheet_to_csv(wsCustomers));
+fs.writeFileSync('apps/web/public/sample_customer_import_template.csv', XLSX.utils.sheet_to_csv(wsCustomers));
+
 console.log('✅ Generated Excel & CSV files successfully!');
 console.log(`- Total items: ${rentalItems.length}`);
+console.log(`- Total sample customers: ${sampleCustomers.length}`);
