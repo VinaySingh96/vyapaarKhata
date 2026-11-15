@@ -160,14 +160,22 @@ INSERT INTO "products" (
   'a0000001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Bridal Rani Haar (35g)',
   'Grand 22K 916 Hallmarked royal bridal necklace with intricate meenakari and antique finish. Gross Wt: 35.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000001-0000-0000-0000-000000000001', 'GLD-RANI-HAAR-35G', '22K Gold Bridal Rani Haar - 35 Grams', 245000.00, 275000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000001-0000-0000-0000-000000000001', 'GLD-RANI-HAAR-35G', '22K Gold Bridal Rani Haar - 35 Grams', 7000.00, 7857.14, '35', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 2: 22K Gold Royal Guluband Choker (18g)
 INSERT INTO "products" (
@@ -177,14 +185,22 @@ INSERT INTO "products" (
   'a0000002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Royal Guluband Choker (18g)',
   'Traditional North Indian Purvanchal style choker necklace with floral clusters. Gross Wt: 18.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000002-0000-0000-0000-000000000001', 'GLD-GULUBAND-18G', '22K Gold Guluband Choker - 18 Grams', 126000.00, 142000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000002-0000-0000-0000-000000000001', 'GLD-GULUBAND-18G', '22K Gold Guluband Choker - 18 Grams', 7000.00, 7888.89, '36', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 3: 22K Gold Lightweight Designer Necklace (12g)
 INSERT INTO "products" (
@@ -194,14 +210,22 @@ INSERT INTO "products" (
   'a0000003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Lightweight Designer Necklace (12g)',
   'Contemporary lightweight 22K 916 yellow gold fancy necklace set. Gross Wt: 12.0g', 'Shree Narayan Collection',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000003-0000-0000-0000-000000000001', 'GLD-FANCY-NCK-12G', '22K Gold Lightweight Designer Necklace - 12 Grams', 84000.00, 95500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000003-0000-0000-0000-000000000001', 'GLD-FANCY-NCK-12G', '22K Gold Lightweight Designer Necklace - 12 Grams', 7000.00, 7958.33, '24', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 4: 22K Gold Sita Haar Long Temple Necklace (28g)
 INSERT INTO "products" (
@@ -211,14 +235,22 @@ INSERT INTO "products" (
   'a0000004-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Sita Haar Long Temple Necklace (28g)',
   'Traditional long sita haar with embossed Lakshmi and floral motifs. Gross Wt: 28.0g', 'Shree Narayan Temple',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000004-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000004-0000-0000-0000-000000000001', 'GLD-SITA-HAAR-28G', '22K Gold Sita Haar Long Temple Necklace - 28 Grams', 196000.00, 220000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000004-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000004-0000-0000-0000-000000000001', 'GLD-SITA-HAAR-28G', '22K Gold Sita Haar Long Temple Necklace - 28 Grams', 7000.00, 7857.14, '28', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 5: 22K Gold Traditional Hansli Necklace (22g)
 INSERT INTO "products" (
@@ -228,14 +260,22 @@ INSERT INTO "products" (
   'a0000005-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Traditional Hansli Necklace (22g)',
   'Solid traditional torque Hansli collar necklace with handcrafted latch. Gross Wt: 22.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000005-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000005-0000-0000-0000-000000000001', 'GLD-HANSLI-22G', '22K Gold Traditional Hansli Necklace - 22 Grams', 154000.00, 173000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000005-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000005-0000-0000-0000-000000000001', 'GLD-HANSLI-22G', '22K Gold Traditional Hansli Necklace - 22 Grams', 7000.00, 7863.64, '22', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 6: 22K Gold Men Rope Chain (16g)
 INSERT INTO "products" (
@@ -245,14 +285,22 @@ INSERT INTO "products" (
   'a0000006-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Rope Chain (16g)',
   'Heavy diamond-cut twisted rope chain for men, 22 inches, 22K 916 BIS hallmark. Gross Wt: 16.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000006-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000006-0000-0000-0000-000000000001', 'GLD-CHN-ROPE-16G', '22K Gold Men Rope Chain - 16 Grams', 112000.00, 125500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000006-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000006-0000-0000-0000-000000000001', 'GLD-CHN-ROPE-16G', '22K Gold Men Rope Chain - 16 Grams', 7000.00, 7843.75, '32', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 7: 22K Gold Rudraksha Mala Chain (12g)
 INSERT INTO "products" (
@@ -262,14 +310,22 @@ INSERT INTO "products" (
   'a0000007-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Rudraksha Mala Chain (12g)',
   'Panchmukhi original Rudraksha beads encased in 22K hallmarked gold caps and links. Net Gold: 12.0g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000007-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000007-0000-0000-0000-000000000001', 'GLD-CHN-RUDR-12G', '22K Gold Rudraksha Mala Chain - 12 Grams Net Gold', 86000.00, 97000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000007-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000007-0000-0000-0000-000000000001', 'GLD-CHN-RUDR-12G', '22K Gold Rudraksha Mala Chain - 12 Grams Net Gold', 7166.67, 8083.33, '24', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 8: 22K Gold Men Figaro Chain (10g)
 INSERT INTO "products" (
@@ -279,14 +335,22 @@ INSERT INTO "products" (
   'a0000008-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Figaro Chain (10g)',
   'Classic 3+1 Figaro link men gold chain, high polish finish, 20 inches. Gross Wt: 10.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000008-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000008-0000-0000-0000-000000000001', 'GLD-CHN-FIG-10G', '22K Gold Men Figaro Chain - 10 Grams', 70000.00, 78500.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000008-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000008-0000-0000-0000-000000000001', 'GLD-CHN-FIG-10G', '22K Gold Men Figaro Chain - 10 Grams', 7000.00, 7850.00, '30', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 9: 22K Gold Lotus Kamal Chain (8g)
 INSERT INTO "products" (
@@ -296,14 +360,22 @@ INSERT INTO "products" (
   'a0000009-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Lotus Kamal Chain (8g)',
   'Delicate interconnected lotus motif chain for daily and festive wear. Gross Wt: 8.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000009-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000009-0000-0000-0000-000000000001', 'GLD-CHN-LOTUS-08G', '22K Gold Lotus Kamal Chain - 8 Grams', 56000.00, 63000.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000009-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000009-0000-0000-0000-000000000001', 'GLD-CHN-LOTUS-08G', '22K Gold Lotus Kamal Chain - 8 Grams', 7000.00, 7875.00, '24', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 10: 22K Gold Daily Wear Box Chain (5g)
 INSERT INTO "products" (
@@ -313,14 +385,22 @@ INSERT INTO "products" (
   'a0000010-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Daily Wear Box Chain (5g)',
   'Sturdy four-sided box chain with lobster clasp, 18 inches. Gross Wt: 5.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000010-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000010-0000-0000-0000-000000000001', 'GLD-CHN-BOX-05G', '22K Gold Daily Wear Box Chain - 5 Grams', 35000.00, 39500.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000010-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000010-0000-0000-0000-000000000001', 'GLD-CHN-BOX-05G', '22K Gold Daily Wear Box Chain - 5 Grams', 7000.00, 7900.00, '20', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 11: 22K Gold Hollow Curb Link Chain (6g)
 INSERT INTO "products" (
@@ -330,14 +410,22 @@ INSERT INTO "products" (
   'a0000011-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Hollow Curb Link Chain (6g)',
   'Lightweight high-volume curb link chain, 20 inches. Gross Wt: 6.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000011-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000011-0000-0000-0000-000000000001', 'GLD-CHN-CURB-06G', '22K Gold Hollow Curb Link Chain - 6 Grams', 42000.00, 47400.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000011-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000011-0000-0000-0000-000000000001', 'GLD-CHN-CURB-06G', '22K Gold Hollow Curb Link Chain - 6 Grams', 7000.00, 7900.00, '18', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 12: 22K Gold Sleek Singapore Chain (4g)
 INSERT INTO "products" (
@@ -347,14 +435,22 @@ INSERT INTO "products" (
   'a0000012-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Sleek Singapore Chain (4g)',
   'Sparkling diamond-cut Singapore twist chain for pendants, 18 inches. Gross Wt: 4.0g', 'Shree Narayan Chains',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000012-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000012-0000-0000-0000-000000000001', 'GLD-CHN-SNG-04G', '22K Gold Sleek Singapore Chain - 4 Grams', 28000.00, 31800.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000012-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000012-0000-0000-0000-000000000001', 'GLD-CHN-SNG-04G', '22K Gold Sleek Singapore Chain - 4 Grams', 7000.00, 7950.00, '16', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 13: 22K Gold Traditional Long Vati Mangalsutra (18g)
 INSERT INTO "products" (
@@ -364,14 +460,22 @@ INSERT INTO "products" (
   'a0000013-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Traditional Long Vati Mangalsutra (18g)',
   'Double string black bead traditional mangalsutra with auspicious double vati pendant. Net Gold: 18.0g', 'Shree Narayan Suhaag',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000013-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000013-0000-0000-0000-000000000001', 'GLD-MS-VATI-18G', '22K Gold Traditional Long Vati Mangalsutra - 18 Grams', 126000.00, 141000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000013-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000013-0000-0000-0000-000000000001', 'GLD-MS-VATI-18G', '22K Gold Traditional Long Vati Mangalsutra - 18 Grams', 7000.00, 7833.33, '36', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 14: 22K Gold Short Modern Office Mangalsutra (6g)
 INSERT INTO "products" (
@@ -381,14 +485,22 @@ INSERT INTO "products" (
   'a0000014-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Short Modern Office Mangalsutra (6g)',
   'Minimalist single-line black beads mangalsutra with geometric gold pendant. Net Gold: 6.0g', 'Shree Narayan Suhaag',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000014-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000014-0000-0000-0000-000000000001', 'GLD-MS-MOD-06G', '22K Gold Short Modern Office Mangalsutra - 6 Grams', 43000.00, 48500.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000014-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000014-0000-0000-0000-000000000001', 'GLD-MS-MOD-06G', '22K Gold Short Modern Office Mangalsutra - 6 Grams', 7166.67, 8083.33, '18', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 15: 22K Gold Diamond-Cut Floral Mangalsutra (10g)
 INSERT INTO "products" (
@@ -398,14 +510,22 @@ INSERT INTO "products" (
   'a0000015-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Diamond-Cut Floral Mangalsutra (10g)',
   'Medium length mangalsutra with floral diamond-cut centrepiece. Net Gold: 10.0g', 'Shree Narayan Suhaag',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000015-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000015-0000-0000-0000-000000000001', 'GLD-MS-FLR-10G', '22K Gold Floral Mangalsutra - 10 Grams', 71000.00, 79900.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000015-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000015-0000-0000-0000-000000000001', 'GLD-MS-FLR-10G', '22K Gold Floral Mangalsutra - 10 Grams', 7100.00, 7990.00, '20', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 16: 22K Gold Kolkata Filigree Kada Pair (32g)
 INSERT INTO "products" (
@@ -415,14 +535,22 @@ INSERT INTO "products" (
   'a0000016-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Kolkata Filigree Kada Pair (32g)',
   'Handcrafted exquisite Kolkata filigree work openable kadas with screw lock. Pair Wt: 32.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000016-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000016-0000-0000-0000-000000000001', 'GLD-KD-FIL-32G', '22K Gold Kolkata Filigree Kada Pair - 32 Grams', 224000.00, 252000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000016-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000016-0000-0000-0000-000000000001', 'GLD-KD-FIL-32G', '22K Gold Kolkata Filigree Kada Pair - 32 Grams', 7000.00, 7875.00, '32', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 17: 22K Gold Antique Lion Face Men Kada (35g)
 INSERT INTO "products" (
@@ -432,14 +560,22 @@ INSERT INTO "products" (
   'a0000017-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Antique Lion Face Men Kada (35g)',
   'Solid Rajputi/Vedic Babbar Sher lion face Kada with ruby gemstone eyes. Gross Wt: 35.0g', 'Shree Narayan Royal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000017-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000017-0000-0000-0000-000000000001', 'GLD-KD-LION-35G', '22K Gold Antique Lion Face Men Kada - 35 Grams', 245000.00, 276000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000017-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000017-0000-0000-0000-000000000001', 'GLD-KD-LION-35G', '22K Gold Antique Lion Face Men Kada - 35 Grams', 7000.00, 7885.71, '35', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 18: 22K Gold Machine-Cut Daily Bangles (Set of 4, 30g)
 INSERT INTO "products" (
@@ -449,14 +585,22 @@ INSERT INTO "products" (
   'a0000018-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Machine-Cut Daily Bangles (Set of 4, 30g)',
   'Four piece sleek CNC diamond-cut gold bangles set, size 2.4/2.6. Total Wt: 30.0g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000018-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000018-0000-0000-0000-000000000001', 'GLD-BG-MC4-30G', '22K Gold Machine-Cut Daily Bangles Set of 4 - 30 Grams', 210000.00, 236000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000018-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000018-0000-0000-0000-000000000001', 'GLD-BG-MC4-30G', '22K Gold Machine-Cut Daily Bangles Set of 4 - 30 Grams', 7000.00, 7866.67, '60', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 19: 22K Gold Broad Patla Bangles (Pair, 40g)
 INSERT INTO "products" (
@@ -466,14 +610,22 @@ INSERT INTO "products" (
   'a0000019-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Broad Patla Bangles (Pair, 40g)',
   'Broad embossed traditional bridal Patla bangles with floral relief work. Pair Wt: 40.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000019-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000019-0000-0000-0000-000000000001', 'GLD-BG-PTL-40G', '22K Gold Broad Patla Bangles Pair - 40 Grams', 280000.00, 315000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000019-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000019-0000-0000-0000-000000000001', 'GLD-BG-PTL-40G', '22K Gold Broad Patla Bangles Pair - 40 Grams', 7000.00, 7875.00, '40', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 20: 22K Gold Traditional Churiyan (Set of 2, 16g)
 INSERT INTO "products" (
@@ -483,14 +635,22 @@ INSERT INTO "products" (
   'a0000020-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Traditional Churiyan (Set of 2, 16g)',
   'Pair of classic round pipe gold churiyan with glossy polish, size 2.6. Pair Wt: 16.0g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000020-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000020-0000-0000-0000-000000000001', 'GLD-BG-CHU-16G', '22K Gold Traditional Churiyan Pair - 16 Grams', 112000.00, 126000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000020-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000020-0000-0000-0000-000000000001', 'GLD-BG-CHU-16G', '22K Gold Traditional Churiyan Pair - 16 Grams', 7000.00, 7875.00, '32', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 21: 22K Gold Pipe Bangles Meenakari (Pair, 20g)
 INSERT INTO "products" (
@@ -500,14 +660,22 @@ INSERT INTO "products" (
   'a0000021-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Pipe Bangles Meenakari (Pair, 20g)',
   'Pair of light hollow pipe bangles with vibrant red and green meenakari enameling. Pair Wt: 20.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000021-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000021-0000-0000-0000-000000000001', 'GLD-BG-MNK-20G', '22K Gold Pipe Bangles Meenakari Pair - 20 Grams', 142000.00, 159000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000021-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000021-0000-0000-0000-000000000001', 'GLD-BG-MNK-20G', '22K Gold Pipe Bangles Meenakari Pair - 20 Grams', 7100.00, 7950.00, '40', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 22: 22K Gold Rajasthani Double Jhumka (14g)
 INSERT INTO "products" (
@@ -517,14 +685,22 @@ INSERT INTO "products" (
   'a0000022-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Rajasthani Double Jhumka (14g)',
   'Three-tier bell shaped heavy traditional Jhumka earrings with pearl drops. Pair Wt: 14.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000022-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000022-0000-0000-0000-000000000001', 'GLD-ER-JHM-14G', '22K Gold Rajasthani Double Jhumka - 14 Grams', 98000.00, 110500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000022-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000022-0000-0000-0000-000000000001', 'GLD-ER-JHM-14G', '22K Gold Rajasthani Double Jhumka - 14 Grams', 7000.00, 7892.86, '28', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 23: 22K Gold Royal Chandbali Earrings (15g)
 INSERT INTO "products" (
@@ -534,14 +710,22 @@ INSERT INTO "products" (
   'a0000023-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Royal Chandbali Earrings (15g)',
   'Crescent moon shaped Chandbali earrings with floral studs and dangling ghungroos. Pair Wt: 15.0g', 'Shree Narayan Royal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000023-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000023-0000-0000-0000-000000000001', 'GLD-ER-CHB-15G', '22K Gold Royal Chandbali Earrings - 15 Grams', 105000.00, 118500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000023-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000023-0000-0000-0000-000000000001', 'GLD-ER-CHB-15G', '22K Gold Royal Chandbali Earrings - 15 Grams', 7000.00, 7900.00, '30', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 24: 22K Gold Sui Dhaga Needle Earrings (4g)
 INSERT INTO "products" (
@@ -551,14 +735,22 @@ INSERT INTO "products" (
   'a0000024-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Sui Dhaga Needle Earrings (4g)',
   'Long sleek chain pull-through threader needle earrings with geometric ends. Pair Wt: 4.0g', 'Shree Narayan Modern',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000024-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000024-0000-0000-0000-000000000001', 'GLD-ER-SUI-04G', '22K Gold Sui Dhaga Needle Earrings - 4 Grams', 28000.00, 31900.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000024-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000024-0000-0000-0000-000000000001', 'GLD-ER-SUI-04G', '22K Gold Sui Dhaga Needle Earrings - 4 Grams', 7000.00, 7975.00, '12', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 25: 22K Gold Daily Floral Tops Studs (2.5g)
 INSERT INTO "products" (
@@ -568,14 +760,22 @@ INSERT INTO "products" (
   'a0000025-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Daily Floral Tops Studs (2.5g)',
   'Delicate floral daily wear studs with screw back post. Pair Wt: 2.5g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000025-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000025-0000-0000-0000-000000000001', 'GLD-ER-TOP-2.5G', '22K Gold Daily Floral Tops Studs - 2.5 Grams', 17500.00, 19900.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000025-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000025-0000-0000-0000-000000000001', 'GLD-ER-TOP-2.5G', '22K Gold Daily Floral Tops Studs - 2.5 Grams', 7000.00, 7960.00, '12.5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 26: 22K Gold Traditional Kanphool Ear Cuffs (16g)
 INSERT INTO "products" (
@@ -585,14 +785,22 @@ INSERT INTO "products" (
   'a0000026-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Traditional Kanphool Ear Cuffs (16g)',
   'Grand bridal ear cuffs covering full ear with hair support chain (sahara). Pair Wt: 16.0g', 'Shree Narayan Bridal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000026-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000026-0000-0000-0000-000000000001', 'GLD-ER-KAN-16G', '22K Gold Traditional Kanphool Ear Cuffs - 16 Grams', 112000.00, 126500.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000026-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000026-0000-0000-0000-000000000001', 'GLD-ER-KAN-16G', '22K Gold Traditional Kanphool Ear Cuffs - 16 Grams', 7000.00, 7906.25, '16', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 27: 22K Gold Hollow Ball Studs (1.5g)
 INSERT INTO "products" (
@@ -602,14 +810,22 @@ INSERT INTO "products" (
   'a0000027-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Hollow Ball Studs (1.5g)',
   'Simple shiny round gold ball studs for kids and daily wear. Pair Wt: 1.5g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000027-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000027-0000-0000-0000-000000000001', 'GLD-ER-BAL-1.5G', '22K Gold Hollow Ball Studs - 1.5 Grams', 10500.00, 12100.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000027-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000027-0000-0000-0000-000000000001', 'GLD-ER-BAL-1.5G', '22K Gold Hollow Ball Studs - 1.5 Grams', 7000.00, 8066.67, '7.5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 28: 22K Gold Traditional Hoop Bali (3.5g)
 INSERT INTO "products" (
@@ -619,14 +835,22 @@ INSERT INTO "products" (
   'a0000028-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Traditional Hoop Bali (3.5g)',
   'Round carved hoop bali with secure wire closure. Pair Wt: 3.5g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000028-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000028-0000-0000-0000-000000000001', 'GLD-ER-BAL-3.5G', '22K Gold Traditional Hoop Bali - 3.5 Grams', 24500.00, 27900.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000028-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000028-0000-0000-0000-000000000001', 'GLD-ER-BAL-3.5G', '22K Gold Traditional Hoop Bali - 3.5 Grams', 7000.00, 7971.43, '14', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 29: 22K Gold Men Royal Lion Signet Ring (8g)
 INSERT INTO "products" (
@@ -636,14 +860,22 @@ INSERT INTO "products" (
   'a0000029-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Royal Lion Signet Ring (8g)',
   'Heavy casted lion face gents signet ring with micro detailing. Gross Wt: 8.0g', 'Shree Narayan Royal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000029-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000029-0000-0000-0000-000000000001', 'GLD-RG-MLN-08G', '22K Gold Men Royal Lion Signet Ring - 8 Grams', 56000.00, 63200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000029-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000029-0000-0000-0000-000000000001', 'GLD-RG-MLN-08G', '22K Gold Men Royal Lion Signet Ring - 8 Grams', 7000.00, 7900.00, '16', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 30: 22K Gold Men Square Maharaja Ring (6g)
 INSERT INTO "products" (
@@ -653,14 +885,22 @@ INSERT INTO "products" (
   'a0000030-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Square Maharaja Ring (6g)',
   'Gents broad square top ring with dual tone rhodium and yellow finish. Gross Wt: 6.0g', 'Shree Narayan Royal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000030-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000030-0000-0000-0000-000000000001', 'GLD-RG-MSQ-06G', '22K Gold Men Square Maharaja Ring - 6 Grams', 42000.00, 47500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000030-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000030-0000-0000-0000-000000000001', 'GLD-RG-MSQ-06G', '22K Gold Men Square Maharaja Ring - 6 Grams', 7000.00, 7916.67, '12', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 31: 22K Gold Ladies Solitaire CZ Floral Ring (3.5g)
 INSERT INTO "products" (
@@ -670,14 +910,22 @@ INSERT INTO "products" (
   'a0000031-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Ladies Solitaire CZ Floral Ring (3.5g)',
   'Feminine floral design ring with sparkling cubic zirconia solitaire center. Gross Wt: 3.5g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000031-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000031-0000-0000-0000-000000000001', 'GLD-RG-LCZ-3.5G', '22K Gold Ladies Solitaire CZ Floral Ring - 3.5 Grams', 24800.00, 28200.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000031-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000031-0000-0000-0000-000000000001', 'GLD-RG-LCZ-3.5G', '22K Gold Ladies Solitaire CZ Floral Ring - 3.5 Grams', 7085.71, 8057.14, '10.5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 32: 22K Gold Ladies Peacock Meenakari Ring (5g)
 INSERT INTO "products" (
@@ -687,14 +935,22 @@ INSERT INTO "products" (
   'a0000032-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Ladies Peacock Meenakari Ring (5g)',
   'Vibrant handcrafted peacock motif cocktail ring with blue and green meena work. Gross Wt: 5.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000032-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000032-0000-0000-0000-000000000001', 'GLD-RG-LPC-05G', '22K Gold Ladies Peacock Meenakari Ring - 5 Grams', 35500.00, 40200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000032-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000032-0000-0000-0000-000000000001', 'GLD-RG-LPC-05G', '22K Gold Ladies Peacock Meenakari Ring - 5 Grams', 7100.00, 8040.00, '10', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 33: 22K Gold Tortoise Kurma Ring (4.5g)
 INSERT INTO "products" (
@@ -704,14 +960,22 @@ INSERT INTO "products" (
   'a0000033-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Tortoise Kurma Ring (4.5g)',
   'Auspicious Vastu tortoise ring with engraved shell for wealth and prosperity. Gross Wt: 4.5g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000033-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000033-0000-0000-0000-000000000001', 'GLD-RG-TOR-4.5G', '22K Gold Tortoise Kurma Ring - 4.5 Grams', 31800.00, 36000.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000033-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000033-0000-0000-0000-000000000001', 'GLD-RG-TOR-4.5G', '22K Gold Tortoise Kurma Ring - 4.5 Grams', 7066.67, 8000.00, '13.5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 34: 22K Gold Men Auspicious Om Ring (5.5g)
 INSERT INTO "products" (
@@ -721,14 +985,22 @@ INSERT INTO "products" (
   'a0000034-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Auspicious Om Ring (5.5g)',
   'Holy sacred Om symbol embossed in red enamel background on heavy gold shank. Gross Wt: 5.5g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000034-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000034-0000-0000-0000-000000000001', 'GLD-RG-MOM-5.5G', '22K Gold Men Auspicious Om Ring - 5.5 Grams', 38800.00, 43900.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000034-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000034-0000-0000-0000-000000000001', 'GLD-RG-MOM-5.5G', '22K Gold Men Auspicious Om Ring - 5.5 Grams', 7054.55, 7981.82, '11', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 35: 22K Gold Couple Matching Wedding Bands (Pair, 9g)
 INSERT INTO "products" (
@@ -738,14 +1010,22 @@ INSERT INTO "products" (
   'a0000035-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Couple Matching Wedding Bands (Pair, 9g)',
   'Pair of matching satin brushed and polished comfort-fit wedding rings. Total Wt: 9.0g', 'Shree Narayan Collection',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000035-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000035-0000-0000-0000-000000000001', 'GLD-RG-CPB-09G', '22K Gold Couple Matching Wedding Bands Pair - 9 Grams', 63500.00, 71800.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000035-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000035-0000-0000-0000-000000000001', 'GLD-RG-CPB-09G', '22K Gold Couple Matching Wedding Bands Pair - 9 Grams', 7055.56, 7977.78, '18', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 36: 22K Gold Laxmi Ganesha Blessing Pendant (5g)
 INSERT INTO "products" (
@@ -755,14 +1035,22 @@ INSERT INTO "products" (
   'a0000036-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Laxmi Ganesha Blessing Pendant (5g)',
   'Intricately embossed divine Lakshmi Ganesh rectangular frame pendant. Gross Wt: 5.0g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000036-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000036-0000-0000-0000-000000000001', 'GLD-PD-LXG-05G', '22K Gold Laxmi Ganesha Blessing Pendant - 5 Grams', 35000.00, 39600.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000036-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000036-0000-0000-0000-000000000001', 'GLD-PD-LXG-05G', '22K Gold Laxmi Ganesha Blessing Pendant - 5 Grams', 7000.00, 7920.00, '15', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 37: 22K Gold Mahadev Trishul & Damru Pendant (4g)
 INSERT INTO "products" (
@@ -772,14 +1060,22 @@ INSERT INTO "products" (
   'a0000037-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Mahadev Trishul & Damru Pendant (4g)',
   'Lord Shiva Trishul with Damru and Mahakal third eye pendant. Gross Wt: 4.0g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000037-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000037-0000-0000-0000-000000000001', 'GLD-PD-TRS-04G', '22K Gold Mahadev Trishul Damru Pendant - 4 Grams', 28200.00, 31900.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000037-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000037-0000-0000-0000-000000000001', 'GLD-PD-TRS-04G', '22K Gold Mahadev Trishul Damru Pendant - 4 Grams', 7050.00, 7975.00, '12', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 38: 22K Gold Sacred Omkar Pendant (2g)
 INSERT INTO "products" (
@@ -789,14 +1085,22 @@ INSERT INTO "products" (
   'a0000038-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Sacred Omkar Pendant (2g)',
   'Solid polished divine Om pendant for chains. Gross Wt: 2.0g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000038-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000038-0000-0000-0000-000000000001', 'GLD-PD-OMK-02G', '22K Gold Sacred Omkar Pendant - 2 Grams', 14100.00, 16000.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000038-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000038-0000-0000-0000-000000000001', 'GLD-PD-OMK-02G', '22K Gold Sacred Omkar Pendant - 2 Grams', 7050.00, 8000.00, '10', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 39: 22K Gold Heart Filigree Pendant (3g)
 INSERT INTO "products" (
@@ -806,14 +1110,22 @@ INSERT INTO "products" (
   'a0000039-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Heart Filigree Pendant (3g)',
   'Lace filigree double heart romantic pendant. Gross Wt: 3.0g', 'Shree Narayan Modern',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000039-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000039-0000-0000-0000-000000000001', 'GLD-PD-HRT-03G', '22K Gold Heart Filigree Pendant - 3 Grams', 21200.00, 24000.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000039-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000039-0000-0000-0000-000000000001', 'GLD-PD-HRT-03G', '22K Gold Heart Filigree Pendant - 3 Grams', 7066.67, 8000.00, '9', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 40: 22K Gold Bridal Nath with Pearl Chain (6g)
 INSERT INTO "products" (
@@ -823,14 +1135,22 @@ INSERT INTO "products" (
   'a0000040-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Bridal Nath with Pearl Chain (6g)',
   'Large traditional Purvanchal bridal Nath with ruby stone and pearl sahara chain. Gross Wt: 6.0g', 'Shree Narayan Bridal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000040-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000040-0000-0000-0000-000000000001', 'GLD-NP-NTH-06G', '22K Gold Bridal Nath with Pearl Chain - 6 Grams', 42500.00, 48000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000040-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000040-0000-0000-0000-000000000001', 'GLD-NP-NTH-06G', '22K Gold Bridal Nath with Pearl Chain - 6 Grams', 7083.33, 8000.00, '12', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 41: 22K Gold Screw Stud Nose Pin Laung (0.5g)
 INSERT INTO "products" (
@@ -840,14 +1160,22 @@ INSERT INTO "products" (
   'a0000041-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Screw Stud Nose Pin Laung (0.5g)',
   'Traditional diamond-cut gold Laung nose stud with threaded screw. Gross Wt: 0.5g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000041-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000041-0000-0000-0000-000000000001', 'GLD-NP-LNG-0.5G', '22K Gold Screw Stud Nose Pin Laung - 0.5 Grams', 3600.00, 4200.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000041-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000041-0000-0000-0000-000000000001', 'GLD-NP-LNG-0.5G', '22K Gold Screw Stud Nose Pin Laung - 0.5 Grams', 7200.00, 8400.00, '5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 42: 22K Gold Clip-on Maharashtrian Nath (2.5g)
 INSERT INTO "products" (
@@ -857,14 +1185,22 @@ INSERT INTO "products" (
   'a0000042-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Clip-on Maharashtrian Nath (2.5g)',
   'Pearl and ruby studded non-piercing press-on traditional Nath. Gross Wt: 2.5g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000042-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000042-0000-0000-0000-000000000001', 'GLD-NP-MHN-2.5G', '22K Gold Clip-on Maharashtrian Nath - 2.5 Grams', 17800.00, 20200.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000042-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000042-0000-0000-0000-000000000001', 'GLD-NP-MHN-2.5G', '22K Gold Clip-on Maharashtrian Nath - 2.5 Grams', 7120.00, 8080.00, '7.5', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 43: 22K Gold Wire Nose Bali Ring (1g)
 INSERT INTO "products" (
@@ -874,14 +1210,22 @@ INSERT INTO "products" (
   'a0000043-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Wire Nose Bali Ring (1g)',
   'Simple polished wire nose ring bali. Gross Wt: 1.0g', 'Shree Narayan Daily',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000043-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000043-0000-0000-0000-000000000001', 'GLD-NP-BAL-01G', '22K Gold Wire Nose Bali Ring - 1 Gram', 7100.00, 8200.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 44: 22K Gold Bridal Maang Tikka (7g)
 INSERT INTO "products" (
@@ -891,14 +1235,22 @@ INSERT INTO "products" (
   'a0000044-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Bridal Maang Tikka (7g)',
   'Floral circular Tikka with hanging jhumki bead and pearl hair chain. Gross Wt: 7.0g', 'Shree Narayan Bridal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000044-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000044-0000-0000-0000-000000000001', 'GLD-TK-BDL-07G', '22K Gold Bridal Maang Tikka - 7 Grams', 49500.00, 56000.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000044-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000044-0000-0000-0000-000000000001', 'GLD-TK-BDL-07G', '22K Gold Bridal Maang Tikka - 7 Grams', 7071.43, 8000.00, '14', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 45: 22K Gold Royal Kamarbandh Waist Belt (65g)
 INSERT INTO "products" (
@@ -908,14 +1260,22 @@ INSERT INTO "products" (
   'a0000045-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Royal Kamarbandh Waist Belt (65g)',
   'Grand traditional waist belt with layered hanging gold latkans and bells. Gross Wt: 65.0g', 'Shree Narayan Heritage',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000045-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000045-0000-0000-0000-000000000001', 'GLD-KB-RYL-65G', '22K Gold Royal Kamarbandh Waist Belt - 65 Grams', 460000.00, 518000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000045-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000045-0000-0000-0000-000000000001', 'GLD-KB-RYL-65G', '22K Gold Royal Kamarbandh Waist Belt - 65 Grams', 7076.92, 7969.23, '65', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 46: 22K Gold Bridal Hathphool Pair (20g)
 INSERT INTO "products" (
@@ -925,14 +1285,22 @@ INSERT INTO "products" (
   'a0000046-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Bridal Hathphool Pair (20g)',
   'Pair of floral hand harness with three-finger attached rings. Pair Wt: 20.0g', 'Shree Narayan Bridal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000046-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000046-0000-0000-0000-000000000001', 'GLD-HP-BDL-20G', '22K Gold Bridal Hathphool Pair - 20 Grams', 142000.00, 160000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000046-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000046-0000-0000-0000-000000000001', 'GLD-HP-BDL-20G', '22K Gold Bridal Hathphool Pair - 20 Grams', 7100.00, 8000.00, '20', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 47: 22K Gold Baby Nazariya Bracelet Pair (4g)
 INSERT INTO "products" (
@@ -942,14 +1310,22 @@ INSERT INTO "products" (
   'a0000047-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Baby Nazariya Bracelet Pair (4g)',
   'Protective black bead and 22K gold bead baby bracelets with soft clasp. Pair Wt: 4.0g', 'Shree Narayan Baby',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000047-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000047-0000-0000-0000-000000000001', 'GLD-BB-NZR-04G', '22K Gold Baby Nazariya Bracelet Pair - 4 Grams', 28400.00, 32200.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000047-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000047-0000-0000-0000-000000000001', 'GLD-BB-NZR-04G', '22K Gold Baby Nazariya Bracelet Pair - 4 Grams', 7100.00, 8050.00, '16', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 48: 22K Gold Men Solid Cuban Link Bracelet (24g)
 INSERT INTO "products" (
@@ -959,14 +1335,22 @@ INSERT INTO "products" (
   'a0000048-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0010000-0000-0000-0000-000000000001', 'goods', '22K Gold Men Solid Cuban Link Bracelet (24g)',
   'Bold men wrist bracelet with heavy box lock and safety latch. Gross Wt: 24.0g', 'Shree Narayan Royal',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000048-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000048-0000-0000-0000-000000000001', 'GLD-BR-MCB-24G', '22K Gold Men Solid Cuban Link Bracelet - 24 Grams', 170000.00, 191000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000048-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000048-0000-0000-0000-000000000001', 'GLD-BR-MCB-24G', '22K Gold Men Solid Cuban Link Bracelet - 24 Grams', 7083.33, 7958.33, '24', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 49: 24K 999 Pure Gold Coin 1 Gram (Laxmi Ganesh)
 INSERT INTO "products" (
@@ -976,14 +1360,22 @@ INSERT INTO "products" (
   'a0000049-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Coin 1 Gram (Laxmi Ganesh)',
   'Tamper-proof blister packed 1g 999 fineness 24 Karat gold coin with Laxmi Ganesh motif.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000049-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000049-0000-0000-0000-000000000001', 'GCOIN-999-01G', '24K Gold Coin 1 Gram - Laxmi Ganesh', 7750.00, 8150.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 50: 24K 999 Pure Gold Coin 2 Gram (Maa Laxmi)
 INSERT INTO "products" (
@@ -993,14 +1385,22 @@ INSERT INTO "products" (
   'a0000050-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Coin 2 Gram (Maa Laxmi)',
   'Tamper-proof blister packed 2g 999 fineness 24 Karat gold coin with seated Lakshmi.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000050-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000050-0000-0000-0000-000000000001', 'GCOIN-999-02G', '24K Gold Coin 2 Gram - Maa Laxmi', 15500.00, 16250.00, '8', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000050-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000050-0000-0000-0000-000000000001', 'GCOIN-999-02G', '24K Gold Coin 2 Gram - Maa Laxmi', 7750.00, 8125.00, '16', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 51: 24K 999 Pure Gold Coin 5 Gram (Sacred Om)
 INSERT INTO "products" (
@@ -1010,14 +1410,22 @@ INSERT INTO "products" (
   'a0000051-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Coin 5 Gram (Sacred Om)',
   'Certified 5g 999 pure gold minted coin with sacred Om symbol.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000051-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000051-0000-0000-0000-000000000001', 'GCOIN-999-05G', '24K Gold Coin 5 Gram - Sacred Om', 38750.00, 40500.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000051-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000051-0000-0000-0000-000000000001', 'GCOIN-999-05G', '24K Gold Coin 5 Gram - Sacred Om', 7750.00, 8100.00, '25', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 52: 24K 999 Pure Gold Coin 8 Gram (1 Guinea)
 INSERT INTO "products" (
@@ -1027,14 +1435,22 @@ INSERT INTO "products" (
   'a0000052-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Coin 8 Gram (1 Guinea)',
   'Classic 1 Tola / 1 Sovereign Guinea 8g 999 pure investment gold coin.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000052-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000052-0000-0000-0000-000000000001', 'GCOIN-999-08G', '24K Gold Coin 8 Gram (1 Guinea)', 62000.00, 64700.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000052-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000052-0000-0000-0000-000000000001', 'GCOIN-999-08G', '24K Gold Coin 8 Gram (1 Guinea)', 7750.00, 8087.50, '32', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 53: 24K 999 Pure Gold Bar 10 Gram (Hallmarked)
 INSERT INTO "products" (
@@ -1044,14 +1460,22 @@ INSERT INTO "products" (
   'a0000053-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Bar 10 Gram (Hallmarked)',
   'BIS Hallmarked rectangular 10g 999.0 purity gold bullion minted bar.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000053-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000053-0000-0000-0000-000000000001', 'GBAR-999-10G', '24K Gold Bar 10 Gram - BIS Hallmarked', 77500.00, 80800.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000053-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000053-0000-0000-0000-000000000001', 'GBAR-999-10G', '24K Gold Bar 10 Gram - BIS Hallmarked', 7750.00, 8080.00, '50', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 54: 24K 999 Pure Gold Minted Bar 20 Gram
 INSERT INTO "products" (
@@ -1061,14 +1485,22 @@ INSERT INTO "products" (
   'a0000054-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Minted Bar 20 Gram',
   'Investment grade 20g pure gold bar sealed in assay certification card.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000054-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000054-0000-0000-0000-000000000001', 'GBAR-999-20G', '24K Gold Minted Bar 20 Gram', 155000.00, 161200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000054-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000054-0000-0000-0000-000000000001', 'GBAR-999-20G', '24K Gold Minted Bar 20 Gram', 7750.00, 8060.00, '40', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 55: 24K 999 Pure Gold Ingot Bar 50 Gram
 INSERT INTO "products" (
@@ -1078,14 +1510,22 @@ INSERT INTO "products" (
   'a0000055-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Ingot Bar 50 Gram',
   'High denomination 50g 999 fineness gold ingot with individual serial number.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000055-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000055-0000-0000-0000-000000000001', 'GBAR-999-50G', '24K Gold Ingot Bar 50 Gram', 387500.00, 402500.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000055-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000055-0000-0000-0000-000000000001', 'GBAR-999-50G', '24K Gold Ingot Bar 50 Gram', 7750.00, 8050.00, '50', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 56: 24K 999 Pure Gold Bullion Bar 100 Gram
 INSERT INTO "products" (
@@ -1095,14 +1535,22 @@ INSERT INTO "products" (
   'a0000056-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0020000-0000-0000-0000-000000000001', 'goods', '24K 999 Pure Gold Bullion Bar 100 Gram',
   'LBMA standard 100g 999.9 purity investment bullion gold bar.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7108', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000056-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000056-0000-0000-0000-000000000001', 'GBAR-999-100G', '24K Gold Bullion Bar 100 Gram', 775000.00, 804000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000056-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000056-0000-0000-0000-000000000001', 'GBAR-999-100G', '24K Gold Bullion Bar 100 Gram', 7750.00, 8040.00, '100', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 57: Pure Silver Heavy Bridal Dulhan Payal Pair (200g)
 INSERT INTO "products" (
@@ -1112,14 +1560,22 @@ INSERT INTO "products" (
   'a0000057-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Heavy Bridal Dulhan Payal Pair (200g)',
   'Grand heavy Purvanchal bridal anklets with multiple bell rows and oxidized antique finish. Pair Wt: 200g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000057-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000057-0000-0000-0000-000000000001', 'SILV-PY-BDL-200G', 'Pure Silver Heavy Bridal Payal Pair - 200 Grams', 18500.00, 22800.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000057-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000057-0000-0000-0000-000000000001', 'SILV-PY-BDL-200G', 'Pure Silver Heavy Bridal Payal Pair - 200 Grams', 92.50, 114.00, '400', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 58: Pure Silver Ghungroo Traditional Payal Pair (100g)
 INSERT INTO "products" (
@@ -1129,14 +1585,22 @@ INSERT INTO "products" (
   'a0000058-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Ghungroo Traditional Payal Pair (100g)',
   'Traditional musical sound ghungroo payal pair with solid clasp. Pair Wt: 100g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000058-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000058-0000-0000-0000-000000000001', 'SILV-PY-GHN-100G', 'Pure Silver Ghungroo Payal Pair - 100 Grams', 9300.00, 11500.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000058-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000058-0000-0000-0000-000000000001', 'SILV-PY-GHN-100G', 'Pure Silver Ghungroo Payal Pair - 100 Grams', 93.00, 115.00, '300', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 59: Pure Silver Daily Wear Chham Chham Payal Pair (60g)
 INSERT INTO "products" (
@@ -1146,14 +1610,22 @@ INSERT INTO "products" (
   'a0000059-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Daily Wear Chham Chham Payal Pair (60g)',
   'Popular village and town daily wear durable silver payal. Pair Wt: 60g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000059-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000059-0000-0000-0000-000000000001', 'SILV-PY-DL60-60G', 'Pure Silver Daily Wear Payal Pair - 60 Grams', 5600.00, 7000.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000059-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000059-0000-0000-0000-000000000001', 'SILV-PY-DL60-60G', 'Pure Silver Daily Wear Payal Pair - 60 Grams', 93.33, 116.67, '300', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 60: Pure Silver Sleek Fancy Chain Payal Pair (35g)
 INSERT INTO "products" (
@@ -1163,14 +1635,22 @@ INSERT INTO "products" (
   'a0000060-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Sleek Fancy Chain Payal Pair (35g)',
   'Lightweight Italian pattern chain anklets for college and modern wear. Pair Wt: 35g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000060-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000060-0000-0000-0000-000000000001', 'SILV-PY-CHN-35G', 'Pure Silver Sleek Chain Payal Pair - 35 Grams', 3300.00, 4200.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000060-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000060-0000-0000-0000-000000000001', 'SILV-PY-CHN-35G', 'Pure Silver Sleek Chain Payal Pair - 35 Grams', 94.29, 120.00, '175', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 61: Pure Silver Antique Tribal Oxidized Payal Pair (80g)
 INSERT INTO "products" (
@@ -1180,14 +1660,22 @@ INSERT INTO "products" (
   'a0000061-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Antique Tribal Oxidized Payal Pair (80g)',
   'Rustic ethnic oxidized finish tribal design anklets. Pair Wt: 80g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000061-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000061-0000-0000-0000-000000000001', 'SILV-PY-TRB-80G', 'Pure Silver Antique Tribal Payal Pair - 80 Grams', 7500.00, 9400.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000061-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000061-0000-0000-0000-000000000001', 'SILV-PY-TRB-80G', 'Pure Silver Antique Tribal Payal Pair - 80 Grams', 93.75, 117.50, '240', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 62: Pure Silver Meenakari Traditional Bichhiya (Pair, 15g)
 INSERT INTO "products" (
@@ -1197,14 +1685,22 @@ INSERT INTO "products" (
   'a0000062-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Meenakari Traditional Bichhiya (Pair, 15g)',
   'Auspicious bridal toe rings with hand painted red and green enamel. Pair Wt: 15g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000062-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000062-0000-0000-0000-000000000001', 'SILV-BC-MNK-15G', 'Pure Silver Meenakari Bichhiya Pair - 15 Grams', 1400.00, 1850.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000062-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000062-0000-0000-0000-000000000001', 'SILV-BC-MNK-15G', 'Pure Silver Meenakari Bichhiya Pair - 15 Grams', 93.33, 123.33, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 63: Pure Silver Stone-Studded Designer Bichhiya (Pair, 10g)
 INSERT INTO "products" (
@@ -1214,14 +1710,22 @@ INSERT INTO "products" (
   'a0000063-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Stone-Studded Designer Bichhiya (Pair, 10g)',
   'Sparkling CZ studded adjustable silver toe rings. Pair Wt: 10g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000063-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000063-0000-0000-0000-000000000001', 'SILV-BC-DSN-10G', 'Pure Silver Designer Bichhiya Pair - 10 Grams', 950.00, 1300.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000063-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000063-0000-0000-0000-000000000001', 'SILV-BC-DSN-10G', 'Pure Silver Designer Bichhiya Pair - 10 Grams', 95.00, 130.00, '100', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 64: Pure Silver Plain Daily Chandi Bichhiya (Pair, 8g)
 INSERT INTO "products" (
@@ -1231,14 +1735,22 @@ INSERT INTO "products" (
   'a0000064-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Plain Daily Chandi Bichhiya (Pair, 8g)',
   'Simple solid curved toe rings for regular everyday wear. Pair Wt: 8g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000064-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000064-0000-0000-0000-000000000001', 'SILV-BC-PLN-08G', 'Pure Silver Plain Bichhiya Pair - 8 Grams', 750.00, 1050.00, '12', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000064-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000064-0000-0000-0000-000000000001', 'SILV-BC-PLN-08G', 'Pure Silver Plain Bichhiya Pair - 8 Grams', 93.75, 131.25, '96', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 65: Pure Silver Royal Peacock Bridal Bichhiya (Set of 4, 30g)
 INSERT INTO "products" (
@@ -1248,14 +1760,22 @@ INSERT INTO "products" (
   'a0000065-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Royal Peacock Bridal Bichhiya (Set of 4, 30g)',
   'Four toe rings set for newlywed bride with peacock feather motifs. Set Wt: 30g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000065-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000065-0000-0000-0000-000000000001', 'SILV-BC-PCK-30G', 'Pure Silver Royal Peacock Bridal Bichhiya Set of 4 - 30 Grams', 2800.00, 3650.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000065-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000065-0000-0000-0000-000000000001', 'SILV-BC-PCK-30G', 'Pure Silver Royal Peacock Bridal Bichhiya Set of 4 - 30 Grams', 93.33, 121.67, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 66: Pure Silver Bahubali Heavy Gents Kada (125g)
 INSERT INTO "products" (
@@ -1265,14 +1785,22 @@ INSERT INTO "products" (
   'a0000066-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Bahubali Heavy Gents Kada (125g)',
   'Solid heavy weight men Punjabi/Rajputi silver Kada with tiger claws or smooth rim. Gross Wt: 125g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000066-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000066-0000-0000-0000-000000000001', 'SILV-KD-BHB-125G', 'Pure Silver Bahubali Heavy Gents Kada - 125 Grams', 11500.00, 14200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000066-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000066-0000-0000-0000-000000000001', 'SILV-KD-BHB-125G', 'Pure Silver Bahubali Heavy Gents Kada - 125 Grams', 92.00, 113.60, '250', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 67: Pure Silver Gents Plain Round Kada (65g)
 INSERT INTO "products" (
@@ -1282,14 +1810,22 @@ INSERT INTO "products" (
   'a0000067-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Gents Plain Round Kada (65g)',
   'Solid round polished daily wear men silver Kada. Gross Wt: 65g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000067-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000067-0000-0000-0000-000000000001', 'SILV-KD-MPL-65G', 'Pure Silver Gents Plain Round Kada - 65 Grams', 6000.00, 7500.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000067-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000067-0000-0000-0000-000000000001', 'SILV-KD-MPL-65G', 'Pure Silver Gents Plain Round Kada - 65 Grams', 92.31, 115.38, '260', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 68: Pure Silver Ladies Fancy Chudi Set (Pair, 50g)
 INSERT INTO "products" (
@@ -1299,14 +1835,22 @@ INSERT INTO "products" (
   'a0000068-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Ladies Fancy Chudi Set (Pair, 50g)',
   'Embossed floral design openable silver bangles with safety screw. Pair Wt: 50g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000068-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000068-0000-0000-0000-000000000001', 'SILV-BG-LFC-50G', 'Pure Silver Ladies Fancy Chudi Set Pair - 50 Grams', 4700.00, 5900.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000068-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000068-0000-0000-0000-000000000001', 'SILV-BG-LFC-50G', 'Pure Silver Ladies Fancy Chudi Set Pair - 50 Grams', 94.00, 118.00, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 69: Pure Silver Kids Nazariya Kada Pair (25g)
 INSERT INTO "products" (
@@ -1316,14 +1860,22 @@ INSERT INTO "products" (
   'a0000069-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Kids Nazariya Kada Pair (25g)',
   'Baby protection silver bangles with black beads and adjustable size. Pair Wt: 25g', 'Shree Narayan Baby',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000069-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000069-0000-0000-0000-000000000001', 'SILV-KD-KID-25G', 'Pure Silver Kids Nazariya Kada Pair - 25 Grams', 2350.00, 3000.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000069-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000069-0000-0000-0000-000000000001', 'SILV-KD-KID-25G', 'Pure Silver Kids Nazariya Kada Pair - 25 Grams', 94.00, 120.00, '125', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 70: 925 Sterling Silver CZ Tennis Bracelet (18g)
 INSERT INTO "products" (
@@ -1333,14 +1885,22 @@ INSERT INTO "products" (
   'a0000070-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', '925 Sterling Silver CZ Tennis Bracelet (18g)',
   'Sparkling diamond-like cubic zirconia link tennis bracelet with box clasp. Wt: 18g', 'Shree Narayan 925',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000070-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000070-0000-0000-0000-000000000001', 'SILV-BR-TNS-18G', '925 Sterling Silver CZ Tennis Bracelet - 18 Grams', 2400.00, 3200.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000070-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000070-0000-0000-0000-000000000001', 'SILV-BR-TNS-18G', '925 Sterling Silver CZ Tennis Bracelet - 18 Grams', 133.33, 177.78, '72', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 71: Pure Silver Men Heavy Curb Chain (50g)
 INSERT INTO "products" (
@@ -1350,14 +1910,22 @@ INSERT INTO "products" (
   'a0000071-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Men Heavy Curb Chain (50g)',
   'Interlocking flat curb chain for gents, 22 inches, high lustre. Gross Wt: 50g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000071-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000071-0000-0000-0000-000000000001', 'SILV-CH-MCB-50G', 'Pure Silver Men Heavy Curb Chain - 50 Grams', 4650.00, 5850.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000071-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000071-0000-0000-0000-000000000001', 'SILV-CH-MCB-50G', 'Pure Silver Men Heavy Curb Chain - 50 Grams', 93.00, 117.00, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 72: Pure Silver Men Solid Rope Chain (30g)
 INSERT INTO "products" (
@@ -1367,14 +1935,22 @@ INSERT INTO "products" (
   'a0000072-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Men Solid Rope Chain (30g)',
   'Classic diamond-cut twisted rope pattern gents silver chain, 20 inches. Gross Wt: 30g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000072-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000072-0000-0000-0000-000000000001', 'SILV-CH-MRP-30G', 'Pure Silver Men Solid Rope Chain - 30 Grams', 2800.00, 3550.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000072-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000072-0000-0000-0000-000000000001', 'SILV-CH-MRP-30G', 'Pure Silver Men Solid Rope Chain - 30 Grams', 93.33, 118.33, '120', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 73: Pure Silver Italian Sleek Snake Chain (15g)
 INSERT INTO "products" (
@@ -1384,14 +1960,22 @@ INSERT INTO "products" (
   'a0000073-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Italian Sleek Snake Chain (15g)',
   'Silky smooth flexible snake chain for ladies lockets, 18 inches. Gross Wt: 15g', 'Shree Narayan 925',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000073-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000073-0000-0000-0000-000000000001', 'SILV-CH-SNK-15G', 'Pure Silver Italian Sleek Snake Chain - 15 Grams', 1450.00, 1900.00, '6', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000073-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000073-0000-0000-0000-000000000001', 'SILV-CH-SNK-15G', 'Pure Silver Italian Sleek Snake Chain - 15 Grams', 96.67, 126.67, '90', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 74: Pure Silver Sacred Naag Snake Astrology Ring (8g)
 INSERT INTO "products" (
@@ -1401,14 +1985,22 @@ INSERT INTO "products" (
   'a0000074-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Sacred Naag Snake Astrology Ring (8g)',
   'Lord Shiva coiled serpent Naag devta ring for Kaal Sarp and Rahu remedies. Wt: 8g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000074-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000074-0000-0000-0000-000000000001', 'SILV-RG-NAG-08G', 'Pure Silver Sacred Naag Snake Ring - 8 Grams', 750.00, 1050.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000074-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000074-0000-0000-0000-000000000001', 'SILV-RG-NAG-08G', 'Pure Silver Sacred Naag Snake Ring - 8 Grams', 93.75, 131.25, '40', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 75: 925 Sterling Silver Adjustable Solitaire Ring (4.5g)
 INSERT INTO "products" (
@@ -1418,14 +2010,22 @@ INSERT INTO "products" (
   'a0000075-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', '925 Sterling Silver Adjustable Solitaire Ring (4.5g)',
   'Free size prong set round brilliant CZ ladies ring. Wt: 4.5g', 'Shree Narayan 925',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000075-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000075-0000-0000-0000-000000000001', 'SILV-RG-SOL-4.5G', '925 Sterling Silver Solitaire Ring - 4.5 Grams', 650.00, 950.00, '6', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000075-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000075-0000-0000-0000-000000000001', 'SILV-RG-SOL-4.5G', '925 Sterling Silver Solitaire Ring - 4.5 Grams', 144.44, 211.11, '27', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 76: Pure Silver Plain Smooth Chandi Chhalla (5g)
 INSERT INTO "products" (
@@ -1435,14 +2035,22 @@ INSERT INTO "products" (
   'a0000076-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Plain Smooth Chandi Chhalla (5g)',
   'Solid smooth seamless silver band ring for astrologic and daily wear. Wt: 5g', 'Shree Narayan Silver',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000076-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000076-0000-0000-0000-000000000001', 'SILV-RG-CHL-05G', 'Pure Silver Plain Smooth Challa - 5 Grams', 470.00, 680.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000076-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000076-0000-0000-0000-000000000001', 'SILV-RG-CHL-05G', 'Pure Silver Plain Smooth Challa - 5 Grams', 94.00, 136.00, '50', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 77: 925 Silver Mahakal Damru Pendant with Chain (12g)
 INSERT INTO "products" (
@@ -1452,14 +2060,22 @@ INSERT INTO "products" (
   'a0000077-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0030000-0000-0000-0000-000000000001', 'goods', '925 Silver Mahakal Damru Pendant with Chain (12g)',
   'Lord Shiva trishul with damru and snake in 925 sterling silver with chain. Total Wt: 12g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000077-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000077-0000-0000-0000-000000000001', 'SILV-PD-MHK-12G', '925 Silver Mahakal Damru Pendant with Chain - 12 Grams', 1250.00, 1690.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000077-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000077-0000-0000-0000-000000000001', 'SILV-PD-MHK-12G', '925 Silver Mahakal Damru Pendant with Chain - 12 Grams', 104.17, 140.83, '60', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 78: Pure Silver Pooja Thali Floral Border (150g)
 INSERT INTO "products" (
@@ -1469,14 +2085,22 @@ INSERT INTO "products" (
   'a0000078-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Pooja Thali Floral Border (150g)',
   'Decorative embossed floral rim silver pooja plate with central Om/Swastik. Wt: 150g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000078-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000078-0000-0000-0000-000000000001', 'SILV-TH-FLR-150G', 'Pure Silver Pooja Thali Floral Border - 150 Grams', 14000.00, 17200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000078-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000078-0000-0000-0000-000000000001', 'SILV-TH-FLR-150G', 'Pure Silver Pooja Thali Floral Border - 150 Grams', 93.33, 114.67, '300', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 79: Pure Silver Royal Heavy Pooja Thali Set (300g)
 INSERT INTO "products" (
@@ -1486,14 +2110,22 @@ INSERT INTO "products" (
   'a0000079-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Royal Heavy Pooja Thali Set (300g)',
   'Complete ceremonial royal thali set with attached diya, katori, and chandan vati. Wt: 300g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000079-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000079-0000-0000-0000-000000000001', 'SILV-TH-RYL-300G', 'Pure Silver Royal Heavy Pooja Thali Set - 300 Grams', 28000.00, 34500.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000079-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000079-0000-0000-0000-000000000001', 'SILV-TH-RYL-300G', 'Pure Silver Royal Heavy Pooja Thali Set - 300 Grams', 93.33, 115.00, '300', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 80: Pure Silver Laxmi-Ganesh Murti Idol Pair (75g)
 INSERT INTO "products" (
@@ -1503,14 +2135,22 @@ INSERT INTO "products" (
   'a0000080-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Laxmi-Ganesh Murti Idol Pair (75g)',
   'Divine Lakshmi and Ganesha silver idols on lotus base with detailed mukut. Pair Wt: 75g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000080-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000080-0000-0000-0000-000000000001', 'SILV-ID-LXG-75G', 'Pure Silver Laxmi-Ganesh Murti Pair - 75 Grams', 7200.00, 9100.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000080-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000080-0000-0000-0000-000000000001', 'SILV-ID-LXG-75G', 'Pure Silver Laxmi-Ganesh Murti Pair - 75 Grams', 96.00, 121.33, '225', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 81: Pure Silver Heavy Laxmi-Ganesh Idol Pair (150g)
 INSERT INTO "products" (
@@ -1520,14 +2160,22 @@ INSERT INTO "products" (
   'a0000081-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Heavy Laxmi-Ganesh Idol Pair (150g)',
   'Large size heavy solid casted Lakshmi Ganesh idols for temple and Diwali pujan. Pair Wt: 150g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000081-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000081-0000-0000-0000-000000000001', 'SILV-ID-LXG-150G', 'Pure Silver Heavy Laxmi-Ganesh Idol Pair - 150 Grams', 14200.00, 17800.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000081-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000081-0000-0000-0000-000000000001', 'SILV-ID-LXG-150G', 'Pure Silver Heavy Laxmi-Ganesh Idol Pair - 150 Grams', 94.67, 118.67, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 82: Pure Silver Traditional Aarti Single Diya (30g)
 INSERT INTO "products" (
@@ -1537,14 +2185,22 @@ INSERT INTO "products" (
   'a0000082-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Traditional Aarti Single Diya (30g)',
   'Deepak lamp with handle and flower petal base for daily evening aarti. Wt: 30g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000082-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000082-0000-0000-0000-000000000001', 'SILV-DY-SNG-30G', 'Pure Silver Aarti Single Diya - 30 Grams', 2800.00, 3550.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000082-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000082-0000-0000-0000-000000000001', 'SILV-DY-SNG-30G', 'Pure Silver Aarti Single Diya - 30 Grams', 93.33, 118.33, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 83: Pure Silver Panchmukhi 5-Wick Diya (85g)
 INSERT INTO "products" (
@@ -1554,14 +2210,22 @@ INSERT INTO "products" (
   'a0000083-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Panchmukhi 5-Wick Diya (85g)',
   'Five wick heavy ceremonial Aarti lamp with ornate handle. Wt: 85g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000083-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000083-0000-0000-0000-000000000001', 'SILV-DY-PNC-85G', 'Pure Silver Panchmukhi 5-Wick Diya - 85 Grams', 8000.00, 10100.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000083-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000083-0000-0000-0000-000000000001', 'SILV-DY-PNC-85G', 'Pure Silver Panchmukhi 5-Wick Diya - 85 Grams', 94.12, 118.82, '170', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 84: Pure Silver Pooja Ghanti Bell with Nandi (50g)
 INSERT INTO "products" (
@@ -1571,14 +2235,22 @@ INSERT INTO "products" (
   'a0000084-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Pooja Ghanti Bell with Nandi (50g)',
   'Resonant temple pooja bell topped with carved Nandi bull figurine. Wt: 50g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000084-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000084-0000-0000-0000-000000000001', 'SILV-GH-NND-50G', 'Pure Silver Pooja Ghanti Bell with Nandi - 50 Grams', 4700.00, 5950.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000084-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000084-0000-0000-0000-000000000001', 'SILV-GH-NND-50G', 'Pure Silver Pooja Ghanti Bell with Nandi - 50 Grams', 94.00, 119.00, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 85: Pure Silver Sacred Kalash Lota (120g)
 INSERT INTO "products" (
@@ -1588,14 +2260,22 @@ INSERT INTO "products" (
   'a0000085-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Sacred Kalash Lota (120g)',
   'Holy water pot for puja rituals, gangajal storage and abhishek. Wt: 120g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000085-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000085-0000-0000-0000-000000000001', 'SILV-KL-LTA-120G', 'Pure Silver Sacred Kalash Lota - 120 Grams', 11200.00, 13900.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000085-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000085-0000-0000-0000-000000000001', 'SILV-KL-LTA-120G', 'Pure Silver Sacred Kalash Lota - 120 Grams', 93.33, 115.83, '240', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 86: Pure Silver Pooja Achamani Spoon (25g)
 INSERT INTO "products" (
@@ -1605,14 +2285,22 @@ INSERT INTO "products" (
   'a0000086-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Pooja Achamani Spoon (25g)',
   'Traditional ritual spoon for offering charanamrit and gangajal. Wt: 25g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000086-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000086-0000-0000-0000-000000000001', 'SILV-SP-ACH-25G', 'Pure Silver Achamani Spoon - 25 Grams', 2350.00, 2990.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000086-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000086-0000-0000-0000-000000000001', 'SILV-SP-ACH-25G', 'Pure Silver Achamani Spoon - 25 Grams', 94.00, 119.60, '100', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 87: Pure Silver Agarbatti Incense Stand (40g)
 INSERT INTO "products" (
@@ -1622,14 +2310,22 @@ INSERT INTO "products" (
   'a0000087-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Agarbatti Incense Stand (40g)',
   'Ornate lotus shaped incense stick stand catching ash cleanly. Wt: 40g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000087-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000087-0000-0000-0000-000000000001', 'SILV-AG-STD-40G', 'Pure Silver Agarbatti Stand - 40 Grams', 3800.00, 4800.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000087-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000087-0000-0000-0000-000000000001', 'SILV-AG-STD-40G', 'Pure Silver Agarbatti Stand - 40 Grams', 95.00, 120.00, '120', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 88: Pure Silver Embossed Water Glass Tumbler (80g)
 INSERT INTO "products" (
@@ -1639,14 +2335,22 @@ INSERT INTO "products" (
   'a0000088-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Embossed Water Glass Tumbler (80g)',
   'Pure silver drinking glass with floral engraving, ideal for ayurvedic health benefits. Wt: 80g', 'Shree Narayan Utensils',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000088-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000088-0000-0000-0000-000000000001', 'SILV-GL-EMB-80G', 'Pure Silver Embossed Water Tumbler Glass - 80 Grams', 7500.00, 9400.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000088-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000088-0000-0000-0000-000000000001', 'SILV-GL-EMB-80G', 'Pure Silver Embossed Water Tumbler Glass - 80 Grams', 93.75, 117.50, '160', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 89: Pure Silver Baby Paladai Bowl & Spoon Set (65g)
 INSERT INTO "products" (
@@ -1656,14 +2360,22 @@ INSERT INTO "products" (
   'a0000089-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Baby Paladai Bowl & Spoon Set (65g)',
   'Smooth polished silver bowl and feeding spoon set for newborn baby naming ceremony. Set Wt: 65g', 'Shree Narayan Baby',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000089-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000089-0000-0000-0000-000000000001', 'SILV-UT-PLD-65G', 'Pure Silver Baby Bowl & Spoon Set - 65 Grams', 6200.00, 7800.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000089-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000089-0000-0000-0000-000000000001', 'SILV-UT-PLD-65G', 'Pure Silver Baby Bowl & Spoon Set - 65 Grams', 95.38, 120.00, '195', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 90: Pure Silver Sindoor Dani with Peacock (35g)
 INSERT INTO "products" (
@@ -1673,14 +2385,22 @@ INSERT INTO "products" (
   'a0000090-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Sindoor Dani with Peacock (35g)',
   'Auspicious vermilion container box featuring engraved peacock on top cover. Wt: 35g', 'Shree Narayan Suhaag',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000090-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000090-0000-0000-0000-000000000001', 'SILV-SD-PCK-35G', 'Pure Silver Sindoor Dani with Peacock - 35 Grams', 3400.00, 4350.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000090-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000090-0000-0000-0000-000000000001', 'SILV-SD-PCK-35G', 'Pure Silver Sindoor Dani with Peacock - 35 Grams', 97.14, 124.29, '140', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 91: Pure Silver Hanuman Ji Gada Idol (45g)
 INSERT INTO "products" (
@@ -1690,14 +2410,22 @@ INSERT INTO "products" (
   'a0000091-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Hanuman Ji Gada Idol (45g)',
   'Solid miniature silver mace of Lord Hanuman symbolizing strength and safety. Wt: 45g', 'Shree Narayan Spiritual',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000091-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000091-0000-0000-0000-000000000001', 'SILV-ID-HNM-45G', 'Pure Silver Hanuman Ji Gada Idol - 45 Grams', 4300.00, 5450.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000091-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000091-0000-0000-0000-000000000001', 'SILV-ID-HNM-45G', 'Pure Silver Hanuman Ji Gada Idol - 45 Grams', 95.56, 121.11, '135', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 92: Pure Silver Kamakshi Deepam Lamp (70g)
 INSERT INTO "products" (
@@ -1707,14 +2435,22 @@ INSERT INTO "products" (
   'a0000092-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Kamakshi Deepam Lamp (70g)',
   'Sacred South/North fusion Kamakshi devi oil lamp for altar. Wt: 70g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000092-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000092-0000-0000-0000-000000000001', 'SILV-DY-KMK-70G', 'Pure Silver Kamakshi Deepam Lamp - 70 Grams', 6600.00, 8350.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000092-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000092-0000-0000-0000-000000000001', 'SILV-DY-KMK-70G', 'Pure Silver Kamakshi Deepam Lamp - 70 Grams', 94.29, 119.29, '140', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 93: Pure Silver Chandan Vati Small Katori (30g)
 INSERT INTO "products" (
@@ -1724,14 +2460,22 @@ INSERT INTO "products" (
   'a0000093-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Chandan Vati Small Katori (30g)',
   'Small polished silver cup for sandalwood paste and roli chawal. Wt: 30g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000093-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000093-0000-0000-0000-000000000001', 'SILV-UT-KTR-30G', 'Pure Silver Chandan Vati Katori - 30 Grams', 2800.00, 3550.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000093-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000093-0000-0000-0000-000000000001', 'SILV-UT-KTR-30G', 'Pure Silver Chandan Vati Katori - 30 Grams', 93.33, 118.33, '150', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 94: Pure Silver Kamadhenu Cow & Calf Idol (110g)
 INSERT INTO "products" (
@@ -1741,14 +2485,22 @@ INSERT INTO "products" (
   'a0000094-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0040000-0000-0000-0000-000000000001', 'goods', 'Pure Silver Kamadhenu Cow & Calf Idol (110g)',
   'Holy Kamadhenu cow suckling calf idol bringing prosperity and good fortune. Wt: 110g', 'Shree Narayan Pooja',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7114', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000094-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000094-0000-0000-0000-000000000001', 'SILV-ID-KMD-110G', 'Pure Silver Kamadhenu Cow & Calf Idol - 110 Grams', 10500.00, 13200.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000094-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000094-0000-0000-0000-000000000001', 'SILV-ID-KMD-110G', 'Pure Silver Kamadhenu Cow & Calf Idol - 110 Grams', 95.45, 120.00, '110', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 95: Pure Silver 999 Coin 10 Gram (Laxmi Ganesh)
 INSERT INTO "products" (
@@ -1758,14 +2510,22 @@ INSERT INTO "products" (
   'a0000095-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Coin 10 Gram (Laxmi Ganesh)',
   'Minted 10g 999 pure silver coin with Goddess Lakshmi and Lord Ganesha in capsule.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000095-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000095-0000-0000-0000-000000000001', 'SCOIN-999-10G', 'Pure Silver 999 Coin 10 Gram - Laxmi Ganesh', 930.00, 1080.00, '20', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000095-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000095-0000-0000-0000-000000000001', 'SCOIN-999-10G', 'Pure Silver 999 Coin 10 Gram - Laxmi Ganesh', 93.00, 108.00, '200', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 96: Pure Silver 999 Coin 20 Gram (Laxmi Ganesh)
 INSERT INTO "products" (
@@ -1775,14 +2535,22 @@ INSERT INTO "products" (
   'a0000096-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Coin 20 Gram (Laxmi Ganesh)',
   'Minted 20g 999 pure silver coin with mirrored relief for gifting and shagun.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000096-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000096-0000-0000-0000-000000000001', 'SCOIN-999-20G', 'Pure Silver 999 Coin 20 Gram - Laxmi Ganesh', 1860.00, 2150.00, '15', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000096-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000096-0000-0000-0000-000000000001', 'SCOIN-999-20G', 'Pure Silver 999 Coin 20 Gram - Laxmi Ganesh', 93.00, 107.50, '300', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 97: Pure Silver 999 Coin 50 Gram (Queen Victoria)
 INSERT INTO "products" (
@@ -1792,14 +2560,22 @@ INSERT INTO "products" (
   'a0000097-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Coin 50 Gram (Queen Victoria)',
   'High relief 50g 999 pure silver antique replica round coin.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000097-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000097-0000-0000-0000-000000000001', 'SCOIN-999-50G', 'Pure Silver 999 Coin 50 Gram - Queen Victoria', 4650.00, 5350.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000097-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000097-0000-0000-0000-000000000001', 'SCOIN-999-50G', 'Pure Silver 999 Coin 50 Gram - Queen Victoria', 93.00, 107.00, '500', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 98: Pure Silver 999 Coin 100 Gram (Ayodhya Ram Mandir Bar)
 INSERT INTO "products" (
@@ -1809,14 +2585,22 @@ INSERT INTO "products" (
   'a0000098-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Coin 100 Gram (Ayodhya Ram Mandir Bar)',
   'Special minted 100g 999 fine silver commemorative bullion bar of Shri Ram Mandir.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000098-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000098-0000-0000-0000-000000000001', 'SCOIN-999-100G', 'Pure Silver 999 Coin 100 Gram - Ram Mandir Bar', 9300.00, 10600.00, '8', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000098-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000098-0000-0000-0000-000000000001', 'SCOIN-999-100G', 'Pure Silver 999 Coin 100 Gram - Ram Mandir Bar', 93.00, 106.00, '800', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 99: Pure Silver 999 Cast Bar 250 Gram
 INSERT INTO "products" (
@@ -1826,14 +2610,22 @@ INSERT INTO "products" (
   'a0000099-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Cast Bar 250 Gram',
   'Refinery certified 250g 999 fine investment silver cast bar with purity seal.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000099-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000099-0000-0000-0000-000000000001', 'SBAR-999-250G', 'Pure Silver 999 Cast Bar 250 Gram', 23250.00, 25800.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000099-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000099-0000-0000-0000-000000000001', 'SBAR-999-250G', 'Pure Silver 999 Cast Bar 250 Gram', 93.00, 103.20, '1000', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 100: Pure Silver 999 Cast Bar 500 Gram
 INSERT INTO "products" (
@@ -1843,14 +2635,22 @@ INSERT INTO "products" (
   'a0000100-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Cast Bar 500 Gram',
   'Refinery certified half kilogram 500g 999 fine investment silver brick bar.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000100-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000100-0000-0000-0000-000000000001', 'SBAR-999-500G', 'Pure Silver 999 Cast Bar 500 Gram', 46500.00, 51200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000100-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000100-0000-0000-0000-000000000001', 'SBAR-999-500G', 'Pure Silver 999 Cast Bar 500 Gram', 93.00, 102.40, '1000', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 101: Pure Silver 999 Bullion Bar 1000 Gram (1 Kg Silver Bar)
 INSERT INTO "products" (
@@ -1860,14 +2660,22 @@ INSERT INTO "products" (
   'a0000101-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   'c0050000-0000-0000-0000-000000000001', 'goods', 'Pure Silver 999 Bullion Bar 1000 Gram (1 Kg Silver Bar)',
   'Standard 1 Kilogram (1000g) 999 fineness serialized silver bullion ingot.', 'Shree Narayan Bullion',
-  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000006', '7106', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
-  'b0000101-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000101-0000-0000-0000-000000000001', 'SBAR-999-1000G', 'Pure Silver 999 Bullion Bar 1 Kg', 93000.00, 101500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'b0000101-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000101-0000-0000-0000-000000000001', 'SBAR-999-1000G', 'Pure Silver 999 Bullion Bar 1 Kg', 93.00, 101.50, '2000', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 102: 18K Diamond Solitaire Engagement Ring (0.25 Ct)
 INSERT INTO "products" (
@@ -1878,13 +2686,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Diamond Solitaire Engagement Ring (0.25 Ct)',
   '18K White Gold 4-prong solitaire engagement ring with 0.25 carat VVS-GH certified diamond.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000102-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000102-0000-0000-0000-000000000001', 'DIAM-RG-SOL-025', '18K Diamond Solitaire Ring 0.25 Ct', 32000.00, 42500.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 103: 18K Diamond Halo Floral Ring (0.40 Ct)
 INSERT INTO "products" (
@@ -1895,13 +2711,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Diamond Halo Floral Ring (0.40 Ct)',
   '18K Yellow Gold halo cocktail ring featuring cluster of brilliant cut diamonds (0.40 Ct total).', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000103-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000103-0000-0000-0000-000000000001', 'DIAM-RG-HLO-040', '18K Diamond Halo Floral Ring 0.40 Ct', 48000.00, 62000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 104: 18K Diamond Stud Earrings Tops (0.30 Ct Pair)
 INSERT INTO "products" (
@@ -1912,13 +2736,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Diamond Stud Earrings Tops (0.30 Ct Pair)',
   'Classic 18K Rose Gold round diamond stud tops (0.15 Ct each, 0.30 Ct total) with screw post.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000104-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000104-0000-0000-0000-000000000001', 'DIAM-ER-STD-030', '18K Diamond Stud Tops 0.30 Ct Pair', 38000.00, 49500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 105: 18K Diamond Tanmaniya Mangalsutra Pendant (0.50 Ct)
 INSERT INTO "products" (
@@ -1929,13 +2761,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Diamond Tanmaniya Mangalsutra Pendant (0.50 Ct)',
   'Curved graceful Tanmaniya pendant studded with 0.50 carats of natural diamonds.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000105-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000105-0000-0000-0000-000000000001', 'DIAM-PD-TMN-050', '18K Diamond Tanmaniya Pendant 0.50 Ct', 58000.00, 75000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 106: 18K Diamond Heart Pendant with Chain (0.15 Ct)
 INSERT INTO "products" (
@@ -1946,13 +2786,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Diamond Heart Pendant with Chain (0.15 Ct)',
   '18K White Gold romantic heart pave diamond pendant including delicate gold chain.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000106-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000106-0000-0000-0000-000000000001', 'DIAM-PD-HRT-015', '18K Diamond Heart Pendant 0.15 Ct', 22000.00, 29500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 107: 14K Diamond Screw Nose Pin (0.05 Ct)
 INSERT INTO "products" (
@@ -1963,13 +2811,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '14K Diamond Screw Nose Pin (0.05 Ct)',
   'Sparkling solitary certified diamond nose pin in 14K gold with secure screw.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000107-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000107-0000-0000-0000-000000000001', 'DIAM-NP-SCW-005', '14K Diamond Screw Nose Pin 0.05 Ct', 6500.00, 8900.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 108: 18K Two-Tone Diamond Men Band Ring (0.20 Ct)
 INSERT INTO "products" (
@@ -1980,13 +2836,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K Two-Tone Diamond Men Band Ring (0.20 Ct)',
   'Gents comfort-fit band in 18K yellow & white gold with flush-set trio diamonds.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000108-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000108-0000-0000-0000-000000000001', 'DIAM-RG-MBD-020', '18K Diamond Men Band Ring 0.20 Ct', 42000.00, 54000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 109: 18K White Gold Diamond Tennis Bracelet (1.50 Ct)
 INSERT INTO "products" (
@@ -1997,13 +2861,21 @@ INSERT INTO "products" (
   'c0060000-0000-0000-0000-000000000001', 'goods', '18K White Gold Diamond Tennis Bracelet (1.50 Ct)',
   'Breathtaking flexible tennis line bracelet featuring 1.50 carats of continuous prong set diamonds.', 'Shree Narayan Solitaire',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7113', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000109-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000109-0000-0000-0000-000000000001', 'DIAM-BR-TNS-150', '18K Diamond Tennis Bracelet 1.50 Ct', 135000.00, 178000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 110: Natural Ceylon Yellow Sapphire Pukhraj (4.25 Ratti)
 INSERT INTO "products" (
@@ -2014,13 +2886,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Ceylon Yellow Sapphire Pukhraj (4.25 Ratti)',
   'Original Sri Lankan unheated bright yellow sapphire with Govt gemological lab certificate.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000110-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000110-0000-0000-0000-000000000001', 'GEM-PUK-425R', 'Natural Ceylon Yellow Sapphire - 4.25 Ratti', 28000.00, 38000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 111: Natural Ceylon Yellow Sapphire Pukhraj (6.50 Ratti)
 INSERT INTO "products" (
@@ -2031,13 +2911,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Ceylon Yellow Sapphire Pukhraj (6.50 Ratti)',
   'Premium large size Sri Lankan yellow sapphire with golden brilliance and certificate.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000111-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000111-0000-0000-0000-000000000001', 'GEM-PUK-650R', 'Natural Ceylon Yellow Sapphire - 6.50 Ratti', 52000.00, 69000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 112: Natural Burma Blue Sapphire Neelam (5.25 Ratti)
 INSERT INTO "products" (
@@ -2048,13 +2936,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Burma Blue Sapphire Neelam (5.25 Ratti)',
   'Auspicious deep royal cornflower blue certified natural sapphire for Shani devta.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000112-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000112-0000-0000-0000-000000000001', 'GEM-NEL-525R', 'Natural Blue Sapphire Neelam - 5.25 Ratti', 42000.00, 56000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 113: Natural Zambian Emerald Panna (5.50 Ratti)
 INSERT INTO "products" (
@@ -2065,13 +2961,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Zambian Emerald Panna (5.50 Ratti)',
   'Lush vivid green certified transparent natural emerald for Budh mercury planet.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000113-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000113-0000-0000-0000-000000000001', 'GEM-PAN-550R', 'Natural Zambian Emerald Panna - 5.50 Ratti', 33000.00, 44000.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 114: Natural Italian Red Coral Moonga (7.25 Ratti)
 INSERT INTO "products" (
@@ -2082,13 +2986,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Italian Red Coral Moonga (7.25 Ratti)',
   'Triangular high dome capsule certified Mediterranean red coral for Mangal mars.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000114-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000114-0000-0000-0000-000000000001', 'GEM-MNG-725R', 'Natural Italian Red Coral Moonga - 7.25 Ratti', 14500.00, 19800.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 115: Natural Old Mine Ruby Manik (4.50 Ratti)
 INSERT INTO "products" (
@@ -2099,13 +3011,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Old Mine Ruby Manik (4.50 Ratti)',
   'Pigeon blood untreated natural ruby gemstone for Sun Surya devta.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000115-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000115-0000-0000-0000-000000000001', 'GEM-MNK-450R', 'Natural Old Mine Ruby Manik - 4.50 Ratti', 31000.00, 41500.00, '1', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 116: Natural South Sea Pearl Moti (6.00 Ratti)
 INSERT INTO "products" (
@@ -2116,13 +3036,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural South Sea Pearl Moti (6.00 Ratti)',
   'Flawless round radiant lustrous white Basra-grade pearl for Moon Chandra.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000116-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000116-0000-0000-0000-000000000001', 'GEM-MOT-600R', 'Natural South Sea Pearl Moti - 6.00 Ratti', 12000.00, 16500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 117: Natural Ceylon Hessonite Gomed (6.75 Ratti)
 INSERT INTO "products" (
@@ -2133,13 +3061,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Ceylon Hessonite Gomed (6.75 Ratti)',
   'Transparent honey colored certified Hessonite garnet gemstone for Rahu planet.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000117-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000117-0000-0000-0000-000000000001', 'GEM-GMD-675R', 'Natural Ceylon Hessonite Gomed - 6.75 Ratti', 9500.00, 13500.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 118: Natural Chrysoberyl Cat Eye Lehsunia (5.25 Ratti)
 INSERT INTO "products" (
@@ -2150,13 +3086,21 @@ INSERT INTO "products" (
   'c0070000-0000-0000-0000-000000000001', 'goods', 'Natural Chrysoberyl Cat Eye Lehsunia (5.25 Ratti)',
   'Sharp chatoyancy ray certified natural Chrysoberyl cat eye for Ketu planet.', 'Shree Narayan Ratna',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000018', '20000000-0000-0000-0000-000000000006', '7103', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000118-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000118-0000-0000-0000-000000000001', 'GEM-LHS-525R', 'Natural Cat Eye Lehsunia - 5.25 Ratti', 11000.00, 15200.00, '2', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 119: Royal Rajasthani Kundan Bridal Choker Set
 INSERT INTO "products" (
@@ -2167,13 +3111,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Royal Rajasthani Kundan Bridal Choker Set',
   'Complete bridal set: heavy kundan choker necklace, hanging earrings, and matching maang tikka.', 'Shree Narayan Utsav',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000119-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000119-0000-0000-0000-000000000001', 'IMIT-ST-KND-01', 'Royal Kundan Bridal Set (Necklace + Earrings + Tikka)', 2800.00, 4200.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 120: Matte Antique Temple Jewellery Long Haram Set
 INSERT INTO "products" (
@@ -2184,13 +3136,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Matte Antique Temple Jewellery Long Haram Set',
   'South temple motif antique gold finish long necklace set with Lakshmi coins and jhumkis.', 'Shree Narayan Utsav',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000120-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000120-0000-0000-0000-000000000001', 'IMIT-ST-TMP-01', 'Matte Antique Temple Long Haram Set', 2200.00, 3400.00, '3', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 121: Micro Gold Plated Brass Rope Chain (24 inch)
 INSERT INTO "products" (
@@ -2201,13 +3161,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Micro Gold Plated Brass Rope Chain (24 inch)',
   '1-gram micro gold plated anti-tarnish daily wear men brass rope chain.', 'Shree Narayan Fashion',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000121-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000121-0000-0000-0000-000000000001', 'IMIT-CH-MGP-24', 'Micro Gold Plated Rope Chain 24 Inch', 350.00, 650.00, '10', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 122: Micro Gold Plated Openable Floral Kada Pair
 INSERT INTO "products" (
@@ -2218,13 +3186,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Micro Gold Plated Openable Floral Kada Pair',
   'Pair of brass micro gold coated openable floral bangles with latch lock.', 'Shree Narayan Fashion',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000122-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000122-0000-0000-0000-000000000001', 'IMIT-KD-FLR-02', 'Micro Gold Plated Floral Kada Pair', 550.00, 950.00, '8', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 123: Traditional Rajputi Meenakari Bridal Nath with Kundan
 INSERT INTO "products" (
@@ -2235,13 +3211,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Traditional Rajputi Meenakari Bridal Nath with Kundan',
   'Grand imitation bridal nath with red meenakari, kundan beads and pearl chain.', 'Shree Narayan Utsav',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000123-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000123-0000-0000-0000-000000000001', 'IMIT-NP-NTH-01', 'Traditional Rajputi Meenakari Bridal Nath', 320.00, 590.00, '6', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 124: Antique Gold Finish Royal Kamarbandh Tagdi
 INSERT INTO "products" (
@@ -2252,13 +3236,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Antique Gold Finish Royal Kamarbandh Tagdi',
   'Adjustable bridal waist chain with cascading ghungroo bells and ruby stone work.', 'Shree Narayan Utsav',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000124-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000124-0000-0000-0000-000000000001', 'IMIT-KB-RYL-01', 'Antique Gold Finish Royal Kamarbandh Tagdi', 750.00, 1250.00, '4', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 125: Traditional Velvet Bridal Chooda Bangles Set
 INSERT INTO "products" (
@@ -2269,13 +3261,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Traditional Velvet Bridal Chooda Bangles Set',
   'Complete red & maroon wedding chooda set with kundan latkan and studded kadas.', 'Shree Narayan Bridal',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000125-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000125-0000-0000-0000-000000000001', 'IMIT-BG-CHD-01', 'Traditional Velvet Bridal Chooda Bangles Set', 1100.00, 1750.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- Item 126: Gold Plated Kundan Hathphool Pair with Rings
 INSERT INTO "products" (
@@ -2286,13 +3286,21 @@ INSERT INTO "products" (
   'c0080000-0000-0000-0000-000000000001', 'goods', 'Gold Plated Kundan Hathphool Pair with Rings',
   'Pair of bridal hand harness chains with floral kundan centerpiece and attached finger rings.', 'Shree Narayan Utsav',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000017', '20000000-0000-0000-0000-000000000006', '7117', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "base_unit_id" = EXCLUDED.base_unit_id,
+  "category_id" = EXCLUDED.category_id,
+  "name" = EXCLUDED.name,
+  "description" = EXCLUDED.description;
 
 INSERT INTO "product_variants" (
   "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0000126-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0000126-0000-0000-0000-000000000001', 'IMIT-HP-KND-02', 'Gold Plated Kundan Hathphool Pair', 480.00, 850.00, '5', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "purchase_price" = EXCLUDED.purchase_price,
+  "selling_price" = EXCLUDED.selling_price,
+  "reorder_level" = EXCLUDED.reorder_level,
+  "variant_name" = EXCLUDED.variant_name;
 
 -- ----------------------------------------------------------------------------
 -- 7. Customers & Bullion / Artisan Suppliers
@@ -2376,16 +3384,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000001-0000-0000-0000-000000000001',
-  '2', '0', '2', '245000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '70', '0', '70', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000001-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 70, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 2 Stock: GLD-GULUBAND-18G
 INSERT INTO "stock_balances" (
@@ -2393,16 +3406,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000002-0000-0000-0000-000000000001',
-  '3', '0', '3', '126000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '54', '0', '54', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000002-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 54, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 3 Stock: GLD-FANCY-NCK-12G
 INSERT INTO "stock_balances" (
@@ -2410,16 +3428,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000003-0000-0000-0000-000000000001',
-  '4', '0', '4', '84000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '48', '0', '48', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000003-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 48, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 4 Stock: GLD-SITA-HAAR-28G
 INSERT INTO "stock_balances" (
@@ -2427,16 +3450,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000004-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000004-0000-0000-0000-000000000001',
-  '2', '0', '2', '196000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '56', '0', '56', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000004-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000004-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 56, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 5 Stock: GLD-HANSLI-22G
 INSERT INTO "stock_balances" (
@@ -2444,16 +3472,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000005-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000005-0000-0000-0000-000000000001',
-  '2', '0', '2', '154000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '44', '0', '44', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000005-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000005-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 44, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 6 Stock: GLD-CHN-ROPE-16G
 INSERT INTO "stock_balances" (
@@ -2461,16 +3494,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000006-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000006-0000-0000-0000-000000000001',
-  '5', '0', '5', '112000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '80', '0', '80', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000006-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000006-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 80, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 7 Stock: GLD-CHN-RUDR-12G
 INSERT INTO "stock_balances" (
@@ -2478,16 +3516,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000007-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000007-0000-0000-0000-000000000001',
-  '4', '0', '4', '86000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '48', '0', '48', '7166.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000007-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000007-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 48, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 8 Stock: GLD-CHN-FIG-10G
 INSERT INTO "stock_balances" (
@@ -2495,16 +3538,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000008-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000008-0000-0000-0000-000000000001',
-  '6', '0', '6', '70000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '60', '0', '60', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000008-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000008-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 60, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 9 Stock: GLD-CHN-LOTUS-08G
 INSERT INTO "stock_balances" (
@@ -2512,16 +3560,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000009-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000009-0000-0000-0000-000000000001',
-  '6', '0', '6', '56000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '48', '0', '48', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000009-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000009-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 48, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 10 Stock: GLD-CHN-BOX-05G
 INSERT INTO "stock_balances" (
@@ -2529,16 +3582,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000010-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000010-0000-0000-0000-000000000001',
-  '8', '0', '8', '35000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '40', '0', '40', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000010-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000010-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 40, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 11 Stock: GLD-CHN-CURB-06G
 INSERT INTO "stock_balances" (
@@ -2546,16 +3604,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000011-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000011-0000-0000-0000-000000000001',
-  '7', '0', '7', '42000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '42', '0', '42', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000011-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000011-0000-0000-0000-000000000001',
-  'adjustment_in', 7, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 42, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 12 Stock: GLD-CHN-SNG-04G
 INSERT INTO "stock_balances" (
@@ -2563,16 +3626,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000012-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000012-0000-0000-0000-000000000001',
-  '10', '0', '10', '28000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '40', '0', '40', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000012-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000012-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 40, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 13 Stock: GLD-MS-VATI-18G
 INSERT INTO "stock_balances" (
@@ -2580,16 +3648,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000013-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000013-0000-0000-0000-000000000001',
-  '4', '0', '4', '126000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '72', '0', '72', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000013-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000013-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 72, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 14 Stock: GLD-MS-MOD-06G
 INSERT INTO "stock_balances" (
@@ -2597,16 +3670,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000014-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000014-0000-0000-0000-000000000001',
-  '6', '0', '6', '43000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '36', '0', '36', '7166.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000014-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000014-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 36, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 15 Stock: GLD-MS-FLR-10G
 INSERT INTO "stock_balances" (
@@ -2614,16 +3692,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000015-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000015-0000-0000-0000-000000000001',
-  '5', '0', '5', '71000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '50', '0', '50', '7100.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000015-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000015-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 50, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 16 Stock: GLD-KD-FIL-32G
 INSERT INTO "stock_balances" (
@@ -2631,16 +3714,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000016-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000016-0000-0000-0000-000000000001',
-  '3', '0', '3', '224000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '96', '0', '96', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000016-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000016-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 96, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 17 Stock: GLD-KD-LION-35G
 INSERT INTO "stock_balances" (
@@ -2648,16 +3736,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000017-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000017-0000-0000-0000-000000000001',
-  '2', '0', '2', '245000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '70', '0', '70', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000017-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000017-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 70, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 18 Stock: GLD-BG-MC4-30G
 INSERT INTO "stock_balances" (
@@ -2665,16 +3758,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000018-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000018-0000-0000-0000-000000000001',
-  '4', '0', '4', '210000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '120', '0', '120', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000018-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000018-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 120, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 19 Stock: GLD-BG-PTL-40G
 INSERT INTO "stock_balances" (
@@ -2682,16 +3780,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000019-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000019-0000-0000-0000-000000000001',
-  '2', '0', '2', '280000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '80', '0', '80', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000019-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000019-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 80, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 20 Stock: GLD-BG-CHU-16G
 INSERT INTO "stock_balances" (
@@ -2699,16 +3802,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000020-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000020-0000-0000-0000-000000000001',
-  '5', '0', '5', '112000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '80', '0', '80', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000020-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000020-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 80, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 21 Stock: GLD-BG-MNK-20G
 INSERT INTO "stock_balances" (
@@ -2716,16 +3824,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000021-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000021-0000-0000-0000-000000000001',
-  '3', '0', '3', '142000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '60', '0', '60', '7100.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000021-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000021-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 60, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 22 Stock: GLD-ER-JHM-14G
 INSERT INTO "stock_balances" (
@@ -2733,16 +3846,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000022-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000022-0000-0000-0000-000000000001',
-  '4', '0', '4', '98000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '56', '0', '56', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000022-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000022-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 56, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 23 Stock: GLD-ER-CHB-15G
 INSERT INTO "stock_balances" (
@@ -2750,16 +3868,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000023-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000023-0000-0000-0000-000000000001',
-  '3', '0', '3', '105000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '45', '0', '45', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000023-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000023-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 45, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 24 Stock: GLD-ER-SUI-04G
 INSERT INTO "stock_balances" (
@@ -2767,16 +3890,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000024-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000024-0000-0000-0000-000000000001',
-  '8', '0', '8', '28000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '32', '0', '32', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000024-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000024-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 32, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 25 Stock: GLD-ER-TOP-2.5G
 INSERT INTO "stock_balances" (
@@ -2784,16 +3912,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000025-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000025-0000-0000-0000-000000000001',
-  '12', '0', '12', '17500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '30', '0', '30', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000025-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000025-0000-0000-0000-000000000001',
-  'adjustment_in', 12, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 30, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 26 Stock: GLD-ER-KAN-16G
 INSERT INTO "stock_balances" (
@@ -2801,16 +3934,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000026-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000026-0000-0000-0000-000000000001',
-  '2', '0', '2', '112000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '32', '0', '32', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000026-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000026-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 32, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 27 Stock: GLD-ER-BAL-1.5G
 INSERT INTO "stock_balances" (
@@ -2818,16 +3956,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000027-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000027-0000-0000-0000-000000000001',
-  '15', '0', '15', '10500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '22.5', '0', '22.5', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000027-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000027-0000-0000-0000-000000000001',
-  'adjustment_in', 15, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 22.5, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 28 Stock: GLD-ER-BAL-3.5G
 INSERT INTO "stock_balances" (
@@ -2835,16 +3978,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000028-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000028-0000-0000-0000-000000000001',
-  '9', '0', '9', '24500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '31.5', '0', '31.5', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000028-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000028-0000-0000-0000-000000000001',
-  'adjustment_in', 9, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 31.5, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 29 Stock: GLD-RG-MLN-08G
 INSERT INTO "stock_balances" (
@@ -2852,16 +4000,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000029-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000029-0000-0000-0000-000000000001',
-  '5', '0', '5', '56000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '40', '0', '40', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000029-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000029-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 40, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 30 Stock: GLD-RG-MSQ-06G
 INSERT INTO "stock_balances" (
@@ -2869,16 +4022,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000030-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000030-0000-0000-0000-000000000001',
-  '6', '0', '6', '42000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '36', '0', '36', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000030-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000030-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 36, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 31 Stock: GLD-RG-LCZ-3.5G
 INSERT INTO "stock_balances" (
@@ -2886,16 +4044,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000031-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000031-0000-0000-0000-000000000001',
-  '8', '0', '8', '24800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '28', '0', '28', '7085.71', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000031-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000031-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 28, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 32 Stock: GLD-RG-LPC-05G
 INSERT INTO "stock_balances" (
@@ -2903,16 +4066,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000032-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000032-0000-0000-0000-000000000001',
-  '5', '0', '5', '35500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '25', '0', '25', '7100.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000032-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000032-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 25, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 33 Stock: GLD-RG-TOR-4.5G
 INSERT INTO "stock_balances" (
@@ -2920,16 +4088,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000033-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000033-0000-0000-0000-000000000001',
-  '7', '0', '7', '31800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '31.5', '0', '31.5', '7066.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000033-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000033-0000-0000-0000-000000000001',
-  'adjustment_in', 7, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 31.5, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 34 Stock: GLD-RG-MOM-5.5G
 INSERT INTO "stock_balances" (
@@ -2937,16 +4110,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000034-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000034-0000-0000-0000-000000000001',
-  '6', '0', '6', '38800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '33', '0', '33', '7054.55', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000034-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000034-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 33, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 35 Stock: GLD-RG-CPB-09G
 INSERT INTO "stock_balances" (
@@ -2954,16 +4132,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000035-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000035-0000-0000-0000-000000000001',
-  '4', '0', '4', '63500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '36', '0', '36', '7055.56', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000035-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000035-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 36, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 36 Stock: GLD-PD-LXG-05G
 INSERT INTO "stock_balances" (
@@ -2971,16 +4154,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000036-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000036-0000-0000-0000-000000000001',
-  '8', '0', '8', '35000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '40', '0', '40', '7000.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000036-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000036-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 40, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 37 Stock: GLD-PD-TRS-04G
 INSERT INTO "stock_balances" (
@@ -2988,16 +4176,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000037-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000037-0000-0000-0000-000000000001',
-  '8', '0', '8', '28200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '32', '0', '32', '7050.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000037-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000037-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 32, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 38 Stock: GLD-PD-OMK-02G
 INSERT INTO "stock_balances" (
@@ -3005,16 +4198,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000038-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000038-0000-0000-0000-000000000001',
-  '14', '0', '14', '14100.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '28', '0', '28', '7050.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000038-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000038-0000-0000-0000-000000000001',
-  'adjustment_in', 14, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 28, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 39 Stock: GLD-PD-HRT-03G
 INSERT INTO "stock_balances" (
@@ -3022,16 +4220,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000039-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000039-0000-0000-0000-000000000001',
-  '7', '0', '7', '21200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '21', '0', '21', '7066.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000039-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000039-0000-0000-0000-000000000001',
-  'adjustment_in', 7, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 21, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 40 Stock: GLD-NP-NTH-06G
 INSERT INTO "stock_balances" (
@@ -3039,16 +4242,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000040-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000040-0000-0000-0000-000000000001',
-  '4', '0', '4', '42500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '24', '0', '24', '7083.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000040-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000040-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 24, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 41 Stock: GLD-NP-LNG-0.5G
 INSERT INTO "stock_balances" (
@@ -3056,16 +4264,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000041-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000041-0000-0000-0000-000000000001',
-  '25', '0', '25', '3600.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '12.5', '0', '12.5', '7200.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000041-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000041-0000-0000-0000-000000000001',
-  'adjustment_in', 25, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 12.5, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 42 Stock: GLD-NP-MHN-2.5G
 INSERT INTO "stock_balances" (
@@ -3073,16 +4286,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000042-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000042-0000-0000-0000-000000000001',
-  '6', '0', '6', '17800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '15', '0', '15', '7120.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000042-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000042-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 15, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 43 Stock: GLD-NP-BAL-01G
 INSERT INTO "stock_balances" (
@@ -3091,15 +4309,20 @@ INSERT INTO "stock_balances" (
   '71000043-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000043-0000-0000-0000-000000000001',
   '18', '0', '18', '7100.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000043-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000043-0000-0000-0000-000000000001',
-  'adjustment_in', 18, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 18, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 44 Stock: GLD-TK-BDL-07G
 INSERT INTO "stock_balances" (
@@ -3107,16 +4330,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000044-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000044-0000-0000-0000-000000000001',
-  '4', '0', '4', '49500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '28', '0', '28', '7071.43', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000044-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000044-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 28, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 45 Stock: GLD-KB-RYL-65G
 INSERT INTO "stock_balances" (
@@ -3124,16 +4352,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000045-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000045-0000-0000-0000-000000000001',
-  '1', '0', '1', '460000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '65', '0', '65', '7076.92', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000045-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000045-0000-0000-0000-000000000001',
-  'adjustment_in', 1, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 65, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 46 Stock: GLD-HP-BDL-20G
 INSERT INTO "stock_balances" (
@@ -3141,16 +4374,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000046-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000046-0000-0000-0000-000000000001',
-  '2', '0', '2', '142000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '40', '0', '40', '7100.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000046-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000046-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 40, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 47 Stock: GLD-BB-NZR-04G
 INSERT INTO "stock_balances" (
@@ -3158,16 +4396,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000047-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000047-0000-0000-0000-000000000001',
-  '8', '0', '8', '28400.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '32', '0', '32', '7100.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000047-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000047-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 32, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 48 Stock: GLD-BR-MCB-24G
 INSERT INTO "stock_balances" (
@@ -3175,16 +4418,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000048-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000048-0000-0000-0000-000000000001',
-  '3', '0', '3', '170000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '72', '0', '72', '7083.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000048-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000048-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 72, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 49 Stock: GCOIN-999-01G
 INSERT INTO "stock_balances" (
@@ -3193,15 +4441,20 @@ INSERT INTO "stock_balances" (
   '71000049-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000049-0000-0000-0000-000000000001',
   '30', '0', '30', '7750.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000049-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000049-0000-0000-0000-000000000001',
-  'adjustment_in', 30, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 30, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 50 Stock: GCOIN-999-02G
 INSERT INTO "stock_balances" (
@@ -3209,16 +4462,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000050-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000050-0000-0000-0000-000000000001',
-  '25', '0', '25', '15500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '50', '0', '50', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000050-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000050-0000-0000-0000-000000000001',
-  'adjustment_in', 25, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 50, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 51 Stock: GCOIN-999-05G
 INSERT INTO "stock_balances" (
@@ -3226,16 +4484,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000051-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000051-0000-0000-0000-000000000001',
-  '20', '0', '20', '38750.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '100', '0', '100', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000051-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000051-0000-0000-0000-000000000001',
-  'adjustment_in', 20, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 100, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 52 Stock: GCOIN-999-08G
 INSERT INTO "stock_balances" (
@@ -3243,16 +4506,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000052-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000052-0000-0000-0000-000000000001',
-  '15', '0', '15', '62000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '120', '0', '120', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000052-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000052-0000-0000-0000-000000000001',
-  'adjustment_in', 15, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 120, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 53 Stock: GBAR-999-10G
 INSERT INTO "stock_balances" (
@@ -3260,16 +4528,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000053-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000053-0000-0000-0000-000000000001',
-  '20', '0', '20', '77500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '200', '0', '200', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000053-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000053-0000-0000-0000-000000000001',
-  'adjustment_in', 20, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 200, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 54 Stock: GBAR-999-20G
 INSERT INTO "stock_balances" (
@@ -3277,16 +4550,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000054-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000054-0000-0000-0000-000000000001',
-  '10', '0', '10', '155000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '200', '0', '200', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000054-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000054-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 200, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 55 Stock: GBAR-999-50G
 INSERT INTO "stock_balances" (
@@ -3294,16 +4572,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000055-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000055-0000-0000-0000-000000000001',
-  '5', '0', '5', '387500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '250', '0', '250', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000055-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000055-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 250, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 56 Stock: GBAR-999-100G
 INSERT INTO "stock_balances" (
@@ -3311,16 +4594,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000056-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000056-0000-0000-0000-000000000001',
-  '3', '0', '3', '775000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '300', '0', '300', '7750.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000056-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000056-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 300, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 57 Stock: SILV-PY-BDL-200G
 INSERT INTO "stock_balances" (
@@ -3328,16 +4616,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000057-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000057-0000-0000-0000-000000000001',
-  '6', '0', '6', '18500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '1200', '0', '1200', '92.50', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000057-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000057-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 1200, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 58 Stock: SILV-PY-GHN-100G
 INSERT INTO "stock_balances" (
@@ -3345,16 +4638,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000058-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000058-0000-0000-0000-000000000001',
-  '10', '0', '10', '9300.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '1000', '0', '1000', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000058-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000058-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 1000, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 59 Stock: SILV-PY-DL60-60G
 INSERT INTO "stock_balances" (
@@ -3362,16 +4660,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000059-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000059-0000-0000-0000-000000000001',
-  '15', '0', '15', '5600.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '900', '0', '900', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000059-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000059-0000-0000-0000-000000000001',
-  'adjustment_in', 15, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 900, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 60 Stock: SILV-PY-CHN-35G
 INSERT INTO "stock_balances" (
@@ -3379,16 +4682,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000060-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000060-0000-0000-0000-000000000001',
-  '16', '0', '16', '3300.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '560', '0', '560', '94.29', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000060-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000060-0000-0000-0000-000000000001',
-  'adjustment_in', 16, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 560, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 61 Stock: SILV-PY-TRB-80G
 INSERT INTO "stock_balances" (
@@ -3396,16 +4704,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000061-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000061-0000-0000-0000-000000000001',
-  '8', '0', '8', '7500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '640', '0', '640', '93.75', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000061-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000061-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 640, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 62 Stock: SILV-BC-MNK-15G
 INSERT INTO "stock_balances" (
@@ -3413,16 +4726,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000062-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000062-0000-0000-0000-000000000001',
-  '25', '0', '25', '1400.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '375', '0', '375', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000062-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000062-0000-0000-0000-000000000001',
-  'adjustment_in', 25, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 375, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 63 Stock: SILV-BC-DSN-10G
 INSERT INTO "stock_balances" (
@@ -3430,16 +4748,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000063-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000063-0000-0000-0000-000000000001',
-  '30', '0', '30', '950.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '300', '0', '300', '95.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000063-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000063-0000-0000-0000-000000000001',
-  'adjustment_in', 30, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 300, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 64 Stock: SILV-BC-PLN-08G
 INSERT INTO "stock_balances" (
@@ -3447,16 +4770,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000064-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000064-0000-0000-0000-000000000001',
-  '35', '0', '35', '750.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '280', '0', '280', '93.75', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000064-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000064-0000-0000-0000-000000000001',
-  'adjustment_in', 35, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 280, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 65 Stock: SILV-BC-PCK-30G
 INSERT INTO "stock_balances" (
@@ -3464,16 +4792,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000065-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000065-0000-0000-0000-000000000001',
-  '12', '0', '12', '2800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '360', '0', '360', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000065-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000065-0000-0000-0000-000000000001',
-  'adjustment_in', 12, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 360, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 66 Stock: SILV-KD-BHB-125G
 INSERT INTO "stock_balances" (
@@ -3481,16 +4814,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000066-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000066-0000-0000-0000-000000000001',
-  '5', '0', '5', '11500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '625', '0', '625', '92.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000066-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000066-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 625, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 67 Stock: SILV-KD-MPL-65G
 INSERT INTO "stock_balances" (
@@ -3498,16 +4836,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000067-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000067-0000-0000-0000-000000000001',
-  '8', '0', '8', '6000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '520', '0', '520', '92.31', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000067-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000067-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 520, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 68 Stock: SILV-BG-LFC-50G
 INSERT INTO "stock_balances" (
@@ -3515,16 +4858,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000068-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000068-0000-0000-0000-000000000001',
-  '8', '0', '8', '4700.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '400', '0', '400', '94.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000068-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000068-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 400, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 69 Stock: SILV-KD-KID-25G
 INSERT INTO "stock_balances" (
@@ -3532,16 +4880,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000069-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000069-0000-0000-0000-000000000001',
-  '15', '0', '15', '2350.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '375', '0', '375', '94.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000069-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000069-0000-0000-0000-000000000001',
-  'adjustment_in', 15, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 375, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 70 Stock: SILV-BR-TNS-18G
 INSERT INTO "stock_balances" (
@@ -3549,16 +4902,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000070-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000070-0000-0000-0000-000000000001',
-  '10', '0', '10', '2400.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '180', '0', '180', '133.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000070-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000070-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 180, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 71 Stock: SILV-CH-MCB-50G
 INSERT INTO "stock_balances" (
@@ -3566,16 +4924,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000071-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000071-0000-0000-0000-000000000001',
-  '10', '0', '10', '4650.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '500', '0', '500', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000071-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000071-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 500, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 72 Stock: SILV-CH-MRP-30G
 INSERT INTO "stock_balances" (
@@ -3583,16 +4946,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000072-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000072-0000-0000-0000-000000000001',
-  '12', '0', '12', '2800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '360', '0', '360', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000072-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000072-0000-0000-0000-000000000001',
-  'adjustment_in', 12, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 360, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 73 Stock: SILV-CH-SNK-15G
 INSERT INTO "stock_balances" (
@@ -3600,16 +4968,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000073-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000073-0000-0000-0000-000000000001',
-  '18', '0', '18', '1450.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '270', '0', '270', '96.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000073-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000073-0000-0000-0000-000000000001',
-  'adjustment_in', 18, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 270, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 74 Stock: SILV-RG-NAG-08G
 INSERT INTO "stock_balances" (
@@ -3617,16 +4990,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000074-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000074-0000-0000-0000-000000000001',
-  '20', '0', '20', '750.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '160', '0', '160', '93.75', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000074-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000074-0000-0000-0000-000000000001',
-  'adjustment_in', 20, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 160, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 75 Stock: SILV-RG-SOL-4.5G
 INSERT INTO "stock_balances" (
@@ -3634,16 +5012,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000075-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000075-0000-0000-0000-000000000001',
-  '18', '0', '18', '650.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '81', '0', '81', '144.44', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000075-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000075-0000-0000-0000-000000000001',
-  'adjustment_in', 18, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 81, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 76 Stock: SILV-RG-CHL-05G
 INSERT INTO "stock_balances" (
@@ -3651,16 +5034,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000076-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000076-0000-0000-0000-000000000001',
-  '30', '0', '30', '470.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '150', '0', '150', '94.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000076-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000076-0000-0000-0000-000000000001',
-  'adjustment_in', 30, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 150, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 77 Stock: SILV-PD-MHK-12G
 INSERT INTO "stock_balances" (
@@ -3668,16 +5056,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000077-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000077-0000-0000-0000-000000000001',
-  '15', '0', '15', '1250.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '180', '0', '180', '104.17', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000077-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000077-0000-0000-0000-000000000001',
-  'adjustment_in', 15, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 180, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 78 Stock: SILV-TH-FLR-150G
 INSERT INTO "stock_balances" (
@@ -3685,16 +5078,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000078-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000078-0000-0000-0000-000000000001',
-  '4', '0', '4', '14000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '600', '0', '600', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000078-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000078-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 600, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 79 Stock: SILV-TH-RYL-300G
 INSERT INTO "stock_balances" (
@@ -3702,16 +5100,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000079-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000079-0000-0000-0000-000000000001',
-  '2', '0', '2', '28000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '600', '0', '600', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000079-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000079-0000-0000-0000-000000000001',
-  'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 600, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 80 Stock: SILV-ID-LXG-75G
 INSERT INTO "stock_balances" (
@@ -3719,16 +5122,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000080-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000080-0000-0000-0000-000000000001',
-  '8', '0', '8', '7200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '600', '0', '600', '96.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000080-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000080-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 600, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 81 Stock: SILV-ID-LXG-150G
 INSERT INTO "stock_balances" (
@@ -3736,16 +5144,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000081-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000081-0000-0000-0000-000000000001',
-  '3', '0', '3', '14200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '450', '0', '450', '94.67', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000081-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000081-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 450, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 82 Stock: SILV-DY-SNG-30G
 INSERT INTO "stock_balances" (
@@ -3753,16 +5166,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000082-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000082-0000-0000-0000-000000000001',
-  '12', '0', '12', '2800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '360', '0', '360', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000082-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000082-0000-0000-0000-000000000001',
-  'adjustment_in', 12, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 360, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 83 Stock: SILV-DY-PNC-85G
 INSERT INTO "stock_balances" (
@@ -3770,16 +5188,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000083-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000083-0000-0000-0000-000000000001',
-  '5', '0', '5', '8000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '425', '0', '425', '94.12', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000083-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000083-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 425, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 84 Stock: SILV-GH-NND-50G
 INSERT INTO "stock_balances" (
@@ -3787,16 +5210,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000084-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000084-0000-0000-0000-000000000001',
-  '7', '0', '7', '4700.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '350', '0', '350', '94.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000084-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000084-0000-0000-0000-000000000001',
-  'adjustment_in', 7, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 350, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 85 Stock: SILV-KL-LTA-120G
 INSERT INTO "stock_balances" (
@@ -3804,16 +5232,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000085-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000085-0000-0000-0000-000000000001',
-  '4', '0', '4', '11200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '480', '0', '480', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000085-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000085-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 480, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 86 Stock: SILV-SP-ACH-25G
 INSERT INTO "stock_balances" (
@@ -3821,16 +5254,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000086-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000086-0000-0000-0000-000000000001',
-  '10', '0', '10', '2350.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '250', '0', '250', '94.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000086-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000086-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 250, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 87 Stock: SILV-AG-STD-40G
 INSERT INTO "stock_balances" (
@@ -3838,16 +5276,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000087-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000087-0000-0000-0000-000000000001',
-  '8', '0', '8', '3800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '320', '0', '320', '95.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000087-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000087-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 320, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 88 Stock: SILV-GL-EMB-80G
 INSERT INTO "stock_balances" (
@@ -3855,16 +5298,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000088-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000088-0000-0000-0000-000000000001',
-  '6', '0', '6', '7500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '480', '0', '480', '93.75', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000088-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000088-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 480, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 89 Stock: SILV-UT-PLD-65G
 INSERT INTO "stock_balances" (
@@ -3872,16 +5320,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000089-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000089-0000-0000-0000-000000000001',
-  '6', '0', '6', '6200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '390', '0', '390', '95.38', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000089-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000089-0000-0000-0000-000000000001',
-  'adjustment_in', 6, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 390, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 90 Stock: SILV-SD-PCK-35G
 INSERT INTO "stock_balances" (
@@ -3889,16 +5342,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000090-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000090-0000-0000-0000-000000000001',
-  '10', '0', '10', '3400.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '350', '0', '350', '97.14', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000090-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000090-0000-0000-0000-000000000001',
-  'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 350, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 91 Stock: SILV-ID-HNM-45G
 INSERT INTO "stock_balances" (
@@ -3906,16 +5364,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000091-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000091-0000-0000-0000-000000000001',
-  '8', '0', '8', '4300.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '360', '0', '360', '95.56', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000091-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000091-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 360, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 92 Stock: SILV-DY-KMK-70G
 INSERT INTO "stock_balances" (
@@ -3923,16 +5386,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000092-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000092-0000-0000-0000-000000000001',
-  '5', '0', '5', '6600.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '350', '0', '350', '94.29', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000092-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000092-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 350, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 93 Stock: SILV-UT-KTR-30G
 INSERT INTO "stock_balances" (
@@ -3940,16 +5408,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000093-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000093-0000-0000-0000-000000000001',
-  '12', '0', '12', '2800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '360', '0', '360', '93.33', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000093-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000093-0000-0000-0000-000000000001',
-  'adjustment_in', 12, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 360, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 94 Stock: SILV-ID-KMD-110G
 INSERT INTO "stock_balances" (
@@ -3957,16 +5430,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000094-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000094-0000-0000-0000-000000000001',
-  '3', '0', '3', '10500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '330', '0', '330', '95.45', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000094-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000094-0000-0000-0000-000000000001',
-  'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 330, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 95 Stock: SCOIN-999-10G
 INSERT INTO "stock_balances" (
@@ -3974,16 +5452,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000095-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000095-0000-0000-0000-000000000001',
-  '50', '0', '50', '930.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '500', '0', '500', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000095-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000095-0000-0000-0000-000000000001',
-  'adjustment_in', 50, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 500, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 96 Stock: SCOIN-999-20G
 INSERT INTO "stock_balances" (
@@ -3991,16 +5474,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000096-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000096-0000-0000-0000-000000000001',
-  '40', '0', '40', '1860.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '800', '0', '800', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000096-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000096-0000-0000-0000-000000000001',
-  'adjustment_in', 40, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 800, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 97 Stock: SCOIN-999-50G
 INSERT INTO "stock_balances" (
@@ -4008,16 +5496,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000097-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000097-0000-0000-0000-000000000001',
-  '25', '0', '25', '4650.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '1250', '0', '1250', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000097-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000097-0000-0000-0000-000000000001',
-  'adjustment_in', 25, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 1250, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 98 Stock: SCOIN-999-100G
 INSERT INTO "stock_balances" (
@@ -4025,16 +5518,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000098-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000098-0000-0000-0000-000000000001',
-  '20', '0', '20', '9300.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '2000', '0', '2000', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000098-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000098-0000-0000-0000-000000000001',
-  'adjustment_in', 20, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 2000, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 99 Stock: SBAR-999-250G
 INSERT INTO "stock_balances" (
@@ -4042,16 +5540,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000099-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000099-0000-0000-0000-000000000001',
-  '8', '0', '8', '23250.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '2000', '0', '2000', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000099-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000099-0000-0000-0000-000000000001',
-  'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 2000, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 100 Stock: SBAR-999-500G
 INSERT INTO "stock_balances" (
@@ -4059,16 +5562,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000100-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000100-0000-0000-0000-000000000001',
-  '5', '0', '5', '46500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '2500', '0', '2500', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000100-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000100-0000-0000-0000-000000000001',
-  'adjustment_in', 5, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 2500, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 101 Stock: SBAR-999-1000G
 INSERT INTO "stock_balances" (
@@ -4076,16 +5584,21 @@ INSERT INTO "stock_balances" (
 ) VALUES (
   '71000101-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000101-0000-0000-0000-000000000001',
-  '4', '0', '4', '93000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  '4000', '0', '4000', '93.00', NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
 ) VALUES (
   '72000101-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000101-0000-0000-0000-000000000001',
-  'adjustment_in', 4, '10000000-0000-0000-0000-000000000003', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'adjustment_in', 4000, '10000000-0000-0000-0000-000000000004', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 102 Stock: DIAM-RG-SOL-025
 INSERT INTO "stock_balances" (
@@ -4094,7 +5607,10 @@ INSERT INTO "stock_balances" (
   '71000102-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000102-0000-0000-0000-000000000001',
   '3', '0', '3', '32000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4102,7 +5618,9 @@ INSERT INTO "stock_movements" (
   '72000102-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000102-0000-0000-0000-000000000001',
   'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 103 Stock: DIAM-RG-HLO-040
 INSERT INTO "stock_balances" (
@@ -4111,7 +5629,10 @@ INSERT INTO "stock_balances" (
   '71000103-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000103-0000-0000-0000-000000000001',
   '3', '0', '3', '48000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4119,7 +5640,9 @@ INSERT INTO "stock_movements" (
   '72000103-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000103-0000-0000-0000-000000000001',
   'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 104 Stock: DIAM-ER-STD-030
 INSERT INTO "stock_balances" (
@@ -4128,7 +5651,10 @@ INSERT INTO "stock_balances" (
   '71000104-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000104-0000-0000-0000-000000000001',
   '4', '0', '4', '38000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4136,7 +5662,9 @@ INSERT INTO "stock_movements" (
   '72000104-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000104-0000-0000-0000-000000000001',
   'adjustment_in', 4, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 105 Stock: DIAM-PD-TMN-050
 INSERT INTO "stock_balances" (
@@ -4145,7 +5673,10 @@ INSERT INTO "stock_balances" (
   '71000105-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000105-0000-0000-0000-000000000001',
   '2', '0', '2', '58000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4153,7 +5684,9 @@ INSERT INTO "stock_movements" (
   '72000105-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000105-0000-0000-0000-000000000001',
   'adjustment_in', 2, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 106 Stock: DIAM-PD-HRT-015
 INSERT INTO "stock_balances" (
@@ -4162,7 +5695,10 @@ INSERT INTO "stock_balances" (
   '71000106-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000106-0000-0000-0000-000000000001',
   '4', '0', '4', '22000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4170,7 +5706,9 @@ INSERT INTO "stock_movements" (
   '72000106-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000106-0000-0000-0000-000000000001',
   'adjustment_in', 4, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 107 Stock: DIAM-NP-SCW-005
 INSERT INTO "stock_balances" (
@@ -4179,7 +5717,10 @@ INSERT INTO "stock_balances" (
   '71000107-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000107-0000-0000-0000-000000000001',
   '10', '0', '10', '6500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4187,7 +5728,9 @@ INSERT INTO "stock_movements" (
   '72000107-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000107-0000-0000-0000-000000000001',
   'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 108 Stock: DIAM-RG-MBD-020
 INSERT INTO "stock_balances" (
@@ -4196,7 +5739,10 @@ INSERT INTO "stock_balances" (
   '71000108-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000108-0000-0000-0000-000000000001',
   '3', '0', '3', '42000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4204,7 +5750,9 @@ INSERT INTO "stock_movements" (
   '72000108-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000108-0000-0000-0000-000000000001',
   'adjustment_in', 3, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 109 Stock: DIAM-BR-TNS-150
 INSERT INTO "stock_balances" (
@@ -4213,7 +5761,10 @@ INSERT INTO "stock_balances" (
   '71000109-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000109-0000-0000-0000-000000000001',
   '1', '0', '1', '135000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4221,7 +5772,9 @@ INSERT INTO "stock_movements" (
   '72000109-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000109-0000-0000-0000-000000000001',
   'adjustment_in', 1, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 110 Stock: GEM-PUK-425R
 INSERT INTO "stock_balances" (
@@ -4230,7 +5783,10 @@ INSERT INTO "stock_balances" (
   '71000110-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000110-0000-0000-0000-000000000001',
   '3', '0', '3', '28000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4238,7 +5794,9 @@ INSERT INTO "stock_movements" (
   '72000110-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000110-0000-0000-0000-000000000001',
   'adjustment_in', 3, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 111 Stock: GEM-PUK-650R
 INSERT INTO "stock_balances" (
@@ -4247,7 +5805,10 @@ INSERT INTO "stock_balances" (
   '71000111-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000111-0000-0000-0000-000000000001',
   '2', '0', '2', '52000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4255,7 +5816,9 @@ INSERT INTO "stock_movements" (
   '72000111-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000111-0000-0000-0000-000000000001',
   'adjustment_in', 2, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 112 Stock: GEM-NEL-525R
 INSERT INTO "stock_balances" (
@@ -4264,7 +5827,10 @@ INSERT INTO "stock_balances" (
   '71000112-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000112-0000-0000-0000-000000000001',
   '2', '0', '2', '42000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4272,7 +5838,9 @@ INSERT INTO "stock_movements" (
   '72000112-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000112-0000-0000-0000-000000000001',
   'adjustment_in', 2, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 113 Stock: GEM-PAN-550R
 INSERT INTO "stock_balances" (
@@ -4281,7 +5849,10 @@ INSERT INTO "stock_balances" (
   '71000113-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000113-0000-0000-0000-000000000001',
   '3', '0', '3', '33000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4289,7 +5860,9 @@ INSERT INTO "stock_movements" (
   '72000113-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000113-0000-0000-0000-000000000001',
   'adjustment_in', 3, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 114 Stock: GEM-MNG-725R
 INSERT INTO "stock_balances" (
@@ -4298,7 +5871,10 @@ INSERT INTO "stock_balances" (
   '71000114-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000114-0000-0000-0000-000000000001',
   '5', '0', '5', '14500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4306,7 +5882,9 @@ INSERT INTO "stock_movements" (
   '72000114-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000114-0000-0000-0000-000000000001',
   'adjustment_in', 5, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 115 Stock: GEM-MNK-450R
 INSERT INTO "stock_balances" (
@@ -4315,7 +5893,10 @@ INSERT INTO "stock_balances" (
   '71000115-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000115-0000-0000-0000-000000000001',
   '2', '0', '2', '31000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4323,7 +5904,9 @@ INSERT INTO "stock_movements" (
   '72000115-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000115-0000-0000-0000-000000000001',
   'adjustment_in', 2, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 116 Stock: GEM-MOT-600R
 INSERT INTO "stock_balances" (
@@ -4332,7 +5915,10 @@ INSERT INTO "stock_balances" (
   '71000116-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000116-0000-0000-0000-000000000001',
   '6', '0', '6', '12000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4340,7 +5926,9 @@ INSERT INTO "stock_movements" (
   '72000116-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000116-0000-0000-0000-000000000001',
   'adjustment_in', 6, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 117 Stock: GEM-GMD-675R
 INSERT INTO "stock_balances" (
@@ -4349,7 +5937,10 @@ INSERT INTO "stock_balances" (
   '71000117-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000117-0000-0000-0000-000000000001',
   '4', '0', '4', '9500.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4357,7 +5948,9 @@ INSERT INTO "stock_movements" (
   '72000117-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000117-0000-0000-0000-000000000001',
   'adjustment_in', 4, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 118 Stock: GEM-LHS-525R
 INSERT INTO "stock_balances" (
@@ -4366,7 +5959,10 @@ INSERT INTO "stock_balances" (
   '71000118-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000118-0000-0000-0000-000000000001',
   '4', '0', '4', '11000.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4374,7 +5970,9 @@ INSERT INTO "stock_movements" (
   '72000118-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000118-0000-0000-0000-000000000001',
   'adjustment_in', 4, '10000000-0000-0000-0000-000000000018', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 119 Stock: IMIT-ST-KND-01
 INSERT INTO "stock_balances" (
@@ -4383,7 +5981,10 @@ INSERT INTO "stock_balances" (
   '71000119-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000119-0000-0000-0000-000000000001',
   '8', '0', '8', '2800.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4391,7 +5992,9 @@ INSERT INTO "stock_movements" (
   '72000119-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000119-0000-0000-0000-000000000001',
   'adjustment_in', 8, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 120 Stock: IMIT-ST-TMP-01
 INSERT INTO "stock_balances" (
@@ -4400,7 +6003,10 @@ INSERT INTO "stock_balances" (
   '71000120-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000120-0000-0000-0000-000000000001',
   '10', '0', '10', '2200.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4408,7 +6014,9 @@ INSERT INTO "stock_movements" (
   '72000120-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000120-0000-0000-0000-000000000001',
   'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 121 Stock: IMIT-CH-MGP-24
 INSERT INTO "stock_balances" (
@@ -4417,7 +6025,10 @@ INSERT INTO "stock_balances" (
   '71000121-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000121-0000-0000-0000-000000000001',
   '25', '0', '25', '350.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4425,7 +6036,9 @@ INSERT INTO "stock_movements" (
   '72000121-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000121-0000-0000-0000-000000000001',
   'adjustment_in', 25, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 122 Stock: IMIT-KD-FLR-02
 INSERT INTO "stock_balances" (
@@ -4434,7 +6047,10 @@ INSERT INTO "stock_balances" (
   '71000122-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000122-0000-0000-0000-000000000001',
   '15', '0', '15', '550.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4442,7 +6058,9 @@ INSERT INTO "stock_movements" (
   '72000122-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000122-0000-0000-0000-000000000001',
   'adjustment_in', 15, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 123 Stock: IMIT-NP-NTH-01
 INSERT INTO "stock_balances" (
@@ -4451,7 +6069,10 @@ INSERT INTO "stock_balances" (
   '71000123-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000123-0000-0000-0000-000000000001',
   '15', '0', '15', '320.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4459,7 +6080,9 @@ INSERT INTO "stock_movements" (
   '72000123-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000123-0000-0000-0000-000000000001',
   'adjustment_in', 15, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 124 Stock: IMIT-KB-RYL-01
 INSERT INTO "stock_balances" (
@@ -4468,7 +6091,10 @@ INSERT INTO "stock_balances" (
   '71000124-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000124-0000-0000-0000-000000000001',
   '12', '0', '12', '750.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4476,7 +6102,9 @@ INSERT INTO "stock_movements" (
   '72000124-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000124-0000-0000-0000-000000000001',
   'adjustment_in', 12, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 125 Stock: IMIT-BG-CHD-01
 INSERT INTO "stock_balances" (
@@ -4485,7 +6113,10 @@ INSERT INTO "stock_balances" (
   '71000125-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000125-0000-0000-0000-000000000001',
   '10', '0', '10', '1100.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4493,7 +6124,9 @@ INSERT INTO "stock_movements" (
   '72000125-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000125-0000-0000-0000-000000000001',
   'adjustment_in', 10, '10000000-0000-0000-0000-000000000001', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 -- Item 126 Stock: IMIT-HP-KND-02
 INSERT INTO "stock_balances" (
@@ -4502,7 +6135,10 @@ INSERT INTO "stock_balances" (
   '71000126-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000126-0000-0000-0000-000000000001',
   '14', '0', '14', '480.00', NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity_on_hand" = EXCLUDED.quantity_on_hand,
+  "quantity_available" = EXCLUDED.quantity_available,
+  "average_unit_cost" = EXCLUDED.average_unit_cost;
 
 INSERT INTO "stock_movements" (
   "id", "tenant_id", "inventory_location_id", "variant_id", "movement_type", "quantity", "unit_id", "reference_type", "reference_id", "occurred_at", "created_at"
@@ -4510,6 +6146,8 @@ INSERT INTO "stock_movements" (
   '72000126-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
   '70000000-0000-0000-0000-000000000001', 'b0000126-0000-0000-0000-000000000001',
   'adjustment_in', 14, '10000000-0000-0000-0000-000000000017', 'opening_stock', '00000000-0000-0000-0000-000000000001', NOW(), NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET
+  "quantity" = EXCLUDED.quantity,
+  "unit_id" = EXCLUDED.unit_id;
 
 COMMIT;
