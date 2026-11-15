@@ -107,4 +107,108 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
       });
     }
   });
+
+  // GET /api/v1/auth/license-status
+  app.get<{
+    Querystring: { tenantId?: string; licenseNumber?: string };
+  }>('/license-status', async (req, reply) => {
+    const tenantId =
+      req.query.tenantId ||
+      (req.headers['x-tenant-id'] as string) ||
+      '00000000-0000-0000-0000-000000000001';
+    const licenseNumber =
+      req.query.licenseNumber || (req.headers['x-license-number'] as string);
+
+    // 1. Try live check against Central Cloud
+    try {
+      const q = new URLSearchParams();
+      if (tenantId) q.set('tenantId', tenantId);
+      if (licenseNumber) q.set('licenseNumber', licenseNumber);
+
+      const centralRes = await fetch(`${centralUrl}/api/v1/auth/license-status?${q.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}),
+          'x-tenant-id': tenantId,
+        },
+      });
+
+      if (centralRes.ok) {
+        const json = (await centralRes.json()) as any;
+        if (json.success && json.data) {
+          // Sync status to local DB so queries / preHandlers reflect updated status
+          if (opts.uow) {
+            try {
+              await opts.uow.runInTransaction(async (ctx: any) => {
+                if (ctx.rawQuery) {
+                  await ctx.rawQuery(`UPDATE tenants SET status = $1 WHERE id = $2`, [
+                    json.data.status,
+                    tenantId,
+                  ]);
+                }
+              });
+            } catch (syncErr: any) {
+              app.log.warn({ syncErr }, `[License Status] Local status sync failed: ${syncErr.message}`);
+            }
+          }
+          return reply.status(200).send(json);
+        }
+      }
+    } catch (centralErr: any) {
+      app.log.warn(
+        { centralErr },
+        `[License Status] Central server unreachable, falling back to local DB: ${centralErr.message}`
+      );
+    }
+
+    // 2. Fallback to local DB if Central Cloud is offline
+    if (opts.uow) {
+      try {
+        const localTenant = await opts.uow.runInTransaction(async (ctx: any) => {
+          if (ctx.rawQuery) {
+            const rows = await ctx.rawQuery(
+              `SELECT id, name, status, trial_ends_at FROM tenants WHERE id = $1`,
+              [tenantId]
+            );
+            return rows[0];
+          }
+          return null;
+        });
+
+        if (localTenant) {
+          const isExpired = localTenant.trial_ends_at
+            ? new Date(localTenant.trial_ends_at) < new Date()
+            : false;
+          let computedStatus = localTenant.status || 'active';
+          if (computedStatus === 'active' && isExpired) {
+            computedStatus = 'expired';
+          }
+
+          return reply.status(200).send({
+            success: true,
+            data: {
+              tenantId: localTenant.id,
+              name: localTenant.name,
+              status: computedStatus,
+              isOfflineCheck: true,
+            },
+            requestId: req.id,
+          });
+        }
+      } catch (dbErr: any) {
+        app.log.warn({ dbErr }, `[License Status] Local DB fallback failed: ${dbErr.message}`);
+      }
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: {
+        tenantId,
+        status: 'active',
+        isDefaultFallback: true,
+      },
+      requestId: req.id,
+    });
+  });
 };

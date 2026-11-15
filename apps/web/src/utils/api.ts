@@ -54,8 +54,35 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 
   const mergedHeaders = getAuthHeaders(customHeaders);
 
-  return fetch(input, {
+  const res = await fetch(input, {
     ...init,
     headers: mergedHeaders,
   });
+
+  if (res.status === 403 && typeof window !== 'undefined') {
+    try {
+      const cloned = res.clone();
+      cloned
+        .json()
+        .then((json) => {
+          const code = json?.error?.code;
+          if (code === 'TENANT_SUSPENDED') {
+            window.dispatchEvent(
+              new CustomEvent('vk:license-status-change', { detail: { status: 'suspended' } })
+            );
+          } else if (code === 'LICENSE_EXPIRED') {
+            window.dispatchEvent(
+              new CustomEvent('vk:license-status-change', { detail: { status: 'expired' } })
+            );
+          } else if (code === 'TENANT_NOT_ACTIVE') {
+            window.dispatchEvent(
+              new CustomEvent('vk:license-status-change', { detail: { status: 'suspended' } })
+            );
+          }
+        })
+        .catch(() => {});
+    } catch {}
+  }
+
+  return res;
 }

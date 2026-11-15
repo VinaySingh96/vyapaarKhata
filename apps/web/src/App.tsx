@@ -14,6 +14,7 @@ import { ExpensesScreen } from './screens/ExpensesScreen.js';
 import { ReportsScreen } from './screens/ReportsScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
 import { LicenseLoginScreen } from './screens/LicenseLoginScreen.js';
+import { LicenseStatusScreen } from './screens/LicenseStatusScreen.js';
 
 const VALID_ROUTES = [
   'dashboard',
@@ -48,7 +49,7 @@ function getRouteFromLocation(): RouteId {
 
 const AppContent: React.FC = () => {
   const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
-  const { storeSettings, isLicenseLoggedIn } = useStore();
+  const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus } = useStore();
 
   // Listen to popstate (back/forward browser buttons) and hashchange
   useEffect(() => {
@@ -78,6 +79,11 @@ const AppContent: React.FC = () => {
   // Restrict any UI before valid store license login
   if (!isLicenseLoggedIn) {
     return <LicenseLoginScreen />;
+  }
+
+  // Restrict and display dedicated screen when tenant status is suspended, expired, cancelled, etc.
+  if (tenantStatus && tenantStatus !== 'active' && tenantStatus !== 'trial') {
+    return <LicenseStatusScreen status={tenantStatus} onRecheck={checkLicenseStatus} />;
   }
 
   return (

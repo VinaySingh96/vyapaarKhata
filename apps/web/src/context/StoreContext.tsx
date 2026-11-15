@@ -22,12 +22,15 @@ interface StoreContextType {
   licenseNumber: string | null;
   jwtToken: string | null;
   isLicenseLoggedIn: boolean;
+  tenantStatus: string;
   isLoading: boolean;
   updateStoreSettings: (newSettings: Partial<StoreSettings>) => Promise<void>;
   refreshStoreSettings: () => Promise<void>;
   loginWithLicense: (licenseNumber: string, secretKey: string) => Promise<{ success: boolean; message?: string }>;
   logoutLicense: () => void;
   setExplicitStoreType: (type: StoreType) => void;
+  checkLicenseStatus: () => Promise<{ status: string; message?: string }>;
+  setSimulatedTenantStatus: (status: string) => void;
 }
 
 const DEFAULT_SETTINGS: StoreSettings = {
@@ -47,12 +50,15 @@ const StoreContext = createContext<StoreContextType>({
   licenseNumber: null,
   jwtToken: null,
   isLicenseLoggedIn: false,
+  tenantStatus: 'active',
   isLoading: false,
   updateStoreSettings: async () => {},
   refreshStoreSettings: async () => {},
   loginWithLicense: async () => ({ success: false }),
   logoutLicense: () => {},
   setExplicitStoreType: () => {},
+  checkLicenseStatus: async () => ({ status: 'active' }),
+  setSimulatedTenantStatus: () => {},
 });
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -107,9 +113,73 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return 'building_materials';
   });
 
+  const [tenantStatus, setTenantStatus] = useState<string>(() => {
+    try {
+      return localStorage.getItem('vk_tenant_status') || 'active';
+    } catch {
+      return 'active';
+    }
+  });
+
   const [isLoading, setIsLoading] = useState(false);
 
   const isLicenseLoggedIn = Boolean(jwtToken && licenseNumber);
+
+  const checkLicenseStatus = async (): Promise<{ status: string; message?: string }> => {
+    try {
+      const res = await apiFetch('/api/v1/auth/license-status');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const newStatus = json.data.status || 'active';
+          setTenantStatus(newStatus);
+          try {
+            localStorage.setItem('vk_tenant_status', newStatus);
+          } catch {}
+          return { status: newStatus, message: json.data.message };
+        }
+      }
+    } catch (e: any) {
+      console.warn('Could not check license status:', e);
+    }
+    return { status: tenantStatus };
+  };
+
+  const setSimulatedTenantStatus = (status: string) => {
+    setTenantStatus(status);
+    try {
+      localStorage.setItem('vk_tenant_status', status);
+    } catch {}
+  };
+
+  // Listen to custom license status change events dispatched by apiFetch
+  useEffect(() => {
+    const handleStatusEvent = (e: any) => {
+      const status = e.detail?.status;
+      if (status) {
+        setTenantStatus(status);
+        try {
+          localStorage.setItem('vk_tenant_status', status);
+        } catch {}
+      }
+    };
+    window.addEventListener('vk:license-status-change', handleStatusEvent);
+    return () => window.removeEventListener('vk:license-status-change', handleStatusEvent);
+  }, []);
+
+  // Periodic license check & re-check on window focus
+  useEffect(() => {
+    if (isLicenseLoggedIn) {
+      checkLicenseStatus();
+      const interval = setInterval(checkLicenseStatus, 30000);
+      const onFocus = () => checkLicenseStatus();
+      window.addEventListener('focus', onFocus);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('focus', onFocus);
+      };
+    }
+  }, [isLicenseLoggedIn, tenantId]);
 
   const loginWithLicense = async (lic: string, secret: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
@@ -151,6 +221,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setTenantId(tenant.id);
       }
 
+      const status = tenant.status || 'active';
+      setTenantStatus(status);
+      localStorage.setItem('vk_tenant_status', status);
+
       setJwtToken(accessToken);
       setLicenseNumber(tenant.licenseNumber || lic);
       setStoreType(tenant.storeType || 'building_materials');
@@ -176,8 +250,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.removeItem('vk_refresh_token');
     localStorage.removeItem('vk_license_number');
     localStorage.removeItem('vk_tenant_id');
+    localStorage.removeItem('vk_tenant_status');
     setJwtToken(null);
     setLicenseNumber(null);
+    setTenantStatus('active');
     setTenantId('00000000-0000-0000-0000-000000000001');
   };
 
@@ -276,12 +352,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         licenseNumber,
         jwtToken,
         isLicenseLoggedIn,
+        tenantStatus,
         isLoading,
         updateStoreSettings,
         refreshStoreSettings,
         loginWithLicense,
         logoutLicense,
         setExplicitStoreType,
+        checkLicenseStatus,
+        setSimulatedTenantStatus,
       }}
     >
       {children}

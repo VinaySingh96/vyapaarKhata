@@ -264,6 +264,54 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
 
     // Register Automated Global Audit Logging Hook
     registerAuditHook(app, uow);
+
+    // PreHandler hook to block write mutations for suspended or expired tenants
+    app.addHook('preHandler', async (request, reply) => {
+      const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method);
+      const isDomainRoute =
+        request.url.startsWith('/api/v1/') &&
+        !request.url.startsWith('/api/v1/auth') &&
+        !request.url.startsWith('/api/v1/sync');
+
+      if (isMutation && isDomainRoute) {
+        const tenantId =
+          (request.headers['x-tenant-id'] as string) || '00000000-0000-0000-0000-000000000001';
+        try {
+          const tenantRow = await uow.runInTransaction(async (ctx: any) => {
+            if (ctx.rawQuery) {
+              const rows = await ctx.rawQuery(`SELECT status FROM tenants WHERE id = $1`, [tenantId]);
+              return rows[0];
+            }
+            return null;
+          });
+
+          if (tenantRow) {
+            if (tenantRow.status === 'suspended') {
+              return reply.status(403).send({
+                success: false,
+                error: {
+                  code: 'TENANT_SUSPENDED',
+                  message: 'Store account has been suspended by the administrator. Operations are disabled.',
+                },
+                requestId: request.id,
+              });
+            }
+            if (tenantRow.status === 'expired' || tenantRow.status === 'cancelled') {
+              return reply.status(403).send({
+                success: false,
+                error: {
+                  code: 'LICENSE_EXPIRED',
+                  message: `Store license status is ${tenantRow.status}. Please renew your license to continue operations.`,
+                },
+                requestId: request.id,
+              });
+            }
+          }
+        } catch {
+          // If query fails, proceed normally
+        }
+      }
+    });
   }
 
   return app;

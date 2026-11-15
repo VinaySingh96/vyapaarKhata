@@ -217,4 +217,81 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
       });
     }
   });
+
+  // GET /api/v1/auth/license-status
+  app.get<{
+    Querystring: { tenantId?: string; licenseNumber?: string };
+  }>('/license-status', async (req, reply) => {
+    let tenantId = req.query.tenantId || (req.headers['x-tenant-id'] as string);
+    const licenseNumber = req.query.licenseNumber || (req.headers['x-license-number'] as string);
+
+    if (!tenantId && !licenseNumber && req.headers.authorization?.startsWith('Bearer ')) {
+      try {
+        const decoded = verifyJwt(req.headers.authorization.slice(7), jwtSecret);
+        if (decoded.tenantId) {
+          tenantId = decoded.tenantId;
+        }
+      } catch {}
+    }
+
+    if (!tenantId && !licenseNumber) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'tenantId or licenseNumber is required' },
+        requestId: req.id,
+      });
+    }
+
+    let tenantWithDetails = null;
+    if (tenantId) {
+      tenantWithDetails = await tenantService.getTenantById(tenantId);
+    } else if (licenseNumber) {
+      const basicTenant = await tenantService.getTenantByLicense(licenseNumber.trim());
+      if (basicTenant) {
+        tenantWithDetails = await tenantService.getTenantById(basicTenant.id);
+      }
+    }
+
+    if (!tenantWithDetails) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Tenant or license not found in Central Cloud' },
+        requestId: req.id,
+      });
+    }
+
+    const sub = tenantWithDetails.subscription;
+    const isExpired = sub ? new Date(sub.validUntil) < new Date() : false;
+
+    let computedStatus: 'active' | 'suspended' | 'trial' | 'expired' | 'cancelled' = tenantWithDetails.status;
+    if (computedStatus === 'active' && isExpired) {
+      computedStatus = 'expired';
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: {
+        tenantId: tenantWithDetails.id,
+        name: tenantWithDetails.name,
+        legalName: tenantWithDetails.legalName,
+        storeType: tenantWithDetails.storeType,
+        licenseNumber: tenantWithDetails.licenseNumber,
+        status: computedStatus,
+        rawStatus: tenantWithDetails.status,
+        plan: tenantWithDetails.plan,
+        subscription: sub || null,
+        message:
+          computedStatus === 'active'
+            ? 'Store license is active and valid.'
+            : computedStatus === 'suspended'
+            ? 'Store license has been suspended by the administrator.'
+            : computedStatus === 'expired'
+            ? 'Store license subscription has expired.'
+            : computedStatus === 'cancelled'
+            ? 'Store subscription has been terminated.'
+            : `Store status is ${computedStatus}.`,
+      },
+      requestId: req.id,
+    });
+  });
 };
