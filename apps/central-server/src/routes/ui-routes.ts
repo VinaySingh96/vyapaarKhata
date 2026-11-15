@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
+import { renderTenantDashboardPage } from './tenant-dashboard-html.js';
 
 export const uiRoutes: FastifyPluginAsync = async (app) => {
   // Redirect root to /admin
@@ -484,22 +485,6 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     </div>
   </div>
 
-  <!-- Tenant Details Modal -->
-  <div class="modal-overlay" id="tenantDetailsModal">
-    <div class="modal-content" style="max-width: 720px;">
-      <div class="modal-header">
-        <h3 style="font-size: 1.15rem; font-weight: 700;" id="detailsTenantName">Tenant Details</h3>
-        <button class="btn btn-secondary btn-sm" onclick="closeTenantDetailsModal()">✕</button>
-      </div>
-      <div class="modal-body" id="detailsModalBody">
-        Loading...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeTenantDetailsModal()">Close</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // Clock
     setInterval(() => {
@@ -592,7 +577,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
               <span class="badge badge-\${t.status}">\${t.status}</span>
             </td>
             <td>
-              <button class="btn btn-primary btn-sm" onclick="viewTenantDetails('\${t.id}')">📊 View Dashboard</button>
+              <a href="/admin/tenants/\${t.id}" class="btn btn-primary btn-sm" style="text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">📊 View Dashboard</a>
               \${t.status === 'active' ? 
                 \`<button class="btn btn-danger btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'suspended')">Suspend</button>\` :
                 \`<button class="btn btn-success btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'active')">Activate</button>\`
@@ -630,7 +615,6 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     // Modal Helpers
     function openCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'flex'; }
     function closeCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'none'; }
-    function closeTenantDetailsModal() { document.getElementById('tenantDetailsModal').style.display = 'none'; }
 
     async function handleCreateTenant(e) {
       e.preventDefault();
@@ -676,266 +660,9 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    // View Tenant Details & Dashboard
-    async function viewTenantDetails(id) {
-      document.getElementById('tenantDetailsModal').style.display = 'flex';
-      const body = document.getElementById('detailsModalBody');
-      body.innerHTML = '<div style="text-align:center; padding: 2rem;">Loading tenant analytics & credentials...</div>';
-
-      try {
-        const [tenantRes, dashRes] = await Promise.all([
-          fetch(\`/api/v1/admin/tenants/\${id}\`),
-          fetch(\`/api/v1/admin/tenants/\${id}/dashboard\`)
-        ]);
-
-        const tJson = await tenantRes.json();
-        const dJson = await dashRes.json();
-
-        if (!tJson.success) {
-          body.innerHTML = '<div style="color:red; padding: 1rem;">Error loading tenant details</div>';
-          return;
-        }
-
-        const t = tJson.data;
-        const d = dJson.success ? dJson.data : {
-          todaySales: 0,
-          todayEarnings: 0,
-          thisMonthSales: 0,
-          thisMonthEarnings: 0,
-          totalSales: 0,
-          totalEarnings: 0,
-          totalSyncEvents: 0,
-          totalInvoicesCount: 0,
-          totalPaymentsCount: 0,
-          eventsByType: {},
-          dailyBreakdown: [],
-          monthlyBreakdown: []
-        };
-
-        const isJewel = t.storeType === 'jewellery';
-        document.getElementById('detailsTenantName').innerHTML = \`
-          <span style="font-size: 1.25rem; margin-right: 6px;">\${isJewel ? '💍' : '🏗️'}</span>
-          \${t.name}
-          <span class="badge" style="margin-left: 8px; background: \${isJewel ? '#fef3c7' : '#e0e7ff'}; color: \${isJewel ? '#92400e' : '#3730a3'};">
-            \${isJewel ? 'Jewellery Showroom' : 'Building Materials & Depot'}
-          </span>
-        \`;
-
-        let instHtml = (t.installations && t.installations.length > 0) ? t.installations.map(i => \`
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <div style="font-weight: 600;">\${i.deviceName} (\${i.installationType})</div>
-              <div style="font-size: 0.75rem; color: #64748b;">
-                HW Fingerprint: \${i.hardwareFingerprint || 'Auto-Detected Terminal'} • App v\${i.appVersion || '0.1.0'}
-              </div>
-              <div style="font-size: 0.75rem; color: #94a3b8;">
-                Last Heartbeat: \${i.lastHeartbeatAt ? new Date(i.lastHeartbeatAt).toLocaleString() : 'Never'}
-              </div>
-            </div>
-            <div>
-              <span class="badge badge-\${i.status}">\${i.status}</span>
-            </div>
-          </div>
-        \`).join('') : '<div style="color: #94a3b8; font-size: 0.85rem;">No local terminals registered yet.</div>';
-
-        let eventsBreakdownHtml = Object.entries(d.eventsByType || {}).map(([evt, count]) => \`
-          <span style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-family: monospace;">
-            <strong>\${evt}</strong>: \${count}
-          </span>
-        \`).join(' ') || '<span style="color:#94a3b8; font-size: 0.8rem;">No events synced yet</span>';
-
-        let dailyRowsHtml = (d.dailyBreakdown && d.dailyBreakdown.length > 0) ? d.dailyBreakdown.slice(0, 7).map(row => \`
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 5px 8px; font-weight: 600; font-family: monospace;">\${row.date}</td>
-            <td style="padding: 5px 8px; color: #64748b;">\${row.invoicesCount} inv</td>
-            <td style="padding: 5px 8px; color: #047857; font-weight: 700; text-align: right;">₹ \${Number(row.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-            <td style="padding: 5px 8px; color: #64748b;">\${row.paymentsCount} rcpt</td>
-            <td style="padding: 5px 8px; color: #7e22ce; font-weight: 700; text-align: right;">₹ \${Number(row.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-          </tr>
-        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 12px; color: #94a3b8;">No daily transactions synced yet</td></tr>';
-
-        let monthlyRowsHtml = (d.monthlyBreakdown && d.monthlyBreakdown.length > 0) ? d.monthlyBreakdown.slice(0, 6).map(row => \`
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 5px 8px; font-weight: 600; font-family: monospace;">\${row.month}</td>
-            <td style="padding: 5px 8px; color: #64748b;">\${row.invoicesCount} inv</td>
-            <td style="padding: 5px 8px; color: #047857; font-weight: 700; text-align: right;">₹ \${Number(row.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-            <td style="padding: 5px 8px; color: #64748b;">\${row.paymentsCount} rcpt</td>
-            <td style="padding: 5px 8px; color: #7e22ce; font-weight: 700; text-align: right;">₹ \${Number(row.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-          </tr>
-        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 12px; color: #94a3b8;">No monthly transactions synced yet</td></tr>';
-
-        body.innerHTML = \`
-          <!-- Store Credentials & License Card -->
-          <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-              <div>
-                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Tenant License & Access Credentials</div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                  <span style="font-family: monospace; font-size: 1.15rem; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 2px 8px; border-radius: 4px;">
-                    \${t.licenseNumber || 'NO LICENSE ASSIGNED'}
-                  </span>
-                  \${t.licenseNumber ? \`<button class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none; font-size: 0.75rem;" onclick="copyToClipboard('\${t.licenseNumber}', 'License Number')">📋 Copy</button>\` : ''}
-                </div>
-              </div>
-              <div>
-                <div style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;">Secret Key (Store Token Auth)</div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
-                  <span style="font-family: monospace; font-size: 0.85rem; color: #facc15; background: rgba(250, 204, 21, 0.15); padding: 4px 8px; border-radius: 4px;">
-                    \${t.secretKey ? t.secretKey.slice(0, 10) + '••••••••' : 'NO SECRET KEY'}
-                  </span>
-                  \${t.secretKey ? \`<button class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: none; font-size: 0.75rem;" onclick="copyToClipboard('\${t.secretKey}', 'Secret Key')">📋 Copy Key</button>\` : ''}
-                </div>
-              </div>
-            </div>
-            <div style="margin-top: 10px; font-size: 0.775rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between;">
-              <span>🔑 Validity: <strong>7 Days (JWT Bearer Token with Refresh)</strong></span>
-              <span>🎨 Target UI Profile: <strong>\${isJewel ? '💍 Jewellery Specialized POS' : '🏗️ Building Materials & Hardware POS'}</strong></span>
-            </div>
-          </div>
-
-          <!-- Financial Dashboard Cards (From Synced Data) -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-              <span>📈 Synced Store Financial Performance (Daily & Monthly)</span>
-              <span style="font-size: 0.75rem; color: #64748b; font-weight: 400;">Aggregated securely from sync inbox</span>
-            </div>
-            
-            <!-- 4 Grid Cards: Daily Sales, Daily Earnings, Monthly Sales, Monthly Earnings -->
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
-              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px;">
-                <div style="font-size: 0.7rem; color: #065f46; font-weight: 700; text-transform: uppercase;">📅 Today's Sales</div>
-                <div style="font-size: 1.2rem; font-weight: 800; color: #047857; margin-top: 4px;">
-                  ₹ \${Number(d.todaySales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-                <div style="font-size: 0.7rem; color: #065f46; margin-top: 2px;">Daily billed amount</div>
-              </div>
-
-              <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 10px;">
-                <div style="font-size: 0.7rem; color: #6b21a8; font-weight: 700; text-transform: uppercase;">💵 Today's Earnings</div>
-                <div style="font-size: 1.2rem; font-weight: 800; color: #7e22ce; margin-top: 4px;">
-                  ₹ \${Number(d.todayEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-                <div style="font-size: 0.7rem; color: #6b21a8; margin-top: 2px;">Daily collections / cash-in</div>
-              </div>
-
-              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px;">
-                <div style="font-size: 0.7rem; color: #1e40af; font-weight: 700; text-transform: uppercase;">📆 This Month's Sales</div>
-                <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; margin-top: 4px;">
-                  ₹ \${Number(d.thisMonthSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-                <div style="font-size: 0.7rem; color: #1e40af; margin-top: 2px;">Monthly billing volume</div>
-              </div>
-
-              <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px;">
-                <div style="font-size: 0.7rem; color: #9a3412; font-weight: 700; text-transform: uppercase;">💳 This Month's Earnings</div>
-                <div style="font-size: 1.2rem; font-weight: 800; color: #c2410c; margin-top: 4px;">
-                  ₹ \${Number(d.thisMonthEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-                <div style="font-size: 0.7rem; color: #9a3412; margin-top: 2px;">Monthly collections</div>
-              </div>
-            </div>
-
-            <!-- All Time Totals Banner -->
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
-              <span>Total Store Billed Sales: <strong style="color: #047857;">₹ \${Number(d.totalSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong> (\${d.totalInvoicesCount} invoices)</span>
-              <span>All-Time Net Collections / Earnings: <strong style="color: #7e22ce;">₹ \${Number(d.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong> (\${d.totalPaymentsCount} receipts)</span>
-            </div>
-          </div>
-
-          <!-- Daily & Monthly Trend Breakdown Tables -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px;">
-              📊 Historical Performance Ledger (Daily & Monthly)
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <!-- Daily Table -->
-              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
-                <div style="background: #f1f5f9; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0;">
-                  📅 Daily Breakdown (Recent Days)
-                </div>
-                <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse;">
-                  <thead>
-                    <tr style="background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0;">
-                      <th style="padding: 4px 8px; text-align: left;">Date</th>
-                      <th style="padding: 4px 8px; text-align: left;">Inv</th>
-                      <th style="padding: 4px 8px; text-align: right;">Sales</th>
-                      <th style="padding: 4px 8px; text-align: left;">Rcpt</th>
-                      <th style="padding: 4px 8px; text-align: right;">Earnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    \${dailyRowsHtml}
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Monthly Table -->
-              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
-                <div style="background: #f1f5f9; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0;">
-                  📆 Monthly Breakdown
-                </div>
-                <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse;">
-                  <thead>
-                    <tr style="background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0;">
-                      <th style="padding: 4px 8px; text-align: left;">Month</th>
-                      <th style="padding: 4px 8px; text-align: left;">Inv</th>
-                      <th style="padding: 4px 8px; text-align: right;">Sales</th>
-                      <th style="padding: 4px 8px; text-align: left;">Rcpt</th>
-                      <th style="padding: 4px 8px; text-align: right;">Earnings</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    \${monthlyRowsHtml}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sync Telemetry Overview -->
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 1.25rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 0.825rem; font-weight: 700; color: #1e293b;">⚡ Sync Volume & Data Transferred</span>
-              <span style="font-size: 0.775rem; color: #64748b;">
-                Last Synced: <strong>\${d.lastSyncedAt ? new Date(d.lastSyncedAt).toLocaleString() : 'Never'}</strong>
-              </span>
-            </div>
-            <div style="font-size: 0.8rem; color: #475569; margin-bottom: 8px;">
-              Total Ingested Events: <strong style="color: #2563eb;">\${d.totalSyncEvents}</strong> (\${d.totalInvoicesCount} invoices, \${d.totalPaymentsCount} settlements)
-            </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              \${eventsBreakdownHtml}
-            </div>
-          </div>
-
-          <!-- Basic Info Grid -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
-            <div>
-              <div style="font-size: 0.8rem; color: #64748b;">Tenant UUID</div>
-              <div style="font-family: monospace; font-size: 0.85rem; font-weight: 600;">\${t.id}</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Legal Name</div>
-              <div style="font-weight: 600;">\${t.legalName || 'N/A'}</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">GSTIN</div>
-              <div style="font-weight: 600;">\${t.gstin || 'Unregistered'}</div>
-            </div>
-            <div>
-              <div style="font-size: 0.8rem; color: #64748b;">Plan Tier</div>
-              <div style="font-weight: 600; text-transform: uppercase;">\${t.plan}</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Contact Info</div>
-              <div style="font-size: 0.85rem;">\${t.contactPhone || 'No phone'} • \${t.contactEmail || 'No email'}</div>
-              <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.5rem;">Store Address</div>
-              <div style="font-size: 0.85rem;">\${t.address || 'N/A'}</div>
-            </div>
-          </div>
-
-          <h4 style="font-size: 0.95rem; font-weight: 700; border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-bottom: 0.5rem;">
-            Registered Terminals (\${t.installations?.length || 0} / \${t.maxInstallations})
-          </h4>
-          \${instHtml}
-        \`;
-      } catch (err) {
-        body.innerHTML = '<div style="color:red; padding: 1rem;">Error: ' + err.message + '</div>';
-      }
+    // View Tenant Details & Dashboard (Navigate to dedicated page)
+    function viewTenantDetails(id) {
+      window.location.href = '/admin/tenants/' + id;
     }
 
     // Load Sync Stream
@@ -1017,6 +744,12 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
 </body>
 </html>`;
 
+    return reply.type('text/html').send(html);
+  });
+
+  // GET /admin/tenants/:id (Dedicated Full Page Store Dashboard)
+  app.get<{ Params: { id: string } }>('/admin/tenants/:id', async (req, reply) => {
+    const html = renderTenantDashboardPage(req.params.id);
     return reply.type('text/html').send(html);
   });
 };
