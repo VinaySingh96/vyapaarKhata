@@ -64,7 +64,7 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     const invoice: SalesInvoice = {
       id: body.id || randomUUID(),
       tenantId: tenantContext.tenantId,
-      businessLocationId: body.businessLocationId || 'b0000000-0000-0000-0000-000000000000',
+      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
       invoiceNumber: body.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
       customerId: body.customerId || 'c0000000-0000-0000-0000-000000000001',
       status: 'draft',
@@ -105,7 +105,7 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
   });
 
   // POST /api/v1/sales/invoices/:id/cancel
-  app.post<{ Params: { id: string }; Body: { reason: string } }>(
+  app.post<{ Params: { id: string }; Body: { reason?: string } }>(
     '/invoices/:id/cancel',
     async (req, reply) => {
       const tenantContext = resolveTenantContext(req);
@@ -121,6 +121,30 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
       return reply.status(200).send({
         success: true,
         data: invoice,
+        message: 'Invoice cancelled and inventory restored',
+        requestId: req.id,
+      });
+    }
+  );
+
+  // DELETE /api/v1/sales/invoices/:id (Soft cancel + restore inventory)
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>(
+    '/invoices/:id',
+    async (req, reply) => {
+      const tenantContext = resolveTenantContext(req);
+      const invoiceId = req.params.id;
+      const reason = req.body?.reason || 'Invoice cancelled by user';
+
+      const invoice = await service.cancelInvoice({
+        tenantContext,
+        invoiceId,
+        reason,
+      });
+
+      return reply.status(200).send({
+        success: true,
+        data: invoice,
+        message: 'Invoice cancelled and inventory restored',
         requestId: req.id,
       });
     }

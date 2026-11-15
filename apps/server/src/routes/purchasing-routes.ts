@@ -40,7 +40,7 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       supplierId: body.supplierId || '',
-      businessLocationId: body.businessLocationId || 'b0000000-0000-0000-0000-000000000000',
+      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
       orderNumber: body.orderNumber || `PO-${Date.now().toString().slice(-6)}`,
       status: 'confirmed',
       subtotal: body.subtotal || 0,

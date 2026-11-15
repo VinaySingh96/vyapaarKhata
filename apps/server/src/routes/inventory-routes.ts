@@ -66,7 +66,7 @@ export const inventoryRoutes: FastifyPluginAsync<InventoryRoutesOptions> = async
     const location: InventoryLocation = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
-      businessLocationId: body.businessLocationId || 'b0000000-0000-0000-0000-000000000000',
+      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
       name: body.name || 'Warehouse',
       code: body.code || `WH-${Date.now().toString().slice(-4)}`,
       locationType: body.locationType || 'warehouse',
@@ -93,7 +93,7 @@ export const inventoryRoutes: FastifyPluginAsync<InventoryRoutesOptions> = async
     const adjustment: StockAdjustment = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
-      inventoryLocationId: body.inventoryLocationId || 'b0000000-0000-0000-0000-000000000001',
+      inventoryLocationId: body.inventoryLocationId || '70000000-0000-0000-0000-000000000001',
       adjustmentNumber: body.adjustmentNumber || `ADJ-${Date.now().toString().slice(-6)}`,
       reason: body.reason || 'physical_count',
       status: 'posted',
