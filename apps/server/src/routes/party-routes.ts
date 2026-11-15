@@ -66,6 +66,7 @@ export const partyRoutes: FastifyPluginAsync<PartyRoutesOptions> = async (app, o
       email: body.email,
       pan: body.pan,
       gstin: body.gstin,
+      billingAddress: body.billingAddress,
       openingBalance: body.openingBalance || 0,
       openingBalanceType: body.openingBalanceType || 'debit',
       isActive: true,

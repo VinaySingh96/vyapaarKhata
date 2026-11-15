@@ -62,9 +62,14 @@ export class PgUnitOfWork implements UnitOfWork {
       const invoiceRepo: InvoiceRepository = {
         findById: async (tenantId: EntityId, id: EntityId): Promise<SalesInvoice | null> => {
           const invRes = await client.query(
-            `SELECT id, tenant_id, invoice_number, party_id, business_location_id, status, subtotal, tax_amount, total_amount, posted_at, created_at
-             FROM sales_invoices
-             WHERE tenant_id = $1 AND id = $2`,
+            `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
+                    p.phone as customer_phone, pa.address_line_1 as customer_address,
+                    si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
+                    si.posted_at, si.created_at
+             FROM sales_invoices si
+             LEFT JOIN parties p ON p.id = si.party_id
+             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
+             WHERE si.tenant_id = $1 AND si.id = $2`,
             [tenantId, id]
           );
 
@@ -80,9 +85,13 @@ export class PgUnitOfWork implements UnitOfWork {
           const defaultInventoryLocationId = locRes.rows[0]?.id || r.business_location_id;
 
           const linesRes = await client.query(
-            `SELECT id, invoice_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
-             FROM sales_invoice_lines
-             WHERE invoice_id = $1`,
+            `SELECT sil.id, sil.invoice_id, sil.variant_id, sil.unit_id, sil.quantity, sil.unit_price, sil.tax_amount, sil.line_total,
+                    COALESCE(p.name, 'Catalog Item') as product_name, pv.sku, u.symbol as unit_symbol
+             FROM sales_invoice_lines sil
+             LEFT JOIN product_variants pv ON pv.id = sil.variant_id
+             LEFT JOIN products p ON p.id = pv.product_id
+             LEFT JOIN units u ON u.id = sil.unit_id
+             WHERE sil.invoice_id = $1`,
             [id]
           );
 
@@ -96,6 +105,9 @@ export class PgUnitOfWork implements UnitOfWork {
             unitPrice: parseFloat(l.unit_price),
             taxAmount: parseFloat(l.tax_amount || '0'),
             lineTotal: parseFloat(l.line_total),
+            productName: l.product_name,
+            sku: l.sku,
+            unitSymbol: l.unit_symbol || 'pcs',
           }));
 
           return {
@@ -104,6 +116,9 @@ export class PgUnitOfWork implements UnitOfWork {
             businessLocationId: r.business_location_id,
             invoiceNumber: r.invoice_number,
             customerId: r.party_id,
+            customerName: r.customer_name || 'Counter Customer',
+            customerAddress: r.customer_address || undefined,
+            customerPhone: r.customer_phone || undefined,
             status: r.status as InvoiceStatus,
             subtotal: parseFloat(r.subtotal || '0'),
             taxTotal: parseFloat(r.tax_amount || '0'),
@@ -115,10 +130,15 @@ export class PgUnitOfWork implements UnitOfWork {
 
         list: async (tenantId: EntityId, limit: number = 50): Promise<SalesInvoice[]> => {
           const res = await client.query(
-            `SELECT id, tenant_id, invoice_number, party_id, business_location_id, status, subtotal, tax_amount, total_amount, posted_at, created_at
-             FROM sales_invoices
-             WHERE tenant_id = $1
-             ORDER BY created_at DESC
+            `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
+                    p.phone as customer_phone, pa.address_line_1 as customer_address,
+                    si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
+                    si.posted_at, si.created_at
+             FROM sales_invoices si
+             LEFT JOIN parties p ON p.id = si.party_id
+             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
+             WHERE si.tenant_id = $1
+             ORDER BY si.created_at DESC
              LIMIT $2`,
             [tenantId, limit]
           );
@@ -129,6 +149,9 @@ export class PgUnitOfWork implements UnitOfWork {
             businessLocationId: r.business_location_id,
             invoiceNumber: r.invoice_number,
             customerId: r.party_id,
+            customerName: r.customer_name || 'Counter Customer',
+            customerAddress: r.customer_address || undefined,
+            customerPhone: r.customer_phone || undefined,
             status: r.status as InvoiceStatus,
             subtotal: parseFloat(r.subtotal || '0'),
             taxTotal: parseFloat(r.tax_amount || '0'),
@@ -164,7 +187,7 @@ export class PgUnitOfWork implements UnitOfWork {
           );
 
           for (const line of invoice.lines) {
-            let variantId = line.variantId || line.productId;
+            let variantId = (line as any).variantId || (line as any).productVariantId || line.productId;
             const vRes = await client.query(
               `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
               [variantId]
@@ -832,11 +855,13 @@ export class PgUnitOfWork implements UnitOfWork {
         list: async (tenantId: EntityId, partyType?: PartyType): Promise<Party[]> => {
           const res = await client.query(
             `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
+                    pa.address_line_1 as billing_address,
                     COALESCE(SUM(ple.debit_amount - ple.credit_amount), 0) as current_balance
              FROM parties p
+             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
              LEFT JOIN party_ledger_entries ple ON ple.party_id = p.id
              WHERE p.tenant_id = $1 AND ($2::varchar IS NULL OR p.party_type = $2 OR p.party_type = 'both')
-             GROUP BY p.id
+             GROUP BY p.id, pa.address_line_1
              ORDER BY p.display_name ASC`,
             [tenantId, partyType || null]
           );
@@ -851,6 +876,7 @@ export class PgUnitOfWork implements UnitOfWork {
             pan: r.pan || undefined,
             email: r.email || undefined,
             phone: r.phone || undefined,
+            billingAddress: r.billing_address || undefined,
             openingBalance: 0,
             openingBalanceType: 'debit',
             currentBalance: parseFloat(r.current_balance || '0'),
@@ -862,11 +888,13 @@ export class PgUnitOfWork implements UnitOfWork {
         findById: async (tenantId: EntityId, id: EntityId): Promise<Party | null> => {
           const res = await client.query(
             `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
+                    pa.address_line_1 as billing_address,
                     COALESCE(SUM(ple.debit_amount - ple.credit_amount), 0) as current_balance
              FROM parties p
+             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
              LEFT JOIN party_ledger_entries ple ON ple.party_id = p.id
              WHERE p.tenant_id = $1 AND p.id = $2
-             GROUP BY p.id`,
+             GROUP BY p.id, pa.address_line_1`,
             [tenantId, id]
           );
 
@@ -883,6 +911,7 @@ export class PgUnitOfWork implements UnitOfWork {
             pan: r.pan || undefined,
             email: r.email || undefined,
             phone: r.phone || undefined,
+            billingAddress: r.billing_address || undefined,
             openingBalance: 0,
             openingBalanceType: 'debit',
             currentBalance: parseFloat(r.current_balance || '0'),
@@ -892,6 +921,7 @@ export class PgUnitOfWork implements UnitOfWork {
         },
 
         save: async (party: Party): Promise<void> => {
+          const partyId = ensureUuid(party.id);
           await client.query(
             `INSERT INTO parties (
                id, tenant_id, party_type, display_name, legal_name, gstin, pan, email, phone, is_active, created_at
@@ -907,7 +937,7 @@ export class PgUnitOfWork implements UnitOfWork {
                is_active = EXCLUDED.is_active,
                updated_at = NOW()`,
             [
-              ensureUuid(party.id),
+              partyId,
               party.tenantId,
               party.partyType,
               party.displayName,
@@ -919,6 +949,25 @@ export class PgUnitOfWork implements UnitOfWork {
               party.isActive !== false,
             ]
           );
+
+          if (party.billingAddress) {
+            const addrRes = await client.query(
+              `SELECT id FROM party_addresses WHERE party_id = $1 LIMIT 1`,
+              [partyId]
+            );
+            if (addrRes.rows.length > 0) {
+              await client.query(
+                `UPDATE party_addresses SET address_line_1 = $1, is_default = true WHERE id = $2`,
+                [party.billingAddress, addrRes.rows[0].id]
+              );
+            } else {
+              await client.query(
+                `INSERT INTO party_addresses (id, party_id, address_type, address_line_1, is_default)
+                 VALUES ($1, $2, 'billing', $3, true)`,
+                [randomUUID(), partyId, party.billingAddress]
+              );
+            }
+          }
         },
 
         getBalance: async (tenantId: EntityId, partyId: EntityId): Promise<number> => {

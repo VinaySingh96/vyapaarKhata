@@ -24,6 +24,9 @@ export interface SalesInvoiceLine {
   taxRateId?: EntityId;
   taxAmount: number;
   lineTotal: number;
+  productName?: string;
+  sku?: string;
+  unitSymbol?: string;
 }
 
 export interface SalesInvoice {
@@ -32,6 +35,9 @@ export interface SalesInvoice {
   businessLocationId?: EntityId;
   invoiceNumber: string;
   customerId: EntityId;
+  customerName?: string;
+  customerAddress?: string;
+  customerPhone?: string;
   status: InvoiceStatus;
   subtotal: number;
   taxTotal: number;
@@ -375,6 +381,7 @@ export interface Party {
   email?: string;
   pan?: string;
   gstin?: string;
+  billingAddress?: string;
   openingBalance: number;
   openingBalanceType: 'debit' | 'credit';
   currentBalance?: number;
