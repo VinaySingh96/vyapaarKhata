@@ -149,27 +149,27 @@ const rentalItems = [
     "Daily Rental Rate (Sell Rate)": 50,
     "Description": "Pillar shuttering iron frame size 9 inch x 15 inch, height 7 ft"
   },
-  // 4. Patra
+  // 4. Patra (Wooden Centring Plate)
   {
     "Category": "Centring Plates & Plywood",
-    "Item Name": "Patra (Centring Steel Plate)",
-    "Item Code / SKU": "PATRA-STEEL-PLATE",
+    "Item Name": "Patra (Wooden Centring Plate)",
+    "Item Code / SKU": "PATRA-WOODEN-PLATE",
     "Unit": "pcs",
     "Initial Stock": 500,
     "Purchase Rate (Asset Cost)": 350,
     "Daily Rental Rate (Sell Rate)": 1,
-    "Description": "Heavy MS centring / shuttering slab sheet plate"
+    "Description": "Wooden centring / shuttering plate (wooden patra)"
   },
-  // 5. Chali
+  // 5. Chali (Wooden Centring Chali)
   {
-    "Category": "Scaffolding & Grating",
-    "Item Name": "Chali (Iron Scaffolding Grating)",
-    "Item Code / SKU": "CHALI-GRATING",
+    "Category": "Centring Plates & Plywood",
+    "Item Name": "Chali (Wooden Centring Chali)",
+    "Item Code / SKU": "CHALI-WOODEN",
     "Unit": "pcs",
     "Initial Stock": 30,
     "Purchase Rate (Asset Cost)": 1200,
     "Daily Rental Rate (Sell Rate)": 10,
-    "Description": "Iron mesh walkway / scaffolding platform chali"
+    "Description": "Wooden scaffolding walkway / centring platform chali"
   },
   // 6. Ply
   {
