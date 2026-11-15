@@ -1,624 +1,499 @@
-import React, { useState } from 'react';
-import { StockBalance, StockMovement } from '@vyapaarkhata/domain';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { Modal } from '../components/Modal.js';
+import { useToast } from '../components/Toast.js';
+
+interface StockBalanceItem {
+  id: string;
+  variantId: string;
+  itemName?: string;
+  sku?: string;
+  unit?: string;
+  quantityOnHand: number;
+  quantityReserved: number;
+  quantityAvailable: number;
+}
+
+interface StockMovementItem {
+  id: string;
+  movementType: string;
+  quantity: number;
+  referenceDocumentType: string;
+  referenceDocumentId: string;
+  createdAt: string;
+}
 
 export const InventoryScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [activeTab, setActiveTab] = useState<'balances' | 'movements'>('balances');
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const warehouses = [
-    { id: 'all', name: 'All Warehouses' },
-    { id: 'w1', name: 'Main Yard (MY-01)' },
-    { id: 'w2', name: 'North Godown (NG-02)' },
-    { id: 'w3', name: 'Retail Storefront (RS-01)' },
-  ];
+  const [balances, setBalances] = useState<StockBalanceItem[]>([]);
+  const [movements, setMovements] = useState<StockMovementItem[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
-  const [balances, setBalances] = useState<(StockBalance & { itemName: string; sku: string; unit: string; warehouseName: string })[]>([
-    {
-      id: 'b1',
-      tenantId: 't1',
-      locationId: 'w1',
-      productId: 'p1',
-      variantId: 'v1',
-      itemName: 'UltraTech Portland Pozzolana Cement',
-      sku: 'CEM-PP-50KG',
-      unit: 'bags',
-      warehouseName: 'Main Yard (MY-01)',
-      currentBalance: 35,
-      reorderLevel: 10,
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'b2',
-      tenantId: 't1',
-      locationId: 'w1',
-      productId: 'p2',
-      variantId: 'v2',
-      itemName: 'TMT Steel Fe550D Rebar 12mm',
-      sku: 'TMT-12MM-KG',
-      unit: 'kg',
-      warehouseName: 'Main Yard (MY-01)',
-      currentBalance: 18,
-      reorderLevel: 25, // Low stock warning!
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'b3',
-      tenantId: 't1',
-      locationId: 'w2',
-      productId: 'p3',
-      variantId: 'v3',
-      itemName: 'Asian Paints Apex Ultima White (20L)',
-      sku: 'PNT-APX-20L',
-      unit: 'buckets',
-      warehouseName: 'North Godown (NG-02)',
-      currentBalance: 8,
-      reorderLevel: 5,
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 'b4',
-      tenantId: 't1',
-      locationId: 'w3',
-      productId: 'p4',
-      variantId: 'v4',
-      itemName: 'River Sand Fine Washed',
-      sku: 'SND-WSH-TON',
-      unit: 'tons',
-      warehouseName: 'Retail Storefront (RS-01)',
-      currentBalance: 0,
-      reorderLevel: 5,
-      updatedAt: new Date().toISOString(),
-    },
-  ]);
+  // Adjustment form state
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [countedQty, setCountedQty] = useState('20');
+  const [reason, setReason] = useState('Physical count verification');
 
-  const [movements, setMovements] = useState<(StockMovement & { itemName: string; warehouseName: string })[]>([
-    {
-      id: 'm1',
-      tenantId: 't1',
-      locationId: 'w1',
-      productId: 'p1',
-      unitId: 'u1',
-      itemName: 'UltraTech Portland Cement',
-      warehouseName: 'Main Yard',
-      movementType: 'sale',
-      quantity: -5,
-      referenceDocumentType: 'sales_invoice',
-      referenceDocumentId: 'INV-10023',
-      createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-    },
-    {
-      id: 'm2',
-      tenantId: 't1',
-      locationId: 'w1',
-      productId: 'p1',
-      unitId: 'u1',
-      itemName: 'UltraTech Portland Cement',
-      warehouseName: 'Main Yard',
-      movementType: 'purchase_receipt',
-      quantity: 20,
-      referenceDocumentType: 'purchase_receipt',
-      referenceDocumentId: 'GRN-0041',
-      createdAt: new Date(Date.now() - 3600000 * 6).toISOString(),
-    },
-    {
-      id: 'm3',
-      tenantId: 't1',
-      locationId: 'w1',
-      productId: 'p2',
-      unitId: 'u2',
-      itemName: 'TMT Steel Fe550D Rebar 12mm',
-      warehouseName: 'Main Yard',
-      movementType: 'adjustment_in',
-      quantity: 10,
-      referenceDocumentType: 'inventory_adjustment',
-      referenceDocumentId: 'ADJ-0012',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-  ]);
-
-  // Adjustment Modal State
-  const [adjWarehouse, setAdjWarehouse] = useState('w1');
-  const [adjItem, setAdjItem] = useState('p1');
-  const [adjType, setAdjType] = useState<'increase' | 'decrease'>('increase');
-  const [adjQty, setAdjQty] = useState('5');
-  const [adjReason, setAdjReason] = useState('physical_count');
-
-  // Transfer Modal State
-  const [fromWarehouse, setFromWarehouse] = useState('w1');
-  const [toWarehouse, setToWarehouse] = useState('w2');
-  const [transferItem, setTransferItem] = useState('p1');
-  const [transferQty, setTransferQty] = useState('5');
-
-  const filteredBalances = selectedWarehouse === 'all'
-    ? balances
-    : balances.filter((b) => b.locationId === selectedWarehouse);
-
-  const handleCreateAdjustment = (e: React.FormEvent) => {
-    e.preventDefault();
-    const qty = parseFloat(adjQty) || 0;
-    if (qty <= 0) return;
-
-    const delta = adjType === 'increase' ? qty : -qty;
-
-    // Update balances
-    setBalances((prev) =>
-      prev.map((b) => {
-        if (b.productId === adjItem && b.locationId === adjWarehouse) {
-          return { ...b, currentBalance: Math.max(0, b.currentBalance + delta) };
+  const loadData = () => {
+    setLoading(true);
+    // 1. Fetch balances
+    fetch('/api/v1/inventory/balances', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setBalances(json.data);
         }
-        return b;
       })
-    );
+      .catch((err) => console.warn('Failed to load balances:', err));
 
-    // Record movement
-    const selectedProd = balances.find((b) => b.productId === adjItem);
-    setMovements([
-      {
-        id: `m-${Date.now()}`,
-        tenantId: 't1',
-        locationId: adjWarehouse,
-        productId: adjItem,
-        unitId: 'u1',
-        itemName: selectedProd?.itemName || 'Product',
-        warehouseName: warehouses.find((w) => w.id === adjWarehouse)?.name || 'Warehouse',
-        movementType: adjType === 'increase' ? 'adjustment_in' : 'adjustment_out',
-        quantity: delta,
-        referenceDocumentType: 'inventory_adjustment',
-        referenceDocumentId: `ADJ-${Date.now().toString().slice(-4)}`,
-        createdAt: new Date().toISOString(),
-      },
-      ...movements,
-    ]);
+    // 2. Fetch movements audit trail
+    fetch('/api/v1/inventory/movements?limit=30', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setMovements(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load movements:', err));
 
-    setShowAdjustmentModal(false);
+    // 3. Fetch products catalog
+    fetch('/api/v1/products', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setProducts(json.data);
+          if (json.data.length > 0 && !selectedProductId) {
+            setSelectedProductId(json.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.warn('Failed to load products:', err))
+      .finally(() => setLoading(false));
   };
 
-  const handleCreateTransfer = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalPhysicalUnits = balances.reduce((sum, b) => sum + (b.quantityOnHand || 0), 0);
+
+  const handleCreateAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const qty = parseFloat(transferQty) || 0;
-    if (qty <= 0 || fromWarehouse === toWarehouse) return;
+    const qty = parseFloat(countedQty);
+    if (isNaN(qty)) {
+      toast.warning('Please enter valid counted quantity');
+      return;
+    }
 
-    // Deduct from source, add to dest
-    setBalances((prev) =>
-      prev.map((b) => {
-        if (b.productId === transferItem && b.locationId === fromWarehouse) {
-          return { ...b, currentBalance: Math.max(0, b.currentBalance - qty) };
-        }
-        if (b.productId === transferItem && b.locationId === toWarehouse) {
-          return { ...b, currentBalance: b.currentBalance + qty };
-        }
-        return b;
-      })
-    );
+    setIsSubmitting(true);
+    try {
+      const prod = products.find((p) => p.id === selectedProductId);
+      const adjId = crypto.randomUUID();
+      const adjNumber = `ADJ-${Date.now().toString().slice(-6)}`;
 
-    const selectedProd = balances.find((b) => b.productId === transferItem);
-    setMovements([
-      {
-        id: `m-trf-in-${Date.now()}`,
-        tenantId: 't1',
-        locationId: toWarehouse,
-        productId: transferItem,
-        unitId: 'u1',
-        itemName: selectedProd?.itemName || 'Product',
-        warehouseName: warehouses.find((w) => w.id === toWarehouse)?.name || 'Warehouse',
-        movementType: 'transfer_in',
-        quantity: qty,
-        referenceDocumentType: 'stock_transfer',
-        referenceDocumentId: `TRF-${Date.now().toString().slice(-4)}`,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: `m-trf-out-${Date.now()}`,
-        tenantId: 't1',
-        locationId: fromWarehouse,
-        productId: transferItem,
-        unitId: 'u1',
-        itemName: selectedProd?.itemName || 'Product',
-        warehouseName: warehouses.find((w) => w.id === fromWarehouse)?.name || 'Warehouse',
-        movementType: 'transfer_out',
-        quantity: -qty,
-        referenceDocumentType: 'stock_transfer',
-        referenceDocumentId: `TRF-${Date.now().toString().slice(-4)}`,
-        createdAt: new Date().toISOString(),
-      },
-      ...movements,
-    ]);
+      const res = await fetch('/api/v1/inventory/adjustments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          id: adjId,
+          adjustmentNumber: adjNumber,
+          inventoryLocationId: '70000000-0000-0000-0000-000000000001',
+          reason,
+          lines: [
+            {
+              id: crypto.randomUUID(),
+              adjustmentId: adjId,
+              variantId: prod?.defaultVariantId || prod?.variants?.[0]?.id || prod?.id || '8448562d-7ad1-4771-a48d-b3ce2e8aeb08',
+              unitId: prod?.baseUnitId || '10000000-0000-0000-0000-000000000001',
+              countedQuantity: qty,
+              varianceQuantity: 0,
+            },
+          ],
+        }),
+      });
 
-    setShowTransferModal(false);
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to post adjustment');
+      }
+
+      toast.success(`Adjustment ${adjNumber} saved successfully!`);
+      setShowAdjustmentModal(false);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Error saving adjustment');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Header & Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-            📦 Inventory & Multi-Warehouse Stock
-          </h2>
-          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-            Multi-location inventory tracking, negative stock rejection policy, transfers, and movement ledger.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => setShowAdjustmentModal(true)}
-            style={{
-              backgroundColor: '#4b5563',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '10px 14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            ⚖️ Stock Adjustment
-          </button>
-          <button
-            onClick={() => setShowTransferModal(true)}
-            style={{
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '10px 14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
-          >
-            ⇄ Inter-Warehouse Transfer
-          </button>
-        </div>
-      </div>
-
-      {/* Tabs and Warehouse Filter */}
+    <div>
+      {/* Top Header */}
       <div
         style={{
           display: 'flex',
+          flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid #e5e7eb',
-          marginBottom: '16px',
+          gap: '12px',
+          marginBottom: '20px',
         }}
       >
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <button
-            onClick={() => setActiveTab('balances')}
-            style={{
-              padding: '10px 4px',
-              border: 'none',
-              background: 'none',
-              borderBottom: activeTab === 'balances' ? '2px solid #2563eb' : '2px solid transparent',
-              color: activeTab === 'balances' ? '#2563eb' : '#6b7280',
-              fontWeight: activeTab === 'balances' ? 700 : 500,
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            Stock Balances by Location
-          </button>
-          <button
-            onClick={() => setActiveTab('movements')}
-            style={{
-              padding: '10px 4px',
-              border: 'none',
-              background: 'none',
-              borderBottom: activeTab === 'movements' ? '2px solid #2563eb' : '2px solid transparent',
-              color: activeTab === 'movements' ? '#2563eb' : '#6b7280',
-              fontWeight: activeTab === 'movements' ? 700 : 500,
-              fontSize: '14px',
-              cursor: 'pointer',
-            }}
-          >
-            Movement Audit Ledger
-          </button>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('inventory.title')}
+          </h2>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+            {t('inventory.subtitle')}
+          </p>
         </div>
+        <button
+          id="btn-stock-adjustment"
+          onClick={() => setShowAdjustmentModal(true)}
+          style={{
+            padding: '10px 18px',
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '6px',
+            fontWeight: 600,
+            fontSize: '13.5px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+          }}
+        >
+          {t('inventory.btnAdjust')}
+        </button>
+      </div>
 
-        {activeTab === 'balances' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '8px' }}>
-            <span style={{ fontSize: '13px', color: '#6b7280' }}>Warehouse:</span>
-            <select
-              value={selectedWarehouse}
-              onChange={(e) => setSelectedWarehouse(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid #d1d5db',
-                fontSize: '13px',
-                backgroundColor: '#ffffff',
-              }}
-            >
-              {warehouses.map((w) => (
-                <option key={w.id} value={w.id}>{w.name}</option>
-              ))}
-            </select>
+      {/* KPI Cards */}
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Active Tracked Variants</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {balances.length}
           </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Physical Stock On Hand</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
+            {totalPhysicalUnits} units
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Primary Godown Location</div>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#2563eb', marginTop: '6px' }}>
+            Main Godown (MG-01)
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Movement Audit Logs</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {movements.length} logged
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Switcher */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          backgroundColor: '#ffffff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+          marginBottom: '16px',
+          alignItems: 'center',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setActiveTab('balances')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeTab === 'balances' ? '#2563eb' : '#ffffff',
+            color: activeTab === 'balances' ? '#ffffff' : '#374151',
+          }}
+        >
+          {t('inventory.tabBalances')} ({balances.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('movements')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeTab === 'movements' ? '#2563eb' : '#ffffff',
+            color: activeTab === 'movements' ? '#ffffff' : '#374151',
+          }}
+        >
+          {t('inventory.tabMovements')} ({movements.length})
+        </button>
+        <button
+          type="button"
+          onClick={loadData}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#374151',
+            marginLeft: 'auto',
+          }}
+        >
+          {loading ? '...' : '↻ Refresh'}
+        </button>
+      </div>
+
+      {/* Table Content */}
+      <div className="vk-table-responsive">
+        {activeTab === 'balances' ? (
+          <table>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+                <th style={{ padding: '12px 16px', textAlign: 'left' }}>Item / SKU</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left' }}>Location</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>On-Hand Physical</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Reserved (Orders)</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Available for Sale</th>
+                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Stock Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {balances.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                    No stock balances recorded. Inward stock from Purchasing or record initial stock.
+                  </td>
+                </tr>
+              ) : (
+                balances.map((b) => {
+                  const prod = products.find((p) => p.defaultVariantId === b.variantId || p.variants?.[0]?.id === b.variantId || p.id === b.variantId);
+                  const name = prod ? prod.name : 'Catalog Item';
+                  const sku = prod ? prod.sku : b.sku || 'SKU';
+                  const unit = prod ? prod.baseUnitSymbol : 'units';
+                  const isLow = b.quantityAvailable <= (prod?.reorderLevel || 10);
+
+                  return (
+                    <tr key={b.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                        {name}
+                        <div style={{ fontSize: '11px', color: '#6b7280', fontFamily: 'monospace' }}>{sku}</div>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: '#4b5563' }}>Main Godown (MG-01)</td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>
+                        {b.quantityOnHand} {unit}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
+                        {b.quantityReserved || 0} {unit}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: b.quantityAvailable > 0 ? '#059669' : '#dc2626' }}>
+                        {b.quantityAvailable} {unit}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                        <span
+                          style={{
+                            padding: '3px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            backgroundColor: b.quantityAvailable === 0 ? '#fee2e2' : isLow ? '#fef3c7' : '#ecfdf5',
+                            color: b.quantityAvailable === 0 ? '#b91c1c' : isLow ? '#b45309' : '#065f46',
+                          }}
+                        >
+                          {b.quantityAvailable === 0 ? 'OUT OF STOCK' : isLow ? 'LOW STOCK' : 'HEALTHY'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        ) : (
+          <table>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+                <th style={{ padding: '12px 16px', textAlign: 'left' }}>Movement Type</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Quantity Delta</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left' }}>Reference Document</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Occurred At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movements.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                    No stock movements recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                movements.map((m) => {
+                  const isPositive = m.quantity > 0;
+                  return (
+                    <tr key={m.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                        <span
+                          style={{
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            backgroundColor: isPositive ? '#ecfdf5' : '#fef2f2',
+                            color: isPositive ? '#065f46' : '#991b1b',
+                          }}
+                        >
+                          {m.movementType.toUpperCase()}
+                        </span>
+                      </td>
+                      <td
+                        style={{
+                          padding: '12px 16px',
+                          textAlign: 'right',
+                          fontWeight: 700,
+                          color: isPositive ? '#059669' : '#dc2626',
+                        }}
+                      >
+                        {isPositive ? `+${m.quantity}` : m.quantity} units
+                      </td>
+                      <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#4b5563' }}>
+                        {m.referenceDocumentType}: {m.referenceDocumentId.slice(0, 13)}...
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
+                        {m.createdAt ? new Date(m.createdAt).toLocaleString() : 'Just now'}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         )}
       </div>
 
-      {/* Tab 1: Balances Table */}
-      {activeTab === 'balances' && (
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-                <th style={{ padding: '12px 16px' }}>Item Name</th>
-                <th style={{ padding: '12px 16px' }}>SKU</th>
-                <th style={{ padding: '12px 16px' }}>Warehouse Location</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>On Hand</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Reorder Level</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Stock Health Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBalances.map((b) => {
-                const isLow = b.currentBalance > 0 && b.currentBalance <= (b.reorderLevel || 0);
-                const isOut = b.currentBalance === 0;
-
-                return (
-                  <tr key={b.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
-                      {b.itemName}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#4b5563' }}>{b.sku}</td>
-                    <td style={{ padding: '12px 16px', color: '#374151' }}>{b.warehouseName}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }}>
-                      {b.currentBalance} {b.unit}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
-                      {b.reorderLevel} {b.unit}
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      {isOut ? (
-                        <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, backgroundColor: '#fee2e2', color: '#b91c1c' }}>
-                          Out of Stock (Zero)
-                        </span>
-                      ) : isLow ? (
-                        <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, backgroundColor: '#fef3c7', color: '#b45309' }}>
-                          ⚠️ Low Stock Threshold
-                        </span>
-                      ) : (
-                        <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, backgroundColor: '#dcfce7', color: '#15803d' }}>
-                          ✓ Healthy Balance
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Tab 2: Movement Audit Ledger */}
-      {activeTab === 'movements' && (
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-                <th style={{ padding: '12px 16px' }}>Timestamp</th>
-                <th style={{ padding: '12px 16px' }}>Item Name</th>
-                <th style={{ padding: '12px 16px' }}>Warehouse</th>
-                <th style={{ padding: '12px 16px' }}>Movement Type</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Qty Change</th>
-                <th style={{ padding: '12px 16px' }}>Reference Document</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movements.map((m) => {
-                const isPositive = m.quantity > 0;
-                return (
-                  <tr key={m.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '12px 16px', color: '#6b7280' }}>
-                      {new Date(m.createdAt).toLocaleDateString()} {new Date(m.createdAt).toLocaleTimeString()}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>{m.itemName}</td>
-                    <td style={{ padding: '12px 16px', color: '#4b5563' }}>{m.warehouseName}</td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          backgroundColor: '#f3f4f6',
-                          color: '#374151',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {m.movementType.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: '12px 16px',
-                        textAlign: 'right',
-                        fontWeight: 700,
-                        color: isPositive ? '#16a34a' : '#dc2626',
-                      }}
-                    >
-                      {isPositive ? `+${m.quantity}` : m.quantity}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#2563eb' }}>
-                      {m.referenceDocumentType}: {m.referenceDocumentId}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Stock Adjustment Modal */}
-      {showAdjustmentModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '450px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Record Stock Adjustment</h3>
-            <form onSubmit={handleCreateAdjustment}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Warehouse Location</label>
-                <select
-                  value={adjWarehouse}
-                  onChange={(e) => setAdjWarehouse(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  {warehouses.filter((w) => w.id !== 'all').map((w) => (
-                    <option key={w.id} value={w.id}>{w.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Select Product / Item</label>
-                <select
-                  value={adjItem}
-                  onChange={(e) => setAdjItem(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  <option value="p1">UltraTech Cement (50kg)</option>
-                  <option value="p2">TMT Steel Rebar 12mm</option>
-                  <option value="p3">Asian Paints Apex (20L)</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Adjustment Type</label>
-                  <select
-                    value={adjType}
-                    onChange={(e) => setAdjType(e.target.value as any)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    <option value="increase">+ Increase Stock</option>
-                    <option value="decrease">- Decrease Stock</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Quantity</label>
-                  <input
-                    type="number"
-                    value={adjQty}
-                    onChange={(e) => setAdjQty(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Reason</label>
-                <select
-                  value={adjReason}
-                  onChange={(e) => setAdjReason(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  <option value="physical_count">Physical Audit / Recount</option>
-                  <option value="damage">Damaged in Transit / Warehouse</option>
-                  <option value="expired">Expired Material</option>
-                  <option value="theft">Discrepancy / Shrinkage</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAdjustmentModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Post Adjustment
-                </button>
-              </div>
-            </form>
+      {/* Modern Custom Modal: Stock Adjustment */}
+      <Modal
+        isOpen={showAdjustmentModal}
+        onClose={() => setShowAdjustmentModal(false)}
+        title="Physical Stock Adjustment"
+        subtitle="Reconcile physical warehouse count against digital balances."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAdjustmentModal(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-stock-adjustment"
+              disabled={isSubmitting}
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Saving...' : 'Save Adjustment'}
+            </button>
+          </>
+        }
+      >
+        <form id="form-stock-adjustment" onSubmit={handleCreateAdjustment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Item to Reconcile *
+            </label>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+            >
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.sku})
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
 
-      {/* Stock Transfer Modal */}
-      {showTransferModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '450px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Inter-Warehouse Stock Transfer</h3>
-            <form onSubmit={handleCreateTransfer}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>From Source</label>
-                  <select
-                    value={fromWarehouse}
-                    onChange={(e) => setFromWarehouse(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    {warehouses.filter((w) => w.id !== 'all').map((w) => (
-                      <option key={w.id} value={w.id}>{w.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>To Destination</label>
-                  <select
-                    value={toWarehouse}
-                    onChange={(e) => setToWarehouse(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    {warehouses.filter((w) => w.id !== 'all').map((w) => (
-                      <option key={w.id} value={w.id}>{w.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Product / Item</label>
-                <select
-                  value={transferItem}
-                  onChange={(e) => setTransferItem(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  <option value="p1">UltraTech Cement (50kg)</option>
-                  <option value="p2">TMT Steel Rebar 12mm</option>
-                  <option value="p3">Asian Paints Apex (20L)</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Transfer Quantity</label>
-                <input
-                  type="number"
-                  value={transferQty}
-                  onChange={(e) => setTransferQty(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowTransferModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Execute Transfer
-                </button>
-              </div>
-            </form>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Physical Counted Quantity *
+            </label>
+            <input
+              type="number"
+              min="0"
+              required
+              value={countedQty}
+              onChange={(e) => setCountedQty(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700 }}
+            />
           </div>
-        </div>
-      )}
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Audit Reason / Note
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

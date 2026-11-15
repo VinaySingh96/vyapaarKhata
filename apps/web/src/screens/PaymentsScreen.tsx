@@ -1,357 +1,549 @@
-import React, { useState } from 'react';
-import { Payment } from '@vyapaarkhata/domain';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { Modal } from '../components/Modal.js';
+import { useToast } from '../components/Toast.js';
+
+interface PaymentItem {
+  id: string;
+  tenantId?: string;
+  partyId?: string;
+  partyName?: string;
+  paymentNumber: string;
+  direction: 'inbound' | 'outbound';
+  status: string;
+  amount: number;
+  referenceNumber?: string;
+  paymentMode?: string;
+  postedAt?: string;
+  createdAt: string;
+}
+
+interface PartyOption {
+  id: string;
+  displayName: string;
+  partyType: string;
+}
 
 export const PaymentsScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [directionFilter, setDirectionFilter] = useState<'all' | 'inbound' | 'outbound'>('all');
   const [showRecordModal, setShowRecordModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [payments, setPayments] = useState<(Payment & { partyName: string; paymentMode: string })[]>([
-    {
-      id: 'pay-1',
-      tenantId: 't1',
-      partyId: 'pt-1',
-      partyName: 'Acme Construction Pvt Ltd',
-      paymentNumber: 'REC-2024-001',
-      direction: 'inbound',
-      status: 'posted',
-      amount: 42480,
-      referenceNumber: 'UPI-AXIS-992211',
-      paymentMode: 'UPI / QR',
-      allocations: [],
-      postedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    },
-    {
-      id: 'pay-2',
-      tenantId: 't1',
-      partyId: 'pt-2',
-      partyName: 'UltraTech Cement Distributors',
-      paymentNumber: 'PAY-2024-001',
-      direction: 'outbound',
-      status: 'posted',
-      amount: 35400,
-      referenceNumber: 'NEFT-HDFC-883344',
-      paymentMode: 'Bank Transfer (NEFT)',
-      allocations: [],
-      postedAt: new Date(Date.now() - 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: 'pay-3',
-      tenantId: 't1',
-      partyId: 'pt-3',
-      partyName: 'Shree Sai Hardware',
-      paymentNumber: 'REC-2024-002',
-      direction: 'inbound',
-      status: 'posted',
-      amount: 5000,
-      referenceNumber: 'CASH',
-      paymentMode: 'Cash',
-      allocations: [],
-      postedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    },
-  ]);
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
+  const [parties, setParties] = useState<PartyOption[]>([]);
 
-  // Form State
+  // Form state
   const [direction, setDirection] = useState<'inbound' | 'outbound'>('inbound');
-  const [partyName, setPartyName] = useState('Acme Construction Pvt Ltd');
-  const [amount, setAmount] = useState('10000');
-  const [paymentMode, setPaymentMode] = useState('UPI / QR');
-  const [refNumber, setRefNumber] = useState('');
+  const [selectedPartyId, setSelectedPartyId] = useState('');
+  const [amount, setAmount] = useState('1000');
+  const [reference, setReference] = useState('');
+  const [paymentMode, setPaymentMode] = useState('cash');
 
-  const filteredPayments = directionFilter === 'all'
-    ? payments
-    : payments.filter((p) => p.direction === directionFilter);
+  const loadData = () => {
+    setLoading(true);
+    // 1. Fetch payments
+    fetch('/api/v1/payments', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setPayments(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load payments:', err));
+
+    // 2. Fetch parties
+    fetch('/api/v1/parties', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setParties(json.data);
+          if (json.data.length > 0 && !selectedPartyId) {
+            setSelectedPartyId(json.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.warn('Failed to load parties:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const filteredPayments = payments.filter((p) => {
+    if (directionFilter === 'all') return true;
+    return p.direction === directionFilter;
+  });
 
   const totalInbound = payments
     .filter((p) => p.direction === 'inbound')
-    .reduce((acc, p) => acc + p.amount, 0);
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   const totalOutbound = payments
     .filter((p) => p.direction === 'outbound')
-    .reduce((acc, p) => acc + p.amount, 0);
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amt = parseFloat(amount) || 0;
-    if (amt <= 0) return;
+    const parsedAmount = parseFloat(amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      toast.warning('Please enter a valid payment amount');
+      return;
+    }
+    if (!selectedPartyId) {
+      toast.warning('Please select a party');
+      return;
+    }
 
-    const newPay: Payment & { partyName: string; paymentMode: string } = {
-      id: `pay-${Date.now()}`,
-      tenantId: 't1',
-      partyId: `pt-${Date.now()}`,
-      partyName,
-      paymentNumber: `${direction === 'inbound' ? 'REC' : 'PAY'}-${Date.now().toString().slice(-4)}`,
-      direction,
-      status: 'posted',
-      amount: amt,
-      referenceNumber: refNumber || 'DIRECT',
-      paymentMode,
-      allocations: [],
-      postedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
+    try {
+      const paymentId = crypto.randomUUID();
+      const paymentNumber = `PAY-${direction === 'inbound' ? 'REC' : 'OUT'}-${Date.now().toString().slice(-6)}`;
 
-    setPayments([newPay, ...payments]);
-    setShowRecordModal(false);
-    setAmount('');
-    setRefNumber('');
+      // 1. Create draft payment
+      const res = await fetch('/api/v1/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          id: paymentId,
+          partyId: selectedPartyId,
+          paymentNumber,
+          direction,
+          amount: parsedAmount,
+          referenceNumber: reference.trim() || undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to record payment');
+      }
+
+      // 2. Post payment atomically to party ledger
+      const postRes = await fetch(`/api/v1/payments/${paymentId}/post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({}),
+      });
+
+      const postJson = await postRes.json();
+      if (!postJson.success) {
+        throw new Error(postJson.error?.message || 'Failed to post payment');
+      }
+
+      toast.success(`Payment ${paymentNumber} for ₹ ${parsedAmount.toLocaleString()} posted to ledger!`);
+      setShowRecordModal(false);
+      setAmount('1000');
+      setReference('');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Error processing payment');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div>
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+        }}
+      >
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-            💳 Payments, Collections & Cash Flow
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('payments.title')}
           </h2>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-            Multi-mode payments: Customer Receipts (UPI/Cash/Bank) and Supplier Settlements with document allocations.
+            {t('payments.subtitle')}
           </p>
         </div>
         <button
+          id="btn-record-payment"
           onClick={() => setShowRecordModal(true)}
           style={{
-            backgroundColor: '#2563eb',
+            padding: '10px 18px',
+            backgroundColor: '#059669',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
-            padding: '10px 16px',
             fontWeight: 600,
+            fontSize: '13.5px',
             cursor: 'pointer',
-            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 1px 2px rgba(5,150,105,0.2)',
           }}
         >
-          + Record New Payment
+          {t('payments.recordPayment')}
         </button>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ backgroundColor: '#ecfdf5', padding: '16px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#047857' }}>TOTAL INBOUND COLLECTIONS</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#065f46', marginTop: '4px' }}>
-            +₹{totalInbound.toLocaleString()}
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Collections (Inward)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
+            ₹ {totalInbound.toLocaleString()}
           </div>
         </div>
-        <div style={{ backgroundColor: '#fff1f2', padding: '16px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#be123c' }}>TOTAL OUTBOUND PAYMENTS</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#9f1239', marginTop: '4px' }}>
-            -₹{totalOutbound.toLocaleString()}
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Supplier Settlements (Outward)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#dc2626', marginTop: '4px' }}>
+            ₹ {totalOutbound.toLocaleString()}
           </div>
         </div>
-        <div style={{ backgroundColor: '#eff6ff', padding: '16px', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#1d4ed8' }}>NET CASH FLOW BALANCE</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#1e40af', marginTop: '4px' }}>
-            ₹{(totalInbound - totalOutbound).toLocaleString()}
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Net Cash Inflow</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
+            ₹ {(totalInbound - totalOutbound).toLocaleString()}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Ledger Transactions</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {payments.length}
           </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        {(['all', 'inbound', 'outbound'] as const).map((dir) => (
-          <button
-            key={dir}
-            onClick={() => setDirectionFilter(dir)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: '1px solid',
-              borderColor: directionFilter === dir ? '#2563eb' : '#d1d5db',
-              backgroundColor: directionFilter === dir ? '#eff6ff' : '#ffffff',
-              color: directionFilter === dir ? '#1d4ed8' : '#4b5563',
-              fontSize: '13px',
-              fontWeight: directionFilter === dir ? 600 : 400,
-              cursor: 'pointer',
-              textTransform: 'capitalize',
-            }}
-          >
-            {dir === 'all' ? 'All Transactions' : dir === 'inbound' ? '↓ Inbound Receipts' : '↑ Outbound Payments'}
-          </button>
-        ))}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '8px',
+          backgroundColor: '#ffffff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+          marginBottom: '16px',
+          alignItems: 'center',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setDirectionFilter('all')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: directionFilter === 'all' ? '#2563eb' : '#ffffff',
+            color: directionFilter === 'all' ? '#ffffff' : '#374151',
+          }}
+        >
+          {t('payments.all')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDirectionFilter('inbound')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: directionFilter === 'inbound' ? '#2563eb' : '#ffffff',
+            color: directionFilter === 'inbound' ? '#ffffff' : '#374151',
+          }}
+        >
+          {t('payments.inbound')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDirectionFilter('outbound')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: directionFilter === 'outbound' ? '#2563eb' : '#ffffff',
+            color: directionFilter === 'outbound' ? '#ffffff' : '#374151',
+          }}
+        >
+          {t('payments.outbound')}
+        </button>
+        <button
+          type="button"
+          onClick={loadData}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#374151',
+            marginLeft: 'auto',
+          }}
+        >
+          {loading ? 'Refreshing...' : '↻ Refresh'}
+        </button>
       </div>
 
       {/* Payments Table */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+      <div className="vk-table-responsive">
+        <table>
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-              <th style={{ padding: '12px 16px' }}>Payment #</th>
-              <th style={{ padding: '12px 16px' }}>Date</th>
-              <th style={{ padding: '12px 16px' }}>Party Name</th>
-              <th style={{ padding: '12px 16px' }}>Type & Mode</th>
-              <th style={{ padding: '12px 16px' }}>Reference / UTR</th>
+            <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Receipt / Voucher No</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Party / Account</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Flow Type</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Reference / UTR</th>
               <th style={{ padding: '12px 16px', textAlign: 'right' }}>Amount</th>
               <th style={{ padding: '12px 16px', textAlign: 'center' }}>Status</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Date</th>
             </tr>
           </thead>
           <tbody>
-            {filteredPayments.map((p) => {
-              const isIn = p.direction === 'inbound';
-              return (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1d4ed8' }}>{p.paymentNumber}</td>
-                  <td style={{ padding: '12px 16px', color: '#6b7280' }}>{new Date(p.createdAt).toLocaleDateString()}</td>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>{p.partyName}</td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span
+            {filteredPayments.length === 0 ? (
+              <tr>
+                <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                  No transactions found for the selected filter.
+                </td>
+              </tr>
+            ) : (
+              filteredPayments.map((p) => {
+                const party = parties.find((partyItem) => partyItem.id === p.partyId);
+                const displayName = party ? party.displayName : (p.partyName || 'Party');
+
+                return (
+                  <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                      {p.paymentNumber}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 500, color: '#374151' }}>
+                      {displayName}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          backgroundColor: p.direction === 'inbound' ? '#ecfdf5' : '#fef2f2',
+                          color: p.direction === 'inbound' ? '#065f46' : '#991b1b',
+                        }}
+                      >
+                        {p.direction === 'inbound' ? '↓ Received (In)' : '↑ Paid (Out)'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#6b7280' }}>
+                      {p.referenceNumber || 'Cash Counter'}
+                    </td>
+                    <td
                       style={{
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        backgroundColor: isIn ? '#dcfce7' : '#fee2e2',
-                        color: isIn ? '#15803d' : '#b91c1c',
-                        marginRight: '6px',
+                        padding: '12px 16px',
+                        textAlign: 'right',
+                        fontWeight: 700,
+                        color: p.direction === 'inbound' ? '#059669' : '#dc2626',
                       }}
                     >
-                      {isIn ? '↓ RECEIPT' : '↑ PAYMENT'}
-                    </span>
-                    <span style={{ fontSize: '12px', color: '#4b5563' }}>{p.paymentMode}</span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#4b5563' }}>{p.referenceNumber || '—'}</td>
-                  <td
-                    style={{
-                      padding: '12px 16px',
-                      textAlign: 'right',
-                      fontWeight: 700,
-                      fontSize: '14px',
-                      color: isIn ? '#059669' : '#dc2626',
-                    }}
-                  >
-                    {isIn ? `+₹${p.amount.toLocaleString()}` : `-₹${p.amount.toLocaleString()}`}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                    <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, backgroundColor: '#dcfce7', color: '#15803d' }}>
-                      POSTED
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
+                      {p.direction === 'inbound' ? '+' : '-'} ₹ {(p.amount || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          backgroundColor: p.status === 'posted' ? '#ecfdf5' : '#fef3c7',
+                          color: p.status === 'posted' ? '#065f46' : '#92400e',
+                        }}
+                      >
+                        {p.status?.toUpperCase() || 'POSTED'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
+                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Today'}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Record Payment Modal */}
-      {showRecordModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '480px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Record Payment Transaction</h3>
-            <form onSubmit={handleRecordPayment}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block', marginBottom: '6px' }}>
-                  Transaction Type
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setDirection('inbound')}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '1px solid',
-                      borderColor: direction === 'inbound' ? '#16a34a' : '#d1d5db',
-                      backgroundColor: direction === 'inbound' ? '#dcfce7' : '#fff',
-                      color: direction === 'inbound' ? '#15803d' : '#374151',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ↓ Customer Receipt (In)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDirection('outbound')}
-                    style={{
-                      padding: '10px',
-                      borderRadius: '6px',
-                      border: '1px solid',
-                      borderColor: direction === 'outbound' ? '#dc2626' : '#d1d5db',
-                      backgroundColor: direction === 'outbound' ? '#fee2e2' : '#fff',
-                      color: direction === 'outbound' ? '#b91c1c' : '#374151',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ↑ Supplier Payment (Out)
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Party Name</label>
-                <select
-                  value={partyName}
-                  onChange={(e) => setPartyName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  <option value="Acme Construction Pvt Ltd">Acme Construction Pvt Ltd (Customer)</option>
-                  <option value="Shree Sai Hardware">Shree Sai Hardware (Customer)</option>
-                  <option value="UltraTech Cement Distributors">UltraTech Cement Distributors (Supplier)</option>
-                  <option value="Kamdhenu Steel Rolling Mills">Kamdhenu Steel Rolling Mills (Supplier)</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Amount (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Payment Mode</label>
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    <option value="UPI / QR">UPI / QR Code</option>
-                    <option value="Cash">Cash in Hand</option>
-                    <option value="Bank Transfer (NEFT)">Bank Transfer (NEFT/RTGS)</option>
-                    <option value="Cheque">Bank Cheque</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Reference # (UTR / Cheque No / Notes)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. UPI Ref: 3344119900"
-                  value={refNumber}
-                  onChange={(e) => setRefNumber(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowRecordModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Record & Post Payment
-                </button>
-              </div>
-            </form>
+      {/* Modern Custom Modal: Record Payment */}
+      <Modal
+        isOpen={showRecordModal}
+        onClose={() => setShowRecordModal(false)}
+        title={t('payments.modalTitle')}
+        subtitle="Record receipt or payout. Commits debit/credit to party khata atomically."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRecordModal(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-record-payment"
+              disabled={isSubmitting}
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#059669',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Posting...' : 'Post to Ledger'}
+            </button>
+          </>
+        }
+      >
+        <form id="form-record-payment" onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Transaction Direction
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setDirection('inbound')}
+                style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  border: direction === 'inbound' ? '2px solid #059669' : '1px solid #d1d5db',
+                  backgroundColor: direction === 'inbound' ? '#ecfdf5' : '#ffffff',
+                  color: direction === 'inbound' ? '#065f46' : '#374151',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                ↓ Customer Collection (In)
+              </button>
+              <button
+                type="button"
+                onClick={() => setDirection('outbound')}
+                style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  border: direction === 'outbound' ? '2px solid #dc2626' : '1px solid #d1d5db',
+                  backgroundColor: direction === 'outbound' ? '#fef2f2' : '#ffffff',
+                  color: direction === 'outbound' ? '#991b1b' : '#374151',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                ↑ Supplier Settlement (Out)
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Select Party *
+            </label>
+            <select
+              value={selectedPartyId}
+              onChange={(e) => setSelectedPartyId(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+            >
+              {parties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.displayName} ({p.partyType})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Amount (₹) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="any"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Payment Mode
+              </label>
+              <select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+              >
+                <option value="cash">Cash Counter</option>
+                <option value="upi">UPI / QR Code</option>
+                <option value="bank">Bank Transfer (NEFT/RTGS)</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Reference / UTR / Cheque Number
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. UTR-AXIS-991823"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

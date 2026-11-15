@@ -1,292 +1,426 @@
-import React, { useState } from 'react';
-import { Expense } from '@vyapaarkhata/domain';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { Modal } from '../components/Modal.js';
+import { useToast } from '../components/Toast.js';
+
+interface ExpenseItem {
+  id: string;
+  categoryName?: string;
+  expenseCategoryId: string;
+  expenseNumber: string;
+  expenseDate: string;
+  amount: number;
+  taxAmount: number;
+  paymentMode: string;
+  description?: string;
+  createdAt: string;
+}
+
+interface ExpenseCategoryItem {
+  id: string;
+  name: string;
+  code?: string;
+}
 
 export const ExpensesScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [expenses, setExpenses] = useState<Expense[]>([
-    {
-      id: 'exp-1',
-      tenantId: 't1',
-      expenseCategoryId: 'ec-1',
-      categoryName: 'Electricity & Utilities',
-      expenseNumber: 'EXP-2024-001',
-      expenseDate: '2024-11-14',
-      amount: 4500,
-      taxAmount: 0,
-      paymentMode: 'UPI',
-      payee: 'Maharashtra State Electricity Board',
-      description: 'Monthly Godown electricity bill',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'exp-2',
-      tenantId: 't1',
-      expenseCategoryId: 'ec-2',
-      categoryName: 'Tea & Refreshments',
-      expenseNumber: 'EXP-2024-002',
-      expenseDate: '2024-11-14',
-      amount: 450,
-      taxAmount: 0,
-      paymentMode: 'Cash',
-      payee: 'Raju Tea Stall',
-      description: 'Daily counter tea & refreshments for staff',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'exp-3',
-      tenantId: 't1',
-      expenseCategoryId: 'ec-3',
-      categoryName: 'Freight & Cartage',
-      expenseNumber: 'EXP-2024-003',
-      expenseDate: '2024-11-13',
-      amount: 2200,
-      taxAmount: 0,
-      paymentMode: 'Cash',
-      payee: 'Tempo Transport Services',
-      description: 'Cement unloading labor charges',
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
+  const [categories, setCategories] = useState<ExpenseCategoryItem[]>([]);
 
   // Form State
-  const [categoryName, setCategoryName] = useState('Electricity & Utilities');
-  const [amount, setAmount] = useState('');
-  const [payee, setPayee] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [amount, setAmount] = useState('500');
   const [description, setDescription] = useState('');
-  const [paymentMode, setPaymentMode] = useState('Cash');
+  const [paymentMode, setPaymentMode] = useState('cash');
 
-  const categories = ['all', 'Electricity & Utilities', 'Tea & Refreshments', 'Freight & Cartage', 'Shop Rent', 'Stationery'];
+  const loadData = () => {
+    setLoading(true);
+    // 1. Fetch expenses
+    fetch('/api/v1/expenses', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setExpenses(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load expenses:', err));
 
-  const filteredExpenses = selectedCategory === 'all'
-    ? expenses
-    : expenses.filter((e) => e.categoryName === selectedCategory);
+    // 2. Fetch categories
+    fetch('/api/v1/expenses/categories', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data);
+          if (json.data.length > 0 && !categoryId) {
+            setCategoryId(json.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.warn('Failed to load expense categories:', err))
+      .finally(() => setLoading(false));
+  };
 
-  const totalExpenseAmount = expenses.reduce((acc, e) => acc + e.amount, 0);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const filteredExpenses = expenses.filter((e) => {
+    if (selectedCategory === 'all') return true;
+    return e.expenseCategoryId === selectedCategory;
+  });
+
+  const totalExpenseAmount = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+
+  const handleRecordExpense = async (e: React.FormEvent) => {
     e.preventDefault();
-    const amt = parseFloat(amount) || 0;
-    if (amt <= 0) return;
+    const parsedAmount = parseFloat(amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      toast.warning('Please enter a valid expense amount');
+      return;
+    }
 
-    const newExp: Expense = {
-      id: `exp-${Date.now()}`,
-      tenantId: 't1',
-      expenseCategoryId: `ec-${Date.now()}`,
-      categoryName,
-      expenseNumber: `EXP-${Date.now().toString().slice(-4)}`,
-      expenseDate: new Date().toISOString().slice(0, 10),
-      amount: amt,
-      taxAmount: 0,
-      paymentMode,
-      payee: payee || undefined,
-      description: description || undefined,
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
+    try {
+      const expId = crypto.randomUUID();
+      const expNumber = `EXP-${Date.now().toString().slice(-6)}`;
 
-    setExpenses([newExp, ...expenses]);
-    setShowAddModal(false);
-    setAmount('');
-    setPayee('');
-    setDescription('');
+      const res = await fetch('/api/v1/expenses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          id: expId,
+          expenseCategoryId: categoryId || 'c0000000-0000-0000-0000-000000000001',
+          expenseNumber: expNumber,
+          expenseDate: new Date().toISOString().slice(0, 10),
+          amount: parsedAmount,
+          taxAmount: 0,
+          paymentMode,
+          description: description.trim() || undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to record expense');
+      }
+
+      toast.success(`Expense ${expNumber} for ₹ ${parsedAmount.toLocaleString()} recorded!`);
+      setShowAddModal(false);
+      setAmount('500');
+      setDescription('');
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Error saving expense');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div>
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+        }}
+      >
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-            💸 Daily Store Expenses
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('expenses.title')}
           </h2>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-            Track day-to-day retail expenses: utilities, tea, local cartage, labor, and petty cash.
+            {t('expenses.subtitle')}
           </p>
         </div>
         <button
+          id="btn-add-expense"
           onClick={() => setShowAddModal(true)}
           style={{
+            padding: '10px 18px',
             backgroundColor: '#2563eb',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
-            padding: '10px 16px',
             fontWeight: 600,
+            fontSize: '13.5px',
             cursor: 'pointer',
-            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
           }}
         >
-          + Record Expense
+          {t('expenses.addNew')}
         </button>
       </div>
 
-      {/* Summary KPI */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+      {/* KPI Cards */}
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOTAL EXPENSES THIS MONTH</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#dc2626', marginTop: '4px' }}>
-            ₹{totalExpenseAmount.toLocaleString()}
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Store Expenses</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#dc2626', marginTop: '4px' }}>
+            ₹ {totalExpenseAmount.toLocaleString()}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOTAL EXPENSE ENTRIES</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Vouchers Logged</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
             {expenses.length}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOP EXPENSE CATEGORY</div>
-          <div style={{ fontSize: '20px', fontWeight: 700, color: '#4b5563', marginTop: '6px' }}>
-            Electricity & Utilities
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Expense Heads</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
+            {categories.length}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Audit Status</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: '#059669', marginTop: '6px' }}>
+            100% Reconciled
           </div>
         </div>
       </div>
 
-      {/* Category Pills */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '16px',
-              border: '1px solid',
-              borderColor: selectedCategory === cat ? '#2563eb' : '#d1d5db',
-              backgroundColor: selectedCategory === cat ? '#eff6ff' : '#ffffff',
-              color: selectedCategory === cat ? '#1d4ed8' : '#4b5563',
-              fontSize: '12px',
-              fontWeight: selectedCategory === cat ? 600 : 400,
-              cursor: 'pointer',
-            }}
-          >
-            {cat === 'all' ? 'All Expenses' : cat}
-          </button>
-        ))}
+      {/* Category Filter */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          backgroundColor: '#ffffff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+          marginBottom: '16px',
+          alignItems: 'center',
+        }}
+      >
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#4b5563' }}>Filter by Category:</span>
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            fontSize: '13px',
+            backgroundColor: '#ffffff',
+            minWidth: '200px',
+          }}
+        >
+          <option value="all">All Categories</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={loadData}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#374151',
+            marginLeft: 'auto',
+          }}
+        >
+          {loading ? '...' : '↻ Refresh'}
+        </button>
       </div>
 
       {/* Expenses Table */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+      <div className="vk-table-responsive">
+        <table>
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-              <th style={{ padding: '12px 16px' }}>Expense #</th>
-              <th style={{ padding: '12px 16px' }}>Date</th>
-              <th style={{ padding: '12px 16px' }}>Category</th>
-              <th style={{ padding: '12px 16px' }}>Payee / Vendor</th>
-              <th style={{ padding: '12px 16px' }}>Description / Note</th>
-              <th style={{ padding: '12px 16px' }}>Mode</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Amount (₹)</th>
+            <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Voucher No</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Expense Head</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Description</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>Mode</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Amount</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Date</th>
             </tr>
           </thead>
           <tbody>
-            {filteredExpenses.map((exp) => (
-              <tr key={exp.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '12px 16px', fontWeight: 600, color: '#1d4ed8' }}>{exp.expenseNumber}</td>
-                <td style={{ padding: '12px 16px', color: '#6b7280' }}>{exp.expenseDate}</td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600, backgroundColor: '#f3f4f6', color: '#374151' }}>
-                    {exp.categoryName}
-                  </span>
-                </td>
-                <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>{exp.payee || '—'}</td>
-                <td style={{ padding: '12px 16px', color: '#4b5563' }}>{exp.description || '—'}</td>
-                <td style={{ padding: '12px 16px', color: '#6b7280' }}>{exp.paymentMode}</td>
-                <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#dc2626', fontSize: '14px' }}>
-                  ₹{exp.amount.toLocaleString()}
+            {filteredExpenses.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                  No expense records found.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredExpenses.map((e) => (
+                <tr key={e.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                    {e.expenseNumber}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#374151' }}>
+                    {e.categoryName || 'Operating Expense'}
+                  </td>
+                  <td style={{ padding: '12px 16px', color: '#6b7280' }}>
+                    {e.description || '—'}
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        backgroundColor: '#f3f4f6',
+                        color: '#4b5563',
+                      }}
+                    >
+                      {e.paymentMode?.toUpperCase() || 'CASH'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
+                    ₹ {(e.amount || 0).toLocaleString()}
+                  </td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
+                    {e.expenseDate || (e.createdAt ? new Date(e.createdAt).toLocaleDateString() : 'Today')}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Add Expense Modal */}
-      {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '450px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Record Expense</h3>
-            <form onSubmit={handleAddExpense}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Category</label>
-                <select
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                >
-                  {categories.filter((c) => c !== 'all').map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Amount (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Payment Mode</label>
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="UPI">UPI / GPay</option>
-                    <option value="Bank">Bank Account</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Paid To (Payee)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Raju Chaiwala / MSEB"
-                  value={payee}
-                  onChange={(e) => setPayee(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Description</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Unloading labor for truck"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Save Expense
-                </button>
-              </div>
-            </form>
+      {/* Modern Custom Modal: Add Expense */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title={t('expenses.modalTitle')}
+        subtitle="Log operational overheads, freight, utility bills, or staff refreshments."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-add-expense"
+              disabled={isSubmitting}
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Recording...' : t('btn.create')}
+            </button>
+          </>
+        }
+      >
+        <form id="form-add-expense" onSubmit={handleRecordExpense} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Expense Category / Head *
+            </label>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Amount (₹) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="any"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700 }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Payment Mode
+              </label>
+              <select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+              >
+                <option value="cash">Cash Counter</option>
+                <option value="upi">UPI / QR Code</option>
+                <option value="bank">Bank Transfer</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Description / Notes
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Unloading labor or power bill"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

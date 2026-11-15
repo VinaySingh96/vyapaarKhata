@@ -1,77 +1,87 @@
-import React, { useState } from 'react';
-import { Product } from '@vyapaarkhata/domain';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { Modal } from '../components/Modal.js';
+import { useToast } from '../components/Toast.js';
+
+interface ProductItem {
+  id: string;
+  name: string;
+  categoryName?: string;
+  sku?: string;
+  barcode?: string;
+  baseUnitSymbol?: string;
+  baseUnitId?: string;
+  purchasePrice?: number;
+  sellingPrice?: number;
+  reorderLevel?: number;
+  totalStock?: number;
+  isActive?: boolean;
+}
 
 export const ProductsScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [products, setProducts] = useState<Partial<Product>[]>([
-    {
-      id: 'p1',
-      name: 'UltraTech Portland Pozzolana Cement',
-      categoryName: 'Cement & Aggregates',
-      sku: 'CEM-PP-50KG',
-      barcode: '8901234567890',
-      baseUnitSymbol: 'bag',
-      purchasePrice: 310,
-      sellingPrice: 380,
-      reorderLevel: 10,
-      totalStock: 35,
-      isActive: true,
-    },
-    {
-      id: 'p2',
-      name: 'TMT Steel Fe550D Rebar 12mm',
-      categoryName: 'Steel & Metals',
-      sku: 'TMT-12MM-KG',
-      barcode: '8901234567891',
-      baseUnitSymbol: 'kg',
-      purchasePrice: 56,
-      sellingPrice: 65,
-      reorderLevel: 25,
-      totalStock: 18, // Low stock!
-      isActive: true,
-    },
-    {
-      id: 'p3',
-      name: 'Asian Paints Apex Ultima White (20L)',
-      categoryName: 'Paints & Finishes',
-      sku: 'PNT-APX-20L',
-      barcode: '8901234567892',
-      baseUnitSymbol: 'bucket',
-      purchasePrice: 3850,
-      sellingPrice: 4400,
-      reorderLevel: 5,
-      totalStock: 8,
-      isActive: true,
-    },
-    {
-      id: 'p4',
-      name: 'River Sand Fine Washed',
-      categoryName: 'Cement & Aggregates',
-      sku: 'SND-WSH-TON',
-      baseUnitSymbol: 'ton',
-      purchasePrice: 1200,
-      sellingPrice: 1650,
-      reorderLevel: 5,
-      totalStock: 0, // Out of stock!
-      isActive: true,
-    },
-  ]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [categories, setCategories] = useState<string[]>(['all']);
 
   // Form State for Add Product
   const [newProductName, setNewProductName] = useState('');
-  const [newCategory, setNewCategory] = useState('Cement & Aggregates');
+  const [newCategory, setNewCategory] = useState('General Goods');
   const [newSku, setNewSku] = useState('');
   const [newBarcode, setNewBarcode] = useState('');
-  const [newUnit, setNewUnit] = useState('bag');
+  const [newUnit, setNewUnit] = useState('pcs');
   const [newPurchasePrice, setNewPurchasePrice] = useState('100');
   const [newSellingPrice, setNewSellingPrice] = useState('130');
   const [newReorderLevel, setNewReorderLevel] = useState('10');
   const [newStock, setNewStock] = useState('20');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const categories = ['all', 'Cement & Aggregates', 'Steel & Metals', 'Paints & Finishes', 'Plumbing & Pipes'];
+  // Load products from backend
+  const loadProducts = () => {
+    setLoading(true);
+    fetch('/api/v1/products', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          const mapped: ProductItem[] = json.data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            categoryName: p.categoryName || 'General Goods',
+            sku: p.sku || 'SKU',
+            barcode: p.barcode,
+            baseUnitSymbol: p.baseUnitSymbol || 'pcs',
+            baseUnitId: p.baseUnitId || '10000000-0000-0000-0000-000000000001',
+            purchasePrice: p.purchasePrice || p.variants?.[0]?.purchasePrice || 0,
+            sellingPrice: p.sellingPrice || p.variants?.[0]?.sellingPrice || 0,
+            reorderLevel: p.reorderLevel || p.variants?.[0]?.reorderLevel || 10,
+            totalStock: p.totalStock !== undefined ? p.totalStock : (p.variants?.[0]?.stockOnHand || 0),
+            isActive: p.isActive !== false,
+          }));
+          setProducts(mapped);
+
+          // Extract unique categories
+          const cats = Array.from(new Set(mapped.map((p) => p.categoryName || 'General Goods')));
+          setCategories(['all', ...cats]);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load products:', err);
+        toast.error('Failed to load products from server');
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
 
   const filteredProducts = products.filter((p) => {
     const matchesCategory = selectedCategory === 'all' || p.categoryName === selectedCategory;
@@ -88,101 +98,147 @@ export const ProductsScreen: React.FC = () => {
   ).length;
   const outOfStockCount = products.filter((p) => (p.totalStock || 0) === 0).length;
 
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProductName.trim()) return;
+    if (!newProductName.trim()) {
+      toast.warning('Product name is required');
+      return;
+    }
 
-    const newProd: Partial<Product> = {
-      id: `p-${Date.now()}`,
-      name: newProductName,
-      categoryName: newCategory,
-      sku: newSku || `SKU-${Date.now().toString().slice(-4)}`,
-      barcode: newBarcode || undefined,
-      baseUnitSymbol: newUnit,
-      purchasePrice: parseFloat(newPurchasePrice) || 0,
-      sellingPrice: parseFloat(newSellingPrice) || 0,
-      reorderLevel: parseFloat(newReorderLevel) || 0,
-      totalStock: parseFloat(newStock) || 0,
-      isActive: true,
-    };
+    setIsSubmitting(true);
+    try {
+      const generatedSku = newSku.trim() || `SKU-${Date.now().toString().slice(-6)}`;
+      const prodId = crypto.randomUUID();
 
-    setProducts([newProd, ...products]);
-    setShowAddModal(false);
-    setNewProductName('');
-    setNewSku('');
-    setNewBarcode('');
+      const res = await fetch('/api/v1/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          id: prodId,
+          name: newProductName.trim(),
+          sku: generatedSku,
+          barcode: newBarcode.trim() || undefined,
+          purchasePrice: parseFloat(newPurchasePrice) || 0,
+          sellingPrice: parseFloat(newSellingPrice) || 0,
+          reorderLevel: parseFloat(newReorderLevel) || 0,
+          baseUnitId: '10000000-0000-0000-0000-000000000001',
+          isStockTracked: true,
+          trackingMethod: 'quantity',
+          valuationMethod: 'weighted_average',
+          isActive: true,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to save product');
+      }
+
+      toast.success(t('products.createdSuccess'));
+      setShowAddModal(false);
+      setNewProductName('');
+      setNewSku('');
+      setNewBarcode('');
+      loadProducts();
+    } catch (err: any) {
+      toast.error(err.message || 'Error creating product');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Top Header & Metrics */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div>
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+        }}
+      >
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-            🏷️ Product & Item Catalog
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('products.title')}
           </h2>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-            Master catalog with SKU, units, barcodes, tax rates, and inventory reorder controls.
+            {t('products.subtitle')}
           </p>
         </div>
         <button
+          id="btn-add-new-product"
           onClick={() => setShowAddModal(true)}
           style={{
+            padding: '10px 18px',
             backgroundColor: '#2563eb',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
-            padding: '10px 16px',
             fontWeight: 600,
+            fontSize: '13.5px',
             cursor: 'pointer',
-            fontSize: '14px',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
           }}
         >
-          + Add New Product
+          {t('products.addNew')}
         </button>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOTAL PRODUCTS</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>{totalProducts}</div>
-        </div>
-        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#059669' }}>ACTIVE IN STOCK</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
-            {totalProducts - outOfStockCount}
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Catalog Products</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {totalProducts}
           </div>
         </div>
-        <div style={{ backgroundColor: '#fffbeb', padding: '16px', borderRadius: '8px', border: '1px solid #fde68a' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#d97706' }}>LOW STOCK ALERTS</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#b45309', marginTop: '4px' }}>{lowStockCount}</div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Active Selling Items</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#10b981', marginTop: '4px' }}>
+            {products.filter((p) => p.isActive).length}
+          </div>
         </div>
-        <div style={{ backgroundColor: '#fef2f2', padding: '16px', borderRadius: '8px', border: '1px solid #fecaca' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626' }}>OUT OF STOCK</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#b91c1c', marginTop: '4px' }}>{outOfStockCount}</div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Low Stock Threshold</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>
+            {lowStockCount}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Out of Stock (Zero)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#ef4444', marginTop: '4px' }}>
+            {outOfStockCount}
+          </div>
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
+      {/* Filter and Search Bar */}
       <div
         style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
           backgroundColor: '#ffffff',
-          padding: '16px',
+          padding: '12px 16px',
           borderRadius: '8px',
           border: '1px solid #e5e7eb',
           marginBottom: '16px',
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center',
-          flexWrap: 'wrap',
         }}
       >
-        <div style={{ flex: 1, minWidth: '240px' }}>
+        <div style={{ flex: '1 1 240px' }}>
           <input
             type="text"
-            placeholder="🔍 Search products by name, SKU, or barcode..."
+            placeholder={t('products.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -190,288 +246,278 @@ export const ProductsScreen: React.FC = () => {
               padding: '8px 12px',
               borderRadius: '6px',
               border: '1px solid #d1d5db',
-              fontSize: '14px',
-              boxSizing: 'border-box',
+              fontSize: '13.5px',
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '16px',
-                border: '1px solid',
-                borderColor: selectedCategory === cat ? '#2563eb' : '#d1d5db',
-                backgroundColor: selectedCategory === cat ? '#eff6ff' : '#ffffff',
-                color: selectedCategory === cat ? '#1d4ed8' : '#4b5563',
-                fontSize: '12px',
-                fontWeight: selectedCategory === cat ? 600 : 400,
-                cursor: 'pointer',
-              }}
-            >
-              {cat === 'all' ? 'All Categories' : cat}
-            </button>
-          ))}
+        <div style={{ flex: '0 1 200px' }}>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              fontSize: '13.5px',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c === 'all' ? t('products.allCategories') : c}
+              </option>
+            ))}
+          </select>
         </div>
+        <button
+          type="button"
+          onClick={loadProducts}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#374151',
+          }}
+        >
+          {loading ? 'Refreshing...' : '↻ Refresh'}
+        </button>
       </div>
 
-      {/* Product Table */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+      {/* Products Table with Responsive Overflow Wrapper */}
+      <div className="vk-table-responsive">
+        <table>
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-              <th style={{ padding: '12px 16px' }}>Product Name</th>
-              <th style={{ padding: '12px 16px' }}>Category</th>
-              <th style={{ padding: '12px 16px' }}>SKU / Barcode</th>
-              <th style={{ padding: '12px 16px' }}>Base Unit</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Purchase Cost</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Selling Price</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Margin %</th>
-              <th style={{ padding: '12px 16px', textAlign: 'center' }}>Stock on Hand</th>
-              <th style={{ padding: '12px 16px', textAlign: 'center' }}>Status</th>
+            <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('products.colItem')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('products.colCategory')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>SKU / Barcode</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('products.colUnit')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>{t('products.colPurchase')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>{t('products.colSelling')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'center' }}>{t('products.colStock')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'center' }}>{t('products.colStatus')}</th>
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map((p) => {
-              const stock = p.totalStock || 0;
-              const reorder = p.reorderLevel || 0;
-              const margin = p.sellingPrice && p.purchasePrice
-                ? (((p.sellingPrice - p.purchasePrice) / p.purchasePrice) * 100).toFixed(1)
-                : '0.0';
+            {filteredProducts.length === 0 ? (
+              <tr>
+                <td colSpan={8} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                  No products found matching your search.
+                </td>
+              </tr>
+            ) : (
+              filteredProducts.map((p) => {
+                const stock = p.totalStock || 0;
+                const reorder = p.reorderLevel || 0;
 
-              let stockBadgeBg = '#dcfce7';
-              let stockBadgeColor = '#15803d';
-              let stockStatus = 'In Stock';
+                let stockBadgeBg = '#ecfdf5';
+                let stockBadgeColor = '#065f46';
+                let stockStatus = t('inventory.inStock');
 
-              if (stock === 0) {
-                stockBadgeBg = '#fee2e2';
-                stockBadgeColor = '#b91c1c';
-                stockStatus = 'Out of Stock';
-              } else if (stock <= reorder) {
-                stockBadgeBg = '#fef3c7';
-                stockBadgeColor = '#b45309';
-                stockStatus = 'Low Stock';
-              }
+                if (stock === 0) {
+                  stockBadgeBg = '#fee2e2';
+                  stockBadgeColor = '#b91c1c';
+                  stockStatus = t('inventory.outOfStock');
+                } else if (stock <= reorder) {
+                  stockBadgeBg = '#fef3c7';
+                  stockBadgeColor = '#b45309';
+                  stockStatus = t('inventory.lowStock');
+                }
 
-              return (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
-                    {p.name}
-                  </td>
-                  <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.categoryName || '—'}</td>
-                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#374151' }}>
-                    <div>{p.sku || '—'}</div>
-                    {p.barcode && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{p.barcode}</div>}
-                  </td>
-                  <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.baseUnitSymbol || 'pcs'}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
-                    ₹{(p.purchasePrice || 0).toLocaleString()}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
-                    ₹{(p.sellingPrice || 0).toLocaleString()}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
-                    +{margin}%
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700 }}>
-                    {stock} {p.baseUnitSymbol}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                    <span
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        backgroundColor: stockBadgeBg,
-                        color: stockBadgeColor,
-                      }}
-                    >
-                      {stockStatus}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                      {p.name}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.categoryName || '—'}</td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#374151' }}>
+                      <div>{p.sku || '—'}</div>
+                      {p.barcode && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{p.barcode}</div>}
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.baseUnitSymbol || 'pcs'}</td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
+                      ₹{(p.purchasePrice || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
+                      ₹{(p.sellingPrice || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700 }}>
+                      {stock} {p.baseUnitSymbol}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      <span
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          backgroundColor: stockBadgeBg,
+                          color: stockBadgeColor,
+                        }}
+                      >
+                        {stockStatus}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Add Product Modal */}
-      {showAddModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 50,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              borderRadius: '8px',
-              padding: '24px',
-              width: '520px',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Add New Item</h3>
-            <form onSubmit={handleAddProduct}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>
-                  Item / Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. UltraTech Cement 50kg"
-                  value={newProductName}
-                  onChange={(e) => setNewProductName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Category</label>
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    {categories.filter((c) => c !== 'all').map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Base Unit</label>
-                  <select
-                    value={newUnit}
-                    onChange={(e) => setNewUnit(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    <option value="bag">Bag</option>
-                    <option value="kg">Kilogram (kg)</option>
-                    <option value="ton">Ton</option>
-                    <option value="bucket">Bucket / Tub</option>
-                    <option value="pcs">Pieces (pcs)</option>
-                    <option value="mtr">Meter (mtr)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>SKU Code</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CEM-UT-50"
-                    value={newSku}
-                    onChange={(e) => setNewSku(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Barcode (EAN-13)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 8901234567890"
-                    value={newBarcode}
-                    onChange={(e) => setNewBarcode(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Purchase Price (₹)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newPurchasePrice}
-                    onChange={(e) => setNewPurchasePrice(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Selling Price (₹)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newSellingPrice}
-                    onChange={(e) => setNewSellingPrice(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Initial Stock</label>
-                  <input
-                    type="number"
-                    value={newStock}
-                    onChange={(e) => setNewStock(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block' }}>Reorder Level Warning</label>
-                  <input
-                    type="number"
-                    value={newReorderLevel}
-                    onChange={(e) => setNewReorderLevel(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    backgroundColor: '#ffffff',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    backgroundColor: '#2563eb',
-                    color: '#ffffff',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                  }}
-                >
-                  Save Item
-                </button>
-              </div>
-            </form>
+      {/* Modern Custom Modal for Adding Product */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title={t('products.modalTitle')}
+        subtitle="Add a new catalog item with pricing, SKU, and godown threshold."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-add-product"
+              disabled={isSubmitting}
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Saving to Database...' : t('btn.create')}
+            </button>
+          </>
+        }
+      >
+        <form id="form-add-product" onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              {t('products.nameLabel')} *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Birla White WallCare Putty 40kg"
+              value={newProductName}
+              onChange={(e) => setNewProductName(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
           </div>
-        </div>
-      )}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.skuLabel')}
+              </label>
+              <input
+                type="text"
+                placeholder="Auto-generated if blank"
+                value={newSku}
+                onChange={(e) => setNewSku(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.barcodeLabel')}
+              </label>
+              <input
+                type="text"
+                placeholder="EAN / Barcode"
+                value={newBarcode}
+                onChange={(e) => setNewBarcode(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.purchasePriceLabel')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newPurchasePrice}
+                onChange={(e) => setNewPurchasePrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.sellingPriceLabel')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={newSellingPrice}
+                onChange={(e) => setNewSellingPrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.reorderLabel')}
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={newReorderLevel}
+                onChange={(e) => setNewReorderLevel(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('products.unitLabel')}
+              </label>
+              <select
+                value={newUnit}
+                onChange={(e) => setNewUnit(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+              >
+                <option value="pcs">Pieces (pcs)</option>
+                <option value="bag">Bags (bag)</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="ton">Metric Tonnes (t)</option>
+                <option value="bucket">Buckets (bkt)</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

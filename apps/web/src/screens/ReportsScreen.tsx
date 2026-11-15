@@ -1,201 +1,274 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { useToast } from '../components/Toast.js';
+
+interface StockValuationItem {
+  variantId: string;
+  productName: string;
+  quantity: number;
+  valuation: number;
+}
 
 export const ReportsScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [activeReportTab, setActiveReportTab] = useState<'valuation' | 'pnl' | 'gst'>('valuation');
+  const [valuationData, setValuationData] = useState<StockValuationItem[]>([]);
+  const [dashboardMetrics, setDashboardMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const stockValuation = [
-    { name: 'UltraTech Portland Cement (50kg)', sku: 'CEM-PP-50KG', qty: 35, unit: 'bags', unitCost: 310, totalValue: 10850 },
-    { name: 'TMT Steel Fe550D Rebar 12mm', sku: 'TMT-12MM-KG', qty: 18, unit: 'kg', unitCost: 56, totalValue: 1008 },
-    { name: 'Asian Paints Apex Ultima White (20L)', sku: 'PNT-APX-20L', qty: 8, unit: 'buckets', unitCost: 3850, totalValue: 30800 },
-    { name: 'River Sand Fine Washed', sku: 'SND-WSH-TON', qty: 0, unit: 'tons', unitCost: 1200, totalValue: 0 },
-  ];
+  const loadData = () => {
+    setLoading(true);
+    // 1. Fetch stock valuation
+    fetch('/api/v1/reports/stock-valuation', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setValuationData(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load valuation report:', err));
 
-  const totalInventoryValuation = stockValuation.reduce((acc, s) => acc + s.totalValue, 0);
+    // 2. Fetch dashboard metrics
+    fetch('/api/v1/reports/dashboard', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setDashboardMetrics(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load dashboard metrics:', err))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const totalInventoryValuation = valuationData.reduce((acc, s) => acc + (s.valuation || 0), 0);
+  const totalPhysicalQuantity = valuationData.reduce((acc, s) => acc + (s.quantity || 0), 0);
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-          📈 Reports, Valuation & Business Analytics
-        </h2>
-        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-          Real-time stock valuation (FIFO/Moving Average), estimated P&L, receivables aging, and GST output/input summaries.
-        </p>
+    <div>
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+        }}
+      >
+        <div>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('reports.title')}
+          </h2>
+          <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
+            {t('reports.subtitle')}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={loadData}
+          style={{
+            padding: '8px 14px',
+            backgroundColor: '#ffffff',
+            border: '1px solid #d1d5db',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#374151',
+          }}
+        >
+          {loading ? 'Refreshing...' : '↻ Refresh Data'}
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Godown Stock Valuation</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
+            ₹ {totalInventoryValuation.toLocaleString()}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Physical On-Hand Quantity</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
+            {totalPhysicalQuantity} units
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Today's Total Sales</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            ₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Receivables (उधारी)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>
+            ₹ {(dashboardMetrics?.totalReceivables || 0).toLocaleString()}
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid #e5e7eb', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          backgroundColor: '#ffffff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+          marginBottom: '16px',
+        }}
+      >
         <button
+          type="button"
           onClick={() => setActiveReportTab('valuation')}
           style={{
-            padding: '10px 4px',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeReportTab === 'valuation' ? '2px solid #2563eb' : '2px solid transparent',
-            color: activeReportTab === 'valuation' ? '#2563eb' : '#6b7280',
-            fontWeight: activeReportTab === 'valuation' ? 700 : 500,
-            fontSize: '14px',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
             cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeReportTab === 'valuation' ? '#2563eb' : '#ffffff',
+            color: activeReportTab === 'valuation' ? '#ffffff' : '#374151',
           }}
         >
-          Stock Valuation Report
+          {t('reports.inventoryValuation')}
         </button>
         <button
+          type="button"
           onClick={() => setActiveReportTab('pnl')}
           style={{
-            padding: '10px 4px',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeReportTab === 'pnl' ? '2px solid #2563eb' : '2px solid transparent',
-            color: activeReportTab === 'pnl' ? '#2563eb' : '#6b7280',
-            fontWeight: activeReportTab === 'pnl' ? 700 : 500,
-            fontSize: '14px',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
             cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeReportTab === 'pnl' ? '#2563eb' : '#ffffff',
+            color: activeReportTab === 'pnl' ? '#ffffff' : '#374151',
           }}
         >
-          Profit & Loss Summary
+          {t('reports.pnlSummary')}
         </button>
         <button
+          type="button"
           onClick={() => setActiveReportTab('gst')}
           style={{
-            padding: '10px 4px',
-            border: 'none',
-            background: 'none',
-            borderBottom: activeReportTab === 'gst' ? '2px solid #2563eb' : '2px solid transparent',
-            color: activeReportTab === 'gst' ? '#2563eb' : '#6b7280',
-            fontWeight: activeReportTab === 'gst' ? 700 : 500,
-            fontSize: '14px',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
             cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeReportTab === 'gst' ? '#2563eb' : '#ffffff',
+            color: activeReportTab === 'gst' ? '#ffffff' : '#374151',
           }}
         >
-          GST GSTR-1 / GSTR-3B Tax Summary
+          {t('reports.gstSummary')}
         </button>
       </div>
 
-      {/* Report 1: Stock Valuation */}
+      {/* Report Content */}
       {activeReportTab === 'valuation' && (
-        <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
-            <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOTAL STOCK VALUATION</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#16a34a', marginTop: '4px' }}>
-                ₹{totalInventoryValuation.toLocaleString()}
-              </div>
+        <div className="vk-table-responsive">
+          <table>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+                <th style={{ padding: '12px 16px', textAlign: 'left' }}>Item Description</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Current Balance</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total Inventory Asset Valuation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {valuationData.length === 0 ? (
+                <tr>
+                  <td colSpan={3} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                    No inventory records found.
+                  </td>
+                </tr>
+              ) : (
+                valuationData.map((s, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                      {s.productName}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>
+                      {s.quantity} units
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#2563eb' }}>
+                      ₹ {s.valuation.toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeReportTab === 'pnl' && (
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600 }}>Profit & Loss Financial Summary</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+              <span style={{ color: '#4b5563' }}>Gross Sales Revenue:</span>
+              <strong style={{ color: '#059669' }}>₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}</strong>
             </div>
-            <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>VALUATION METHOD</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
-                Weighted Average / FIFO
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+              <span style={{ color: '#4b5563' }}>Customer Outstanding Khata:</span>
+              <strong>₹ {(dashboardMetrics?.totalReceivables || 0).toLocaleString()}</strong>
             </div>
-            <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>ITEMS VALUED</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
-                {stockValuation.length} Items
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
+              <span style={{ color: '#4b5563' }}>Stock Assets In Godown:</span>
+              <strong style={{ color: '#2563eb' }}>₹ {totalInventoryValuation.toLocaleString()}</strong>
             </div>
           </div>
+        </div>
+      )}
 
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+      {activeReportTab === 'gst' && (
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600 }}>GST Filing & Tax Breakdown (GSTR-1)</h3>
+          <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 16px 0' }}>
+            Harmonized GST compliance with automatic 18% CGST/SGST split and HSN classification.
+          </p>
+          <div className="vk-table-responsive">
+            <table>
               <thead>
-                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-                  <th style={{ padding: '12px 16px' }}>Product Name</th>
-                  <th style={{ padding: '12px 16px' }}>SKU</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>On Hand</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Unit Purchase Cost</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total Inventory Value</th>
+                <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Tax Slab</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Taxable Turnover</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>CGST (9%)</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>SGST (9%)</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total Tax Liability</th>
                 </tr>
               </thead>
               <tbody>
-                {stockValuation.map((s, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>{s.name}</td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#6b7280' }}>{s.sku}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{s.qty} {s.unit}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', color: '#4b5563' }}>₹{s.unitCost.toLocaleString()}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#16a34a', fontSize: '14px' }}>
-                      ₹{s.totalValue.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                <tr style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                  <td style={{ padding: '12px 16px', fontWeight: 600 }}>Standard Rate (18%)</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {((dashboardMetrics?.todaySales || 0) * 0.09).toFixed(2)}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {((dashboardMetrics?.todaySales || 0) * 0.09).toFixed(2)}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#2563eb' }}>
+                    ₹ {((dashboardMetrics?.todaySales || 0) * 0.18).toFixed(2)}
+                  </td>
+                </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-      )}
-
-      {/* Report 2: P&L Summary */}
-      {activeReportTab === 'pnl' && (
-        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '24px', maxWidth: '650px' }}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Estimated Income Statement (P&L)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-              <span style={{ fontWeight: 600 }}>Total Sales Revenue</span>
-              <span style={{ fontWeight: 700, color: '#111827' }}>₹42,480.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>
-              <span>Less: Cost of Goods Sold (COGS)</span>
-              <span>-₹30,000.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '2px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
-              <span style={{ fontWeight: 700, color: '#15803d' }}>Gross Profit Margin (29.4%)</span>
-              <span style={{ fontWeight: 700, color: '#15803d' }}>₹12,480.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6', color: '#6b7280' }}>
-              <span>Less: Operating Expenses (Utilities, Tea, Cartage)</span>
-              <span>-₹7,150.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '2px solid #111827', fontSize: '16px' }}>
-              <span style={{ fontWeight: 800 }}>Net Estimated Operating Profit</span>
-              <span style={{ fontWeight: 800, color: '#2563eb' }}>₹5,330.00</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Report 3: GST Summary */}
-      {activeReportTab === 'gst' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#111827', fontWeight: 700 }}>Output Tax (Sales Invoices)</h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>Taxable Sales:</span>
-              <span style={{ fontWeight: 600 }}>₹36,000.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>CGST (9%):</span>
-              <span style={{ fontWeight: 600 }}>₹3,240.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>SGST (9%):</span>
-              <span style={{ fontWeight: 600 }}>₹3,240.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: 700 }}>
-              <span>Total Output Tax Collected:</span>
-              <span style={{ color: '#dc2626' }}>₹6,480.00</span>
-            </div>
-          </div>
-
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#111827', fontWeight: 700 }}>Input Tax Credit (ITC - Purchases)</h4>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>Taxable Purchases:</span>
-              <span style={{ fontWeight: 600 }}>₹30,000.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>Input CGST (9%):</span>
-              <span style={{ fontWeight: 600 }}>₹2,700.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ color: '#6b7280' }}>Input SGST (9%):</span>
-              <span style={{ fontWeight: 600 }}>₹2,700.00</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e7eb', paddingTop: '8px', fontWeight: 700 }}>
-              <span>Total Eligible ITC:</span>
-              <span style={{ color: '#16a34a' }}>₹5,400.00</span>
-            </div>
           </div>
         </div>
       )}

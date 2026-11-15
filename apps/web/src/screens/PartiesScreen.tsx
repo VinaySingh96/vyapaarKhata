@@ -1,204 +1,203 @@
-import React, { useState } from 'react';
-import { Party, PartyLedgerEntry } from '@vyapaarkhata/domain';
+import React, { useState, useEffect } from 'react';
+import { useI18n } from '../i18n/index.js';
+import { Modal } from '../components/Modal.js';
+import { useToast } from '../components/Toast.js';
+
+interface PartyItem {
+  id: string;
+  tenantId?: string;
+  partyType: 'customer' | 'supplier' | 'both';
+  displayName: string;
+  legalName?: string;
+  phone?: string;
+  email?: string;
+  gstin?: string;
+  pan?: string;
+  openingBalance?: number;
+  openingBalanceType?: 'debit' | 'credit';
+  currentBalance?: number;
+  isActive?: boolean;
+}
 
 export const PartiesScreen: React.FC = () => {
+  const { t } = useI18n();
+  const toast = useToast();
+
   const [selectedType, setSelectedType] = useState<'all' | 'customer' | 'supplier'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedPartyForLedger, setSelectedPartyForLedger] = useState<Party | null>(null);
+  const [selectedPartyForLedger, setSelectedPartyForLedger] = useState<PartyItem | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [parties, setParties] = useState<Party[]>([
-    {
-      id: 'pt-1',
-      tenantId: 't1',
-      partyType: 'customer',
-      displayName: 'Acme Construction Pvt Ltd',
-      legalName: 'Acme Construction Private Limited',
-      phone: '+91 98765 43210',
-      email: 'accounts@acmeconst.com',
-      gstin: '27AABCA1234F1Z8',
-      pan: 'AABCA1234F',
-      openingBalance: 0,
-      openingBalanceType: 'debit',
-      currentBalance: 42480, // Receivable
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'pt-2',
-      tenantId: 't1',
-      partyType: 'supplier',
-      displayName: 'UltraTech Cement Distributors',
-      legalName: 'UltraTech Cement Distributors Hub',
-      phone: '+91 98111 22334',
-      email: 'orders@utdist.com',
-      gstin: '27AACCA5678B1Z2',
-      pan: 'AACCA5678B',
-      openingBalance: 0,
-      openingBalanceType: 'credit',
-      currentBalance: -35400, // Payable
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'pt-3',
-      tenantId: 't1',
-      partyType: 'customer',
-      displayName: 'Shree Sai Hardware',
-      phone: '+91 97654 32109',
-      openingBalance: 0,
-      openingBalanceType: 'debit',
-      currentBalance: 12500, // Receivable
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'pt-4',
-      tenantId: 't1',
-      partyType: 'supplier',
-      displayName: 'Kamdhenu Steel Rolling Mills',
-      phone: '+91 98222 33445',
-      gstin: '27AAACK1122D1Z4',
-      openingBalance: 0,
-      openingBalanceType: 'credit',
-      currentBalance: 0, // Fully settled
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [parties, setParties] = useState<PartyItem[]>([]);
 
-  const [ledgerEntries] = useState<Record<string, PartyLedgerEntry[]>>({
-    'pt-1': [
-      {
-        id: 'le-1',
-        tenantId: 't1',
-        partyId: 'pt-1',
-        entryType: 'debit',
-        amount: 42480,
-        referenceDocumentType: 'sales_invoice',
-        referenceDocumentId: 'INV-10045',
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      },
-    ],
-    'pt-2': [
-      {
-        id: 'le-2',
-        tenantId: 't1',
-        partyId: 'pt-2',
-        entryType: 'credit',
-        amount: 35400,
-        referenceDocumentType: 'purchase_bill',
-        referenceDocumentId: 'BILL-0034',
-        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      },
-    ],
-  });
+  // Add party form state
+  const [newName, setNewName] = useState('');
+  const [newLegalName, setNewLegalName] = useState('');
+  const [newType, setNewType] = useState<'customer' | 'supplier'>('customer');
+  const [newPhone, setNewPhone] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newGstin, setNewGstin] = useState('');
+  const [newOpeningBalance, setNewOpeningBalance] = useState('0');
 
-  // Add Party Form State
-  const [name, setName] = useState('');
-  const [legalName, setLegalName] = useState('');
-  const [partyType, setPartyType] = useState<'customer' | 'supplier' | 'both'>('customer');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [gstin, setGstin] = useState('');
-  const [pan, setPan] = useState('');
-  const [openingBalance, setOpeningBalance] = useState('0');
+  // Load parties from backend
+  const loadParties = () => {
+    setLoading(true);
+    fetch('/api/v1/parties', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setParties(json.data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to load parties:', err);
+        toast.error('Failed to load parties from server');
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadParties();
+  }, []);
 
   const filteredParties = parties.filter((p) => {
-    const matchesType =
-      selectedType === 'all' ||
-      p.partyType === selectedType ||
-      p.partyType === 'both';
+    const matchesType = selectedType === 'all' || p.partyType === selectedType || p.partyType === 'both';
     const matchesSearch =
-      p.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (p.phone?.includes(searchTerm) || false) ||
-      (p.gstin?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+      p.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.gstin?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
   });
 
   const totalReceivables = parties
     .filter((p) => (p.currentBalance || 0) > 0)
-    .reduce((acc, p) => acc + (p.currentBalance || 0), 0);
+    .reduce((sum, p) => sum + (p.currentBalance || 0), 0);
 
   const totalPayables = parties
     .filter((p) => (p.currentBalance || 0) < 0)
-    .reduce((acc, p) => acc + Math.abs(p.currentBalance || 0), 0);
+    .reduce((sum, p) => sum + Math.abs(p.currentBalance || 0), 0);
 
-  const handleAddParty = (e: React.FormEvent) => {
+  const handleCreateParty = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!newName.trim()) {
+      toast.warning('Party name is required');
+      return;
+    }
 
-    const newParty: Party = {
-      id: `pt-${Date.now()}`,
-      tenantId: 't1',
-      partyType,
-      displayName: name,
-      legalName: legalName || undefined,
-      phone: phone || undefined,
-      email: email || undefined,
-      gstin: gstin || undefined,
-      pan: pan || undefined,
-      openingBalance: parseFloat(openingBalance) || 0,
-      openingBalanceType: 'debit',
-      currentBalance: parseFloat(openingBalance) || 0,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-    };
+    setIsSubmitting(true);
+    try {
+      const partyId = crypto.randomUUID();
+      const res = await fetch('/api/v1/parties', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          id: partyId,
+          partyType: newType,
+          displayName: newName.trim(),
+          legalName: newLegalName.trim() || newName.trim(),
+          phone: newPhone.trim() || undefined,
+          email: newEmail.trim() || undefined,
+          gstin: newGstin.trim().toUpperCase() || undefined,
+          openingBalance: parseFloat(newOpeningBalance) || 0,
+          openingBalanceType: newType === 'customer' ? 'debit' : 'credit',
+        }),
+      });
 
-    setParties([newParty, ...parties]);
-    setShowAddModal(false);
-    setName('');
-    setPhone('');
-    setGstin('');
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to save party');
+      }
+
+      toast.success(t('parties.createdSuccess'));
+      setShowAddModal(false);
+      setNewName('');
+      setNewLegalName('');
+      setNewPhone('');
+      setNewEmail('');
+      setNewGstin('');
+      setNewOpeningBalance('0');
+      loadParties();
+    } catch (err: any) {
+      toast.error(err.message || 'Error saving party');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <div style={{ padding: '4px' }}>
-      {/* Header & Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div>
+      {/* Top Header */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '20px',
+        }}
+      >
         <div>
-          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#111827' }}>
-            👥 Parties & Khata Directory
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#111827' }}>
+            {t('parties.title')}
           </h2>
           <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#6b7280' }}>
-            Manage Customer accounts, Supplier accounts, GST details, credit limits, and running balance ledgers.
+            {t('parties.subtitle')}
           </p>
         </div>
         <button
+          id="btn-add-new-party"
           onClick={() => setShowAddModal(true)}
           style={{
+            padding: '10px 18px',
             backgroundColor: '#2563eb',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
-            padding: '10px 16px',
             fontWeight: 600,
+            fontSize: '13.5px',
             cursor: 'pointer',
-            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
           }}
         >
-          + Add New Party
+          {t('parties.addNew')}
         </button>
       </div>
 
-      {/* Summary Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '20px' }}>
+      {/* KPI Cards */}
+      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280' }}>TOTAL PARTIES</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
-            {parties.length}
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Registered Customers</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {parties.filter((p) => p.partyType === 'customer' || p.partyType === 'both').length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#ecfdf5', padding: '16px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#047857' }}>TOTAL RECEIVABLE (KHATA IN)</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#065f46', marginTop: '4px' }}>
-            ₹{totalReceivables.toLocaleString()}
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Registered Suppliers</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
+            {parties.filter((p) => p.partyType === 'supplier' || p.partyType === 'both').length}
           </div>
         </div>
-        <div style={{ backgroundColor: '#fff1f2', padding: '16px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: '#be123c' }}>TOTAL PAYABLE (SUPPLIER DUES)</div>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#9f1239', marginTop: '4px' }}>
-            ₹{totalPayables.toLocaleString()}
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Receivables (उधारी)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>
+            ₹ {totalReceivables.toLocaleString()}
+          </div>
+        </div>
+        <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Supplier Payables (देनदारी)</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#3b82f6', marginTop: '4px' }}>
+            ₹ {totalPayables.toLocaleString()}
           </div>
         </div>
       </div>
@@ -206,20 +205,21 @@ export const PartiesScreen: React.FC = () => {
       {/* Filter and Search Bar */}
       <div
         style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          alignItems: 'center',
           backgroundColor: '#ffffff',
-          padding: '16px',
+          padding: '12px 16px',
           borderRadius: '8px',
           border: '1px solid #e5e7eb',
           marginBottom: '16px',
-          display: 'flex',
-          gap: '16px',
-          alignItems: 'center',
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: '1 1 240px' }}>
           <input
             type="text"
-            placeholder="🔍 Search party by business name, phone, or GSTIN..."
+            placeholder={t('parties.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -227,280 +227,337 @@ export const PartiesScreen: React.FC = () => {
               padding: '8px 12px',
               borderRadius: '6px',
               border: '1px solid #d1d5db',
-              fontSize: '14px',
-              boxSizing: 'border-box',
+              fontSize: '13.5px',
             }}
           />
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          {(['all', 'customer', 'supplier'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setSelectedType(t)}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: '1px solid',
-                borderColor: selectedType === t ? '#2563eb' : '#d1d5db',
-                backgroundColor: selectedType === t ? '#eff6ff' : '#ffffff',
-                color: selectedType === t ? '#1d4ed8' : '#4b5563',
-                fontSize: '13px',
-                fontWeight: selectedType === t ? 600 : 400,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-              }}
-            >
-              {t === 'all' ? 'All Parties' : `${t}s`}
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => setSelectedType('all')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              backgroundColor: selectedType === 'all' ? '#2563eb' : '#ffffff',
+              color: selectedType === 'all' ? '#ffffff' : '#374151',
+            }}
+          >
+            {t('parties.all')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedType('customer')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              backgroundColor: selectedType === 'customer' ? '#2563eb' : '#ffffff',
+              color: selectedType === 'customer' ? '#ffffff' : '#374151',
+            }}
+          >
+            {t('parties.customers')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedType('supplier')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              backgroundColor: selectedType === 'supplier' ? '#2563eb' : '#ffffff',
+              color: selectedType === 'supplier' ? '#ffffff' : '#374151',
+            }}
+          >
+            {t('parties.suppliers')}
+          </button>
+          <button
+            type="button"
+            onClick={loadParties}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#f3f4f6',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: 600,
+              color: '#374151',
+            }}
+          >
+            {loading ? '...' : '↻'}
+          </button>
         </div>
       </div>
 
-      {/* Parties Table */}
-      <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+      {/* Parties Table with Responsive Wrapper */}
+      <div className="vk-table-responsive">
+        <table>
           <thead>
-            <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb', color: '#4b5563', fontWeight: 600 }}>
-              <th style={{ padding: '12px 16px' }}>Party Name</th>
-              <th style={{ padding: '12px 16px' }}>Type</th>
-              <th style={{ padding: '12px 16px' }}>Contact Phone</th>
-              <th style={{ padding: '12px 16px' }}>GSTIN / PAN</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Net Balance</th>
-              <th style={{ padding: '12px 16px', textAlign: 'center' }}>Ledger</th>
+            <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('parties.colParty')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('parties.colType')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('parties.colContact')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'left' }}>{t('parties.colGstin')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>{t('parties.colBalance')}</th>
+              <th style={{ padding: '12px 16px', textAlign: 'center' }}>{t('parties.colActions')}</th>
             </tr>
           </thead>
           <tbody>
-            {filteredParties.map((p) => {
-              const bal = p.currentBalance || 0;
-              const isReceivable = bal > 0;
-              const isPayable = bal < 0;
+            {filteredParties.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                  No parties found matching criteria.
+                </td>
+              </tr>
+            ) : (
+              filteredParties.map((p) => {
+                const balance = p.currentBalance || 0;
+                const isReceivable = balance > 0;
+                const isPayable = balance < 0;
 
-              return (
-                <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px 16px' }}>
-                    <div style={{ fontWeight: 600, color: '#111827' }}>{p.displayName}</div>
-                    {p.legalName && <div style={{ fontSize: '11px', color: '#6b7280' }}>{p.legalName}</div>}
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: '12px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        backgroundColor: p.partyType === 'customer' ? '#e0f2fe' : '#fef3c7',
-                        color: p.partyType === 'customer' ? '#0369a1' : '#b45309',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {p.partyType}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', color: '#374151' }}>{p.phone || '—'}</td>
-                  <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#4b5563' }}>
-                    <div>{p.gstin || '—'}</div>
-                    {p.pan && <div style={{ fontSize: '11px', color: '#9ca3af' }}>PAN: {p.pan}</div>}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }}>
-                    {bal === 0 ? (
-                      <span style={{ color: '#6b7280' }}>₹0 (Settled)</span>
-                    ) : isReceivable ? (
-                      <span style={{ color: '#059669' }}>+₹{bal.toLocaleString()} (Receivable)</span>
-                    ) : (
-                      <span style={{ color: '#dc2626' }}>-₹{Math.abs(bal).toLocaleString()} (Payable)</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => setSelectedPartyForLedger(p)}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '4px',
-                        border: '1px solid #d1d5db',
-                        backgroundColor: '#ffffff',
-                        color: '#2563eb',
-                        fontWeight: 600,
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      📖 Statement
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                return (
+                  <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
+                      {p.displayName}
+                      {p.legalName && p.legalName !== p.displayName && (
+                        <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 400 }}>{p.legalName}</div>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          backgroundColor: p.partyType === 'customer' ? '#eff6ff' : '#f0fdf4',
+                          color: p.partyType === 'customer' ? '#1d4ed8' : '#15803d',
+                        }}
+                      >
+                        {p.partyType === 'customer' ? t('parties.badgeCustomer') : t('parties.badgeSupplier')}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', color: '#4b5563' }}>
+                      <div>{p.phone || '—'}</div>
+                      {p.email && <div style={{ fontSize: '11px', color: '#9ca3af' }}>{p.email}</div>}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#374151' }}>
+                      {p.gstin || '—'}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700 }}>
+                      <span
+                        style={{
+                          color: isReceivable ? '#d97706' : isPayable ? '#2563eb' : '#059669',
+                        }}
+                      >
+                        ₹ {Math.abs(balance).toLocaleString()}{' '}
+                        <span style={{ fontSize: '11px', fontWeight: 600 }}>
+                          {isReceivable ? '(Dr / लेना)' : isPayable ? '(Cr / देना)' : '(Settled)'}
+                        </span>
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPartyForLedger(p)}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#f3f4f6',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: '#374151',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t('parties.viewLedger')}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Add Party Modal */}
-      {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '500px' }}>
-            <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700 }}>Add New Party</h3>
-            <form onSubmit={handleAddParty}>
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Display Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Bharat Hardware Store"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Party Type</label>
-                  <select
-                    value={partyType}
-                    onChange={(e) => setPartyType(e.target.value as any)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px' }}
-                  >
-                    <option value="customer">Customer (Buyer)</option>
-                    <option value="supplier">Supplier (Vendor)</option>
-                    <option value="both">Both (Customer & Supplier)</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Phone Number</label>
-                  <input
-                    type="tel"
-                    placeholder="+91 98765 00000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>GSTIN</label>
-                  <input
-                    type="text"
-                    placeholder="27ABCDE1234F1Z5"
-                    value={gstin}
-                    onChange={(e) => setGstin(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>PAN Number</label>
-                  <input
-                    type="text"
-                    placeholder="ABCDE1234F"
-                    value={pan}
-                    onChange={(e) => setPan(e.target.value)}
-                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Opening Balance (₹)</label>
-                <input
-                  type="number"
-                  value={openingBalance}
-                  onChange={(e) => setOpeningBalance(e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '4px', boxSizing: 'border-box' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#2563eb', color: '#fff', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Save Party
-                </button>
-              </div>
-            </form>
+      {/* Modern Custom Modal: Add Party */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title={t('parties.modalTitle')}
+        subtitle="Register a new customer or supplier with GSTIN and opening Khata balance."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowAddModal(false)}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-add-party"
+              disabled={isSubmitting}
+              style={{
+                padding: '8px 18px',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSubmitting ? 'Saving...' : t('btn.create')}
+            </button>
+          </>
+        }
+      >
+        <form id="form-add-party" onSubmit={handleCreateParty} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              {t('parties.nameLabel')} *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Mahavir Hardware & Building Materials"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
           </div>
-        </div>
-      )}
 
-      {/* Ledger Statement Modal */}
-      {selectedPartyForLedger && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', padding: '24px', width: '600px', maxHeight: '80vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('parties.typeLabel')}
+              </label>
+              <select
+                value={newType}
+                onChange={(e) => setNewType(e.target.value as any)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+              >
+                <option value="customer">Customer (ग्राहक)</option>
+                <option value="supplier">Supplier / Vendor (आपूर्तिकर्ता)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('parties.phoneLabel')}
+              </label>
+              <input
+                type="tel"
+                placeholder="+91 98XXX XXXXX"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('parties.gstinLabel')}
+              </label>
+              <input
+                type="text"
+                placeholder="27AABCA1234F1Z8"
+                value={newGstin}
+                onChange={(e) => setNewGstin(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                {t('parties.openingLabel')} (₹)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={newOpeningBalance}
+                onChange={(e) => setNewOpeningBalance(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modern Custom Modal: Ledger Statement */}
+      <Modal
+        isOpen={Boolean(selectedPartyForLedger)}
+        onClose={() => setSelectedPartyForLedger(null)}
+        title={selectedPartyForLedger ? `Khata Statement: ${selectedPartyForLedger.displayName}` : 'Party Statement'}
+        subtitle={`Current Ledger Balance: ₹ ${Math.abs(selectedPartyForLedger?.currentBalance || 0).toLocaleString()} ${(selectedPartyForLedger?.currentBalance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}`}
+        size="lg"
+        footer={
+          <button
+            type="button"
+            onClick={() => setSelectedPartyForLedger(null)}
+            style={{
+              padding: '8px 18px',
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: 600,
+              fontSize: '13px',
+              cursor: 'pointer',
+            }}
+          >
+            {t('btn.close')}
+          </button>
+        }
+      >
+        <div style={{ padding: '8px 0' }}>
+          <div style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '13px' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
-                  📖 Khata Statement: {selectedPartyForLedger.displayName}
-                </h3>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                  Party Type: {selectedPartyForLedger.partyType.toUpperCase()} | Net Balance: ₹{(selectedPartyForLedger.currentBalance || 0).toLocaleString()}
-                </div>
+                <span style={{ color: '#64748b' }}>Phone: </span>
+                <strong>{selectedPartyForLedger?.phone || '—'}</strong>
               </div>
-              <button
-                onClick={() => setSelectedPartyForLedger(null)}
-                style={{ border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer', color: '#6b7280' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '6px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                    <th style={{ padding: '10px 12px' }}>Date</th>
-                    <th style={{ padding: '10px 12px' }}>Document / Ref</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'right' }}>Debit (₹)</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'right' }}>Credit (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(ledgerEntries[selectedPartyForLedger.id] || []).length === 0 ? (
-                    <tr>
-                      <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>
-                        No transactions recorded in this ledger period.
-                      </td>
-                    </tr>
-                  ) : (
-                    (ledgerEntries[selectedPartyForLedger.id] || []).map((entry) => (
-                      <tr key={entry.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '10px 12px', color: '#6b7280' }}>
-                          {new Date(entry.createdAt).toLocaleDateString()}
-                        </td>
-                        <td style={{ padding: '10px 12px', fontFamily: 'monospace', color: '#1d4ed8' }}>
-                          {entry.referenceDocumentType}: {entry.referenceDocumentId}
-                        </td>
-                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, color: entry.entryType === 'debit' ? '#dc2626' : '#6b7280' }}>
-                          {entry.entryType === 'debit' ? `₹${entry.amount.toLocaleString()}` : '—'}
-                        </td>
-                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, color: entry.entryType === 'credit' ? '#16a34a' : '#6b7280' }}>
-                          {entry.entryType === 'credit' ? `₹${entry.amount.toLocaleString()}` : '—'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setSelectedPartyForLedger(null)}
-                style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', backgroundColor: '#fff', cursor: 'pointer' }}
-              >
-                Close
-              </button>
+              <div>
+                <span style={{ color: '#64748b' }}>GSTIN: </span>
+                <strong>{selectedPartyForLedger?.gstin || 'Unregistered'}</strong>
+              </div>
+              <div>
+                <span style={{ color: '#64748b' }}>Khata Status: </span>
+                <strong style={{ color: (selectedPartyForLedger?.currentBalance || 0) > 0 ? '#d97706' : '#059669' }}>
+                  {(selectedPartyForLedger?.currentBalance || 0) === 0 ? 'Fully Settled' : 'Active Balance'}
+                </strong>
+              </div>
             </div>
           </div>
+          <p style={{ margin: '8px 0', fontSize: '13px', color: '#475569' }}>
+            Transactions are recorded atomically via double-entry debit/credit ledger entries.
+          </p>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };
