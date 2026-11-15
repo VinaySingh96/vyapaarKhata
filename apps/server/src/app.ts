@@ -14,6 +14,7 @@ import { purchasingRoutes } from './routes/purchasing-routes.js';
 import { paymentRoutes } from './routes/payment-routes.js';
 import { expenseRoutes } from './routes/expense-routes.js';
 import { reportRoutes } from './routes/report-routes.js';
+import { settingsRoutes } from './routes/settings-routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +65,59 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
         },
         requestId,
       });
+    }
+
+    if (
+      error &&
+      typeof error === 'object' &&
+      'statusCode' in error &&
+      typeof (error as any).statusCode === 'number' &&
+      (error as any).statusCode >= 400 &&
+      (error as any).statusCode < 500
+    ) {
+      return reply.status((error as any).statusCode).send({
+        success: false,
+        error: {
+          code: (error as any).code || 'BAD_REQUEST',
+          message: (error as any).message || 'Invalid client request',
+        },
+        requestId,
+      });
+    }
+
+    // Domain business rule violations
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+      const msg = error.message;
+      if (msg.includes('Insufficient stock')) {
+        return reply.status(409).send({
+          success: false,
+          error: {
+            code: 'INSUFFICIENT_STOCK',
+            message: msg,
+          },
+          requestId,
+        });
+      }
+      if (msg.includes('not found')) {
+        return reply.status(404).send({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: msg,
+          },
+          requestId,
+        });
+      }
+      if (msg.includes('already posted') || msg.includes('conflict')) {
+        return reply.status(409).send({
+          success: false,
+          error: {
+            code: 'CONFLICT',
+            message: msg,
+          },
+          requestId,
+        });
+      }
     }
 
     // Default 500 error
@@ -176,6 +230,7 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     app.register(paymentRoutes, { prefix: '/api/v1/payments', uow });
     app.register(expenseRoutes, { prefix: '/api/v1/expenses', uow });
     app.register(reportRoutes, { prefix: '/api/v1/reports', uow });
+    app.register(settingsRoutes, { prefix: '/api/v1/settings', uow });
   }
 
   return app;

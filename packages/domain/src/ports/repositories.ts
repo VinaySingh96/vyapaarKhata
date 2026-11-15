@@ -103,6 +103,24 @@ export interface ReportRepository {
   getStockValuation(tenantId: EntityId): Promise<{ variantId: string; productName: string; quantity: number; valuation: number }[]>;
 }
 
+export interface StoreSettings {
+  tenantId: EntityId;
+  storeName: string;
+  tradeName?: string;
+  legalName?: string;
+  gstin?: string;
+  phone?: string;
+  address?: string;
+  currency?: string;
+  locale?: string;
+  updatedAt?: string;
+}
+
+export interface SettingsRepository {
+  getSettings(tenantId: EntityId): Promise<StoreSettings>;
+  updateSettings(tenantId: EntityId, settings: Partial<StoreSettings>): Promise<StoreSettings>;
+}
+
 export interface UnitOfWorkContext {
   invoices: InvoiceRepository;
   products: ProductRepository;
@@ -114,6 +132,7 @@ export interface UnitOfWorkContext {
   payments: PaymentRepository;
   expenses: ExpenseRepository;
   reports: ReportRepository;
+  settings: SettingsRepository;
 }
 
 export interface UnitOfWork {

@@ -37,6 +37,8 @@ import {
   Expense,
   ExpenseCategory,
   DashboardMetrics,
+  StoreSettings,
+  SettingsRepository,
   EntityId,
 } from '@vyapaarkhata/domain';
 
@@ -162,6 +164,27 @@ export class PgUnitOfWork implements UnitOfWork {
           );
 
           for (const line of invoice.lines) {
+            let variantId = line.variantId || line.productId;
+            const vRes = await client.query(
+              `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+              [variantId]
+            );
+            if (vRes.rows.length > 0) {
+              variantId = vRes.rows[0].id;
+            }
+
+            let unitId = line.unitId;
+            if (!unitId) {
+              const uRes = await client.query(
+                `SELECT p.base_unit_id 
+                 FROM product_variants pv 
+                 JOIN products p ON p.id = pv.product_id 
+                 WHERE pv.id = $1 LIMIT 1`,
+                [variantId]
+              );
+              unitId = uRes.rows[0]?.base_unit_id || '10000000-0000-0000-0000-000000000001';
+            }
+
             await client.query(
               `INSERT INTO sales_invoice_lines (
                  id, invoice_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
@@ -170,8 +193,8 @@ export class PgUnitOfWork implements UnitOfWork {
               [
                 ensureUuid(line.id),
                 invoiceId,
-                line.variantId || line.productId,
-                line.unitId,
+                ensureUuid(variantId),
+                ensureUuid(unitId),
                 line.quantity,
                 line.unitPrice,
                 line.taxAmount,
@@ -205,6 +228,7 @@ export class PgUnitOfWork implements UnitOfWork {
                     p.brand_name, p.hsn_sac_code, p.base_unit_id, u.name as unit_name, u.symbol as unit_symbol,
                     p.is_stock_tracked, p.tracking_method, p.valuation_method, p.is_active, p.created_at,
                     COALESCE(SUM(sb.quantity_on_hand::numeric), 0) as total_stock,
+                    MIN(pv.id::text) as default_variant_id,
                     MIN(pv.purchase_price) as purchase_price,
                     MIN(pv.selling_price) as selling_price,
                     MIN(pv.sku) as sku,
@@ -244,6 +268,7 @@ export class PgUnitOfWork implements UnitOfWork {
             valuationMethod: r.valuation_method,
             isActive: r.is_active,
             totalStock: parseFloat(r.total_stock || '0'),
+            defaultVariantId: r.default_variant_id || r.id,
             createdAt: new Date(r.created_at).toISOString(),
           }));
         },
@@ -481,10 +506,16 @@ export class PgUnitOfWork implements UnitOfWork {
           locationId: EntityId
         ): Promise<StockBalance | null> => {
           const res = await client.query(
-            `SELECT id, tenant_id, variant_id, inventory_location_id, quantity_on_hand, quantity_available, updated_at
-             FROM stock_balances
-             WHERE tenant_id = $1 AND variant_id = $2 AND inventory_location_id = $3
-             FOR UPDATE`,
+            `SELECT sb.id, sb.tenant_id, sb.variant_id, sb.inventory_location_id,
+                    sb.quantity_on_hand, sb.quantity_available, sb.updated_at,
+                    COALESCE(pv.reorder_level::numeric, 0) as reorder_level
+             FROM stock_balances sb
+             JOIN product_variants pv ON pv.id = sb.variant_id
+             WHERE sb.tenant_id = $1 
+               AND (sb.variant_id = $2 OR pv.product_id = $2)
+               AND sb.inventory_location_id = $3
+             FOR UPDATE OF sb
+             LIMIT 1`,
             [tenantId, productId, locationId]
           );
 
@@ -498,6 +529,7 @@ export class PgUnitOfWork implements UnitOfWork {
             variantId: r.variant_id,
             locationId: r.inventory_location_id,
             currentBalance: parseFloat(r.quantity_on_hand),
+            reorderLevel: parseFloat(r.reorder_level || '0'),
             updatedAt: new Date(r.updated_at).toISOString(),
           };
         },
@@ -527,6 +559,27 @@ export class PgUnitOfWork implements UnitOfWork {
         },
 
         recordMovement: async (movement: StockMovement): Promise<void> => {
+          let variantId = movement.variantId || movement.productId;
+          const vRes = await client.query(
+            `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+            [variantId]
+          );
+          if (vRes.rows.length > 0) {
+            variantId = vRes.rows[0].id;
+          }
+
+          let unitId = movement.unitId;
+          if (!unitId) {
+            const pRes = await client.query(
+              `SELECT p.base_unit_id 
+               FROM product_variants pv 
+               JOIN products p ON p.id = pv.product_id 
+               WHERE pv.id = $1 LIMIT 1`,
+              [variantId]
+            );
+            unitId = pRes.rows[0]?.base_unit_id || '10000000-0000-0000-0000-000000000001';
+          }
+
           await client.query(
             `INSERT INTO stock_movements (
                id, tenant_id, inventory_location_id, variant_id, movement_type, quantity, unit_id, reference_type, reference_id, occurred_at, created_at
@@ -535,10 +588,10 @@ export class PgUnitOfWork implements UnitOfWork {
               ensureUuid(movement.id),
               movement.tenantId,
               movement.locationId,
-              movement.variantId || movement.productId,
+              ensureUuid(variantId),
               movement.movementType,
               movement.quantity,
-              movement.unitId,
+              ensureUuid(unitId),
               movement.referenceDocumentType,
               ensureUuid(movement.referenceDocumentId),
               movement.createdAt,
@@ -573,6 +626,15 @@ export class PgUnitOfWork implements UnitOfWork {
         },
 
         updateBalance: async (balance: StockBalance): Promise<void> => {
+          let variantId = balance.variantId || balance.productId;
+          const vRes = await client.query(
+            `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+            [variantId]
+          );
+          if (vRes.rows.length > 0) {
+            variantId = vRes.rows[0].id;
+          }
+
           await client.query(
             `INSERT INTO stock_balances (
                id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
@@ -585,9 +647,9 @@ export class PgUnitOfWork implements UnitOfWork {
               ensureUuid(balance.id),
               balance.tenantId,
               balance.locationId,
-              balance.variantId || balance.productId,
+              ensureUuid(variantId),
               balance.currentBalance,
-              balance.updatedAt,
+              balance.updatedAt ? new Date(balance.updatedAt) : new Date(),
             ]
           );
         },
@@ -665,6 +727,15 @@ export class PgUnitOfWork implements UnitOfWork {
         saveAdjustment: async (adjustment: StockAdjustment): Promise<void> => {
           const adjId = ensureUuid(adjustment.id);
           for (const line of adjustment.lines) {
+            let variantId = line.variantId;
+            const vRes = await client.query(
+              `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+              [variantId]
+            );
+            if (vRes.rows.length > 0) {
+              variantId = vRes.rows[0].id;
+            }
+
             const movementQty = line.adjustmentType === 'increase' ? line.quantity : -line.quantity;
             await client.query(
               `INSERT INTO stock_movements (
@@ -674,7 +745,7 @@ export class PgUnitOfWork implements UnitOfWork {
                 randomUUID(),
                 adjustment.tenantId,
                 adjustment.inventoryLocationId,
-                line.variantId,
+                ensureUuid(variantId),
                 line.adjustmentType === 'increase' ? 'adjustment_in' : 'adjustment_out',
                 movementQty,
                 line.unitId,
@@ -696,7 +767,7 @@ export class PgUnitOfWork implements UnitOfWork {
                 randomUUID(),
                 adjustment.tenantId,
                 adjustment.inventoryLocationId,
-                line.variantId,
+                ensureUuid(variantId),
                 movementQty,
               ]
             );
@@ -706,12 +777,21 @@ export class PgUnitOfWork implements UnitOfWork {
         saveTransfer: async (transfer: StockTransfer): Promise<void> => {
           const transferId = ensureUuid(transfer.id);
           for (const line of transfer.lines) {
+            let variantId = line.variantId;
+            const vRes = await client.query(
+              `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+              [variantId]
+            );
+            if (vRes.rows.length > 0) {
+              variantId = vRes.rows[0].id;
+            }
+
             // Transfer Out from source
             await client.query(
               `INSERT INTO stock_movements (
                  id, tenant_id, inventory_location_id, variant_id, movement_type, quantity, unit_id, reference_type, reference_id, occurred_at, created_at
                ) VALUES ($1, $2, $3, $4, 'transfer_out', $5, $6, 'stock_transfer', $7, NOW(), NOW())`,
-              [randomUUID(), transfer.tenantId, transfer.sourceLocationId, line.variantId, -line.quantity, line.unitId, transferId]
+              [randomUUID(), transfer.tenantId, transfer.sourceLocationId, ensureUuid(variantId), -line.quantity, line.unitId, transferId]
             );
 
             // Transfer In to destination
@@ -719,7 +799,7 @@ export class PgUnitOfWork implements UnitOfWork {
               `INSERT INTO stock_movements (
                  id, tenant_id, inventory_location_id, variant_id, movement_type, quantity, unit_id, reference_type, reference_id, occurred_at, created_at
                ) VALUES ($1, $2, $3, $4, 'transfer_in', $5, $6, 'stock_transfer', $7, NOW(), NOW())`,
-              [randomUUID(), transfer.tenantId, transfer.destinationLocationId, line.variantId, line.quantity, line.unitId, transferId]
+              [randomUUID(), transfer.tenantId, transfer.destinationLocationId, ensureUuid(variantId), line.quantity, line.unitId, transferId]
             );
 
             // Deduct from source
@@ -727,7 +807,7 @@ export class PgUnitOfWork implements UnitOfWork {
               `UPDATE stock_balances
                SET quantity_on_hand = (quantity_on_hand::numeric - $1)::text, quantity_available = (quantity_available::numeric - $1)::text, updated_at = NOW()
                WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4`,
-              [line.quantity, transfer.tenantId, transfer.sourceLocationId, line.variantId]
+              [line.quantity, transfer.tenantId, transfer.sourceLocationId, ensureUuid(variantId)]
             );
 
             // Add to destination
@@ -739,7 +819,7 @@ export class PgUnitOfWork implements UnitOfWork {
                  quantity_on_hand = (stock_balances.quantity_on_hand::numeric + EXCLUDED.quantity_on_hand::numeric)::text,
                  quantity_available = (stock_balances.quantity_available::numeric + EXCLUDED.quantity_available::numeric)::text,
                  updated_at = NOW()`,
-              [randomUUID(), transfer.tenantId, transfer.destinationLocationId, line.variantId, line.quantity]
+              [randomUUID(), transfer.tenantId, transfer.destinationLocationId, ensureUuid(variantId), line.quantity]
             );
           }
         },
@@ -930,22 +1010,28 @@ export class PgUnitOfWork implements UnitOfWork {
           const receiptId = payload['receiptId'] ? String(payload['receiptId']) : undefined;
           const paymentId = payload['paymentId'] ? String(payload['paymentId']) : undefined;
 
-          const aggregateId = invoiceId || billId || receiptId || paymentId || ensureUuid(event.id);
+          const rawAggregateId = invoiceId || billId || receiptId || paymentId || event.id;
+          const aggregateId = ensureUuid(rawAggregateId);
           const aggregateType = event.eventType.split('.')[0] || 'system';
 
           await client.query(
             `INSERT INTO sync_outbox (
-               id, tenant_id, installation_id, aggregate_type, aggregate_id, event_type, payload, status, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8)`,
+               id, tenant_id, installation_id, event_id, aggregate_type, aggregate_id, sequence_number, event_type, payload, status, created_at
+             ) VALUES (
+               $1, $2, $3, $4, $5, $6,
+               COALESCE((SELECT MAX(sequence_number) + 1 FROM sync_outbox WHERE tenant_id = $2), 1),
+               $7, $8, 'pending', $9
+             )`,
             [
-              ensureUuid(event.id),
+              randomUUID(),
               event.tenantId,
               ensureUuid('00000000-0000-0000-0000-000000000001'),
+              ensureUuid(event.id),
               aggregateType,
               aggregateId,
               event.eventType,
               JSON.stringify(event.payload),
-              event.createdAt,
+              event.createdAt ? new Date(event.createdAt) : new Date(),
             ]
           );
         },
@@ -1033,19 +1119,28 @@ export class PgUnitOfWork implements UnitOfWork {
             ]
           );
           for (const line of order.lines) {
+            let variantId = line.variantId;
+            const vRes = await client.query(
+              `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+              [variantId]
+            );
+            if (vRes.rows.length > 0) {
+              variantId = vRes.rows[0].id;
+            }
+
             await client.query(
               `INSERT INTO purchase_order_lines (
                  id, purchase_order_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                ON CONFLICT (id) DO NOTHING`,
-              [ensureUuid(line.id), orderId, line.variantId, line.unitId, line.quantity, line.unitPrice, line.taxAmount, line.lineTotal]
+              [ensureUuid(line.id), orderId, ensureUuid(variantId), ensureUuid(line.unitId), line.quantity, line.unitPrice, line.taxAmount, line.lineTotal]
             );
           }
         },
 
         listReceipts: async (tenantId: EntityId): Promise<PurchaseReceipt[]> => {
           const res = await client.query(
-            `SELECT id, tenant_id, supplier_id, business_location_id, inventory_location_id, receipt_number, status, posted_at, created_at
+            `SELECT id, tenant_id, supplier_id, inventory_location_id, receipt_number, status, posted_at, created_at
              FROM purchase_receipts WHERE tenant_id = $1 ORDER BY created_at DESC`,
             [tenantId]
           );
@@ -1053,7 +1148,6 @@ export class PgUnitOfWork implements UnitOfWork {
             id: r.id,
             tenantId: r.tenant_id,
             supplierId: r.supplier_id,
-            businessLocationId: r.business_location_id,
             inventoryLocationId: r.inventory_location_id,
             receiptNumber: r.receipt_number,
             status: r.status,
@@ -1065,15 +1159,15 @@ export class PgUnitOfWork implements UnitOfWork {
 
         findReceiptById: async (tenantId: EntityId, id: EntityId) => {
           const res = await client.query(
-            `SELECT id, tenant_id, supplier_id, business_location_id, inventory_location_id, purchase_order_id, receipt_number, status, posted_at, created_at
+            `SELECT id, tenant_id, supplier_id, inventory_location_id, purchase_order_id, receipt_number, status, posted_at, created_at
              FROM purchase_receipts WHERE tenant_id = $1 AND id = $2`,
             [tenantId, id]
           );
           if (res.rows.length === 0) return null;
           const r = res.rows[0];
           const linesRes = await client.query(
-            `SELECT id, purchase_receipt_id, purchase_order_line_id, variant_id, unit_id, received_quantity, accepted_quantity, rejected_quantity, unit_cost
-             FROM purchase_receipt_lines WHERE purchase_receipt_id = $1`,
+            `SELECT id, receipt_id, purchase_order_line_id, variant_id, unit_id, received_quantity, accepted_quantity, rejected_quantity, unit_cost
+             FROM purchase_receipt_lines WHERE receipt_id = $1`,
             [id]
           );
           return {
@@ -1101,9 +1195,54 @@ export class PgUnitOfWork implements UnitOfWork {
 
         saveReceipt: async (receipt: any) => {
           await client.query(
-            `UPDATE purchase_receipts SET status = $1, posted_at = $2 WHERE tenant_id = $3 AND id = $4`,
-            [receipt.status, receipt.postedAt || null, receipt.tenantId, receipt.id]
+            `INSERT INTO purchase_receipts (
+               id, tenant_id, supplier_id, purchase_order_id, inventory_location_id, receipt_number, receipt_date, status, posted_at, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, $7, $8, NOW())
+             ON CONFLICT (id) DO UPDATE SET
+               status = EXCLUDED.status,
+               posted_at = EXCLUDED.posted_at`,
+            [
+              ensureUuid(receipt.id),
+              receipt.tenantId,
+              ensureUuid(receipt.supplierId),
+              receipt.purchaseOrderId ? ensureUuid(receipt.purchaseOrderId) : null,
+              ensureUuid(receipt.inventoryLocationId),
+              receipt.receiptNumber,
+              receipt.status,
+              receipt.postedAt ? new Date(receipt.postedAt) : null,
+            ]
           );
+
+          if (receipt.lines && receipt.lines.length > 0) {
+            for (const line of receipt.lines) {
+              let variantId = line.variantId;
+              const vRes = await client.query(
+                `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+                [variantId]
+              );
+              if (vRes.rows.length > 0) {
+                variantId = vRes.rows[0].id;
+              }
+
+              await client.query(
+                `INSERT INTO purchase_receipt_lines (
+                   id, receipt_id, purchase_order_line_id, variant_id, unit_id, received_quantity, accepted_quantity, rejected_quantity, unit_cost
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 ON CONFLICT (id) DO NOTHING`,
+                [
+                  ensureUuid(line.id),
+                  ensureUuid(receipt.id),
+                  line.purchaseOrderLineId ? ensureUuid(line.purchaseOrderLineId) : null,
+                  ensureUuid(variantId),
+                  ensureUuid(line.unitId),
+                  line.receivedQuantity,
+                  line.acceptedQuantity,
+                  line.rejectedQuantity || 0,
+                  line.unitCost || 0,
+                ]
+              );
+            }
+          }
         },
 
         listBills: async (tenantId: EntityId): Promise<PurchaseBill[]> => {
@@ -1172,9 +1311,59 @@ export class PgUnitOfWork implements UnitOfWork {
 
         saveBill: async (bill: any) => {
           await client.query(
-            `UPDATE purchase_bills SET status = $1, posted_at = $2 WHERE tenant_id = $3 AND id = $4`,
-            [bill.status, bill.postedAt || null, bill.tenantId, bill.id]
+            `INSERT INTO purchase_bills (
+               id, tenant_id, supplier_id, business_location_id, bill_number, supplier_invoice_number, bill_date, status, subtotal, tax_amount, total_amount, amount_paid, posted_at, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, $7, $8, $9, $10, $11, $12, NOW())
+             ON CONFLICT (id) DO UPDATE SET
+               status = EXCLUDED.status,
+               amount_paid = EXCLUDED.amount_paid,
+               posted_at = EXCLUDED.posted_at`,
+            [
+              ensureUuid(bill.id),
+              bill.tenantId,
+              ensureUuid(bill.supplierId),
+              ensureUuid(bill.businessLocationId),
+              bill.billNumber,
+              bill.supplierInvoiceNumber || null,
+              bill.status,
+              bill.subtotal || 0,
+              bill.taxAmount || 0,
+              bill.totalAmount || 0,
+              bill.amountPaid || 0,
+              bill.postedAt ? new Date(bill.postedAt) : null,
+            ]
           );
+
+          if (bill.lines && bill.lines.length > 0) {
+            for (const line of bill.lines) {
+              let variantId = line.variantId;
+              const vRes = await client.query(
+                `SELECT id FROM product_variants WHERE id = $1 OR product_id = $1 LIMIT 1`,
+                [variantId]
+              );
+              if (vRes.rows.length > 0) {
+                variantId = vRes.rows[0].id;
+              }
+
+              await client.query(
+                `INSERT INTO purchase_bill_lines (
+                   id, purchase_bill_id, purchase_receipt_line_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
+                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                 ON CONFLICT (id) DO NOTHING`,
+                [
+                  ensureUuid(line.id),
+                  ensureUuid(bill.id),
+                  line.purchaseReceiptLineId ? ensureUuid(line.purchaseReceiptLineId) : null,
+                  ensureUuid(variantId),
+                  ensureUuid(line.unitId),
+                  line.quantity,
+                  line.unitPrice,
+                  line.taxAmount || 0,
+                  line.lineTotal,
+                ]
+              );
+            }
+          }
         },
       };
 
@@ -1244,6 +1433,15 @@ export class PgUnitOfWork implements UnitOfWork {
         },
 
         savePayment: async (payment: any) => {
+          let paymentMethodId = payment.paymentMethodId;
+          if (!paymentMethodId) {
+            const pmRes = await client.query(
+              `SELECT id FROM payment_methods WHERE tenant_id = $1 ORDER BY id LIMIT 1`,
+              [payment.tenantId]
+            );
+            paymentMethodId = pmRes.rows[0]?.id || 'e0000000-0000-0000-0000-000000000001';
+          }
+
           await client.query(
             `INSERT INTO payments (
                id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, payment_date, direction, status, amount, reference_number, posted_at, created_at
@@ -1254,15 +1452,15 @@ export class PgUnitOfWork implements UnitOfWork {
             [
               ensureUuid(payment.id),
               payment.tenantId,
-              payment.partyId,
+              ensureUuid(payment.partyId),
               payment.financialAccountId ? ensureUuid(payment.financialAccountId) : null,
-              payment.paymentMethodId ? ensureUuid(payment.paymentMethodId) : null,
+              ensureUuid(paymentMethodId),
               payment.paymentNumber,
               payment.direction,
               payment.status,
               payment.amount,
               payment.referenceNumber || null,
-              payment.postedAt || null,
+              payment.postedAt ? new Date(payment.postedAt) : null,
             ]
           );
         },
@@ -1318,7 +1516,15 @@ export class PgUnitOfWork implements UnitOfWork {
           await client.query(
             `INSERT INTO expenses (
                id, tenant_id, expense_category_id, expense_number, expense_date, taxable_amount, tax_amount, total_amount, payment_status, description, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+             ON CONFLICT (id) DO UPDATE SET
+               expense_category_id = EXCLUDED.expense_category_id,
+               expense_date = EXCLUDED.expense_date,
+               taxable_amount = EXCLUDED.taxable_amount,
+               tax_amount = EXCLUDED.tax_amount,
+               total_amount = EXCLUDED.total_amount,
+               payment_status = EXCLUDED.payment_status,
+               description = EXCLUDED.description`,
             [
               ensureUuid(expense.id),
               expense.tenantId,
@@ -1350,8 +1556,8 @@ export class PgUnitOfWork implements UnitOfWork {
 
         saveCategory: async (category: ExpenseCategory): Promise<void> => {
           await client.query(
-            `INSERT INTO expense_categories (id, tenant_id, name, code, is_active, created_at)
-             VALUES ($1, $2, $3, $4, $5, NOW())
+            `INSERT INTO expense_categories (id, tenant_id, name, code, is_active)
+             VALUES ($1, $2, $3, $4, $5)
              ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, code = EXCLUDED.code, is_active = EXCLUDED.is_active`,
             [ensureUuid(category.id), category.tenantId, category.name, category.code || null, category.isActive !== false]
           );
@@ -1382,14 +1588,14 @@ export class PgUnitOfWork implements UnitOfWork {
             [tenantId]
           );
 
-          // Low Stock Count
+          // Low Stock Count and Total Stock Valuation
           const stockRes = await client.query(
             `SELECT 
-               COUNT(pv.id) as low_stock_count,
-               COALESCE(SUM(sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
+               COUNT(CASE WHEN COALESCE(sb.quantity_on_hand::numeric, 0) <= COALESCE(pv.reorder_level::numeric, 0) THEN 1 END) as low_stock_count,
+               COALESCE(SUM(COALESCE(sb.quantity_on_hand::numeric, 0) * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
-             WHERE pv.tenant_id = $1 AND COALESCE(sb.quantity_on_hand::numeric, 0) <= COALESCE(pv.reorder_level::numeric, 0)`,
+             WHERE pv.tenant_id = $1`,
             [tenantId]
           );
 
@@ -1440,6 +1646,98 @@ export class PgUnitOfWork implements UnitOfWork {
         },
       };
 
+      // -----------------------------------------------------------------------
+      // Settings Repository
+      // -----------------------------------------------------------------------
+      const settingsRepo: SettingsRepository = {
+        getSettings: async (tenantId: EntityId): Promise<StoreSettings> => {
+          const res = await client.query(
+            `SELECT t.id as tenant_id, t.name as store_name, t.currency, t.locale,
+                    bp.trade_name, bp.legal_name, bp.gstin, bp.phone,
+                    bl.address_line_1, bl.city, bl.state_code, bl.postal_code
+             FROM tenants t
+             LEFT JOIN business_profiles bp ON bp.tenant_id = t.id
+             LEFT JOIN business_locations bl ON bl.tenant_id = t.id
+             WHERE t.id = $1
+             LIMIT 1`,
+            [tenantId]
+          );
+
+          if (res.rows.length === 0) {
+            return {
+              tenantId,
+              storeName: 'vyapaarKhata Wholesale & Retail Depot',
+              currency: 'INR',
+              locale: 'en-IN',
+            };
+          }
+
+          const r = res.rows[0];
+          const fullAddress = [r.address_line_1, r.city, r.state_code, r.postal_code]
+            .filter(Boolean)
+            .join(', ');
+
+          return {
+            tenantId: r.tenant_id,
+            storeName: r.trade_name || r.store_name || 'vyapaarKhata Wholesale & Retail Depot',
+            tradeName: r.trade_name || undefined,
+            legalName: r.legal_name || undefined,
+            gstin: r.gstin || undefined,
+            phone: r.phone || undefined,
+            address: fullAddress || undefined,
+            currency: r.currency || 'INR',
+            locale: r.locale || 'en-IN',
+            updatedAt: new Date().toISOString(),
+          };
+        },
+
+        updateSettings: async (tenantId: EntityId, settings: Partial<StoreSettings>): Promise<StoreSettings> => {
+          const storeName = settings.storeName || settings.tradeName || 'vyapaarKhata Store';
+
+          // 1. Update tenants table
+          await client.query(
+            `UPDATE tenants
+             SET name = $1, currency = COALESCE($2, currency), updated_at = NOW()
+             WHERE id = $3`,
+            [storeName, settings.currency || null, tenantId]
+          );
+
+          // 2. Upsert business_profiles table
+          const bpId = randomUUID();
+          await client.query(
+            `INSERT INTO business_profiles (
+               id, tenant_id, trade_name, legal_name, gstin, phone, created_at, updated_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+             ON CONFLICT (tenant_id) DO UPDATE SET
+               trade_name = EXCLUDED.trade_name,
+               legal_name = EXCLUDED.legal_name,
+               gstin = EXCLUDED.gstin,
+               phone = EXCLUDED.phone,
+               updated_at = NOW()`,
+            [
+              bpId,
+              tenantId,
+              storeName,
+              settings.legalName || storeName,
+              settings.gstin || null,
+              settings.phone || null,
+            ]
+          );
+
+          // 3. Upsert/Update business_locations table
+          if (settings.address || storeName) {
+            await client.query(
+              `UPDATE business_locations
+               SET name = $1, address_line_1 = COALESCE($2, address_line_1), phone = COALESCE($3, phone)
+               WHERE tenant_id = $4`,
+              [storeName, settings.address || null, settings.phone || null, tenantId]
+            );
+          }
+
+          return settingsRepo.getSettings(tenantId);
+        },
+      };
+
       const result = await work({
         invoices: invoiceRepo,
         products: productRepo,
@@ -1451,6 +1749,7 @@ export class PgUnitOfWork implements UnitOfWork {
         payments: paymentRepo,
         expenses: expenseRepo,
         reports: reportRepo,
+        settings: settingsRepo,
       });
 
       await client.query('COMMIT');
