@@ -21,6 +21,28 @@ importers:
         specifier: ^3.0.5
         version: 3.2.7(@types/node@20.19.43)
 
+  apps/central-server:
+    dependencies:
+      fastify:
+        specifier: ^5.12.8
+        version: 5.12.8
+      pg:
+        specifier: ^8.13.1
+        version: 8.23.1
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^20.17.19
+        version: 20.19.43
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.23.1
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   apps/server:
     dependencies:
       '@vyapaarkhata/db':
@@ -45,18 +67,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@vyapaarkhata/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       react:
-        specifier: ^19.3.1
+        specifier: ^19.0.0
         version: 19.3.1
       react-dom:
-        specifier: ^19.3.1
+        specifier: ^19.0.0
         version: 19.3.1(react@19.3.1)
     devDependencies:
       '@types/react':
-        specifier: ^19.3.0
+        specifier: ^19.0.8
         version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.3.0
+        specifier: ^19.0.3
         version: 19.3.0(@types/react@19.3.0)
       typescript:
         specifier: ^5.7.3
