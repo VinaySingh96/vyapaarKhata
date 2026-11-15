@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface PartyItem {
   id: string;
@@ -191,13 +192,13 @@ export const PartiesScreen: React.FC = () => {
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Receivables (उधारी)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>
-            ₹ {totalReceivables.toLocaleString()}
+            ₹ {formatIndianNumber(totalReceivables, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Supplier Payables (देनदारी)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#3b82f6', marginTop: '4px' }}>
-            ₹ {totalPayables.toLocaleString()}
+            ₹ {formatIndianNumber(totalPayables, { decimals: 2 })}
           </div>
         </div>
       </div>
@@ -360,7 +361,7 @@ export const PartiesScreen: React.FC = () => {
                           color: isReceivable ? '#d97706' : isPayable ? '#2563eb' : '#059669',
                         }}
                       >
-                        ₹ {Math.abs(balance).toLocaleString()}{' '}
+                        ₹ {formatIndianNumber(Math.abs(balance), { decimals: 2 })}{' '}
                         <span style={{ fontSize: '11px', fontWeight: 600 }}>
                           {isReceivable ? '(Dr / लेना)' : isPayable ? '(Cr / देना)' : '(Settled)'}
                         </span>
@@ -513,7 +514,7 @@ export const PartiesScreen: React.FC = () => {
         isOpen={Boolean(selectedPartyForLedger)}
         onClose={() => setSelectedPartyForLedger(null)}
         title={selectedPartyForLedger ? `Khata Statement: ${selectedPartyForLedger.displayName}` : 'Party Statement'}
-        subtitle={`Current Ledger Balance: ₹ ${Math.abs(selectedPartyForLedger?.currentBalance || 0).toLocaleString()} ${(selectedPartyForLedger?.currentBalance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}`}
+        subtitle={`Current Ledger Balance: ₹ ${formatIndianNumber(Math.abs(selectedPartyForLedger?.currentBalance || 0), { decimals: 2 })} ${(selectedPartyForLedger?.currentBalance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}`}
         size="lg"
         footer={
           <button

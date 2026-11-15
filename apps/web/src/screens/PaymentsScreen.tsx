@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface PaymentItem {
   id: string;
@@ -241,7 +242,7 @@ export const PaymentsScreen: React.FC = () => {
       return;
     }
     if (direction === 'inbound' && isOverLimit) {
-      toast.error(`Total settlement (₹${totalSettling.toFixed(2)}) cannot exceed balance due (₹${curBal.toFixed(2)})`);
+      toast.error(`Total settlement (₹${formatIndianNumber(totalSettling, { decimals: 2 })}) cannot exceed balance due (₹${formatIndianNumber(curBal, { decimals: 2 })})`);
       return;
     }
 
@@ -270,8 +271,8 @@ export const PaymentsScreen: React.FC = () => {
         }
 
         toast.success(
-          `Payment of ₹${parsedAmount.toLocaleString()} ${
-            parsedAdj > 0 ? `(+ ₹${parsedAdj.toLocaleString()} Kasar)` : ''
+          `Payment of ₹${formatIndianNumber(parsedAmount, { decimals: 2 })} ${
+            parsedAdj > 0 ? `(+ ₹${formatIndianNumber(parsedAdj, { decimals: 2 })} Kasar)` : ''
           } settled on invoice!`
         );
       } else {
@@ -320,8 +321,8 @@ export const PaymentsScreen: React.FC = () => {
         }
 
         toast.success(
-          `Payment ${paymentNumber} for ₹ ${parsedAmount.toLocaleString()} ${
-            parsedAdj > 0 ? `(+ ₹${parsedAdj.toLocaleString()} Kasar)` : ''
+          `Payment ${paymentNumber} for ₹ ${formatIndianNumber(parsedAmount, { decimals: 2 })} ${
+            parsedAdj > 0 ? `(+ ₹${formatIndianNumber(parsedAdj, { decimals: 2 })} Kasar)` : ''
           } posted to ledger!`
         );
       }
@@ -388,19 +389,19 @@ export const PaymentsScreen: React.FC = () => {
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Collections (Inward)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>
-            ₹ {totalInbound.toLocaleString()}
+            ₹ {formatIndianNumber(totalInbound, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Supplier Settlements (Outward)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#dc2626', marginTop: '4px' }}>
-            ₹ {totalOutbound.toLocaleString()}
+            ₹ {formatIndianNumber(totalOutbound, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Settlement Kasar / Discount</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#4338ca', marginTop: '4px' }}>
-            ₹ {totalAdjustments.toLocaleString()}
+            ₹ {formatIndianNumber(totalAdjustments, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -553,19 +554,19 @@ export const PaymentsScreen: React.FC = () => {
                         color: p.direction === 'inbound' ? '#059669' : '#dc2626',
                       }}
                     >
-                      {p.direction === 'inbound' ? '+' : '-'} ₹ {(p.amount || 0).toLocaleString()}
+                      {p.direction === 'inbound' ? '+' : '-'} ₹ {formatIndianNumber(p.amount || 0, { decimals: 2 })}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                       {(p.adjustmentAmount || 0) > 0 ? (
                         <span style={{ fontWeight: 600, color: '#4338ca', fontSize: '12.5px' }}>
-                          ₹ {(p.adjustmentAmount || 0).toLocaleString()}
+                          ₹ {formatIndianNumber(p.adjustmentAmount || 0, { decimals: 2 })}
                         </span>
                       ) : (
                         <span style={{ color: '#9ca3af' }}>-</span>
                       )}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#111827' }}>
-                      ₹ {((p.amount || 0) + (p.adjustmentAmount || 0)).toLocaleString()}
+                      ₹ {formatIndianNumber((p.amount || 0) + (p.adjustmentAmount || 0), { decimals: 2 })}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <span
@@ -768,7 +769,7 @@ export const PaymentsScreen: React.FC = () => {
                         : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
                     return (
                       <option key={inv.id} value={inv.id}>
-                        {inv.invoiceNumber} — Total ₹{inv.grandTotal.toLocaleString()} (Due: ₹{bal.toLocaleString()})
+                        {inv.invoiceNumber} — Total ₹{formatIndianNumber(inv.grandTotal, { decimals: 2 })} (Due: ₹{formatIndianNumber(bal, { decimals: 2 })})
                       </option>
                     );
                   })}
@@ -928,7 +929,7 @@ export const PaymentsScreen: React.FC = () => {
                     <span>Settlement exceeds invoice #{selectedInv?.invoiceNumber} balance due!</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '24px' }}>
-                    Total settlement of ₹ {totalSettling.toFixed(2)} exceeds balance due of ₹ {curBal.toFixed(2)} by ₹ {(totalSettling - curBal).toFixed(2)}. Please reduce payment amount or kasar.
+                    Total settlement of ₹ {formatIndianNumber(totalSettling, { decimals: 2 })} exceeds balance due of ₹ {formatIndianNumber(curBal, { decimals: 2 })} by ₹ {formatIndianNumber(totalSettling - curBal, { decimals: 2 })}. Please reduce payment amount or kasar.
                   </div>
                 </div>
               ) : remainingLeft > 0.01 ? (
@@ -946,18 +947,18 @@ export const PaymentsScreen: React.FC = () => {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '14px' }}>
                     <span style={{ fontSize: '18px' }}>⚠️</span>
-                    <span>Amount ₹ {remainingLeft.toFixed(2)} is still left on invoice #{selectedInv?.invoiceNumber}</span>
+                    <span>Amount ₹ {formatIndianNumber(remainingLeft, { decimals: 2 })} is still left on invoice #{selectedInv?.invoiceNumber}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                    <span>Total Bill: <strong>₹ {invTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></span>
+                    <span>Total Bill: <strong>₹ {formatIndianNumber(invTotal, { decimals: 2 })}</strong></span>
                     <span>•</span>
-                    <span>Current Due: <strong>₹ {curBal.toFixed(2)}</strong></span>
+                    <span>Current Due: <strong>₹ {formatIndianNumber(curBal, { decimals: 2 })}</strong></span>
                     <span>•</span>
-                    <span>Paying Now: <strong>₹ {payAmt.toFixed(2)}</strong></span>
+                    <span>Paying Now: <strong>₹ {formatIndianNumber(payAmt, { decimals: 2 })}</strong></span>
                     {payAdj > 0 && (
                       <>
                         <span>•</span>
-                        <span>Kasar: <strong>₹ {payAdj.toFixed(2)}</strong></span>
+                        <span>Kasar: <strong>₹ {formatIndianNumber(payAdj, { decimals: 2 })}</strong></span>
                       </>
                     )}
                   </div>
@@ -977,13 +978,13 @@ export const PaymentsScreen: React.FC = () => {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontWeight: 700, fontSize: '14px' }}>
                     <span style={{ fontSize: '18px' }}>✓</span>
-                    <span>Settled against invoice #{selectedInv?.invoiceNumber} of ₹ {invTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
+                    <span>Settled against invoice #{selectedInv?.invoiceNumber} of ₹ {formatIndianNumber(invTotal, { decimals: 2 })} amount</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                     <span>
-                      Full Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> received
+                      Full Settlement: <strong>₹ {formatIndianNumber(payAmt, { decimals: 2 })}</strong> received
                       {payAdj > 0 && (
-                        <> + <strong>₹ {payAdj.toFixed(2)}</strong> Kasar</>
+                        <> + <strong>₹ {formatIndianNumber(payAdj, { decimals: 2 })}</strong> Kasar</>
                       )}
                     </span>
                     <span>•</span>
@@ -1008,10 +1009,10 @@ export const PaymentsScreen: React.FC = () => {
               }}
             >
               <span style={{ color: '#4b5563' }}>
-                Net Supplier Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> {payAdj > 0 ? `+ ₹ ${payAdj.toFixed(2)} Discount` : ''}
+                Net Supplier Settlement: <strong>₹ {formatIndianNumber(payAmt, { decimals: 2 })}</strong> {payAdj > 0 ? `+ ₹ ${formatIndianNumber(payAdj, { decimals: 2 })} Discount` : ''}
               </span>
               <span style={{ fontWeight: 800, color: '#dc2626', fontSize: '14px' }}>
-                Total Debit: ₹ {totalSettling.toFixed(2)}
+                Total Debit: ₹ {formatIndianNumber(totalSettling, { decimals: 2 })}
               </span>
             </div>
           )}

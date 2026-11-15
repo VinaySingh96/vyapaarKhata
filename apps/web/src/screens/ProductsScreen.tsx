@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface ProductItem {
   id: string;
@@ -664,10 +665,10 @@ export const ProductsScreen: React.FC = () => {
                         </td>
                         <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.baseUnitSymbol || 'pcs'}</td>
                         <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
-                          ₹{(p.purchasePrice || 0).toLocaleString()}
+                          ₹{formatIndianNumber(p.purchasePrice || 0, { decimals: 2 })}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
-                          ₹{(p.sellingPrice || 0).toLocaleString()}
+                          ₹{formatIndianNumber(p.sellingPrice || 0, { decimals: 2 })}
                         </td>
                         <td style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700 }}>
                           {stock} {p.baseUnitSymbol}

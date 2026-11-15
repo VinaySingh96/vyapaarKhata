@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface ReceiptItem {
   id: string;
@@ -448,7 +449,7 @@ export const PurchasingScreen: React.FC = () => {
                       {b.supplierInvoiceNumber || '—'}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
-                      ₹ {(b.totalAmount || 0).toLocaleString()}
+                      ₹ {formatIndianNumber(b.totalAmount || 0, { decimals: 2 })}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <span

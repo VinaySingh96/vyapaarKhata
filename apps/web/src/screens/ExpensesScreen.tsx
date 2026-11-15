@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface ExpenseItem {
   id: string;
@@ -118,7 +119,7 @@ export const ExpensesScreen: React.FC = () => {
         throw new Error(json.error?.message || 'Failed to record expense');
       }
 
-      toast.success(`Expense ${expNumber} for ₹ ${parsedAmount.toLocaleString()} recorded!`);
+      toast.success(`Expense ${expNumber} for ₹ ${formatIndianNumber(parsedAmount, { decimals: 2 })} recorded!`);
       setShowAddModal(false);
       setAmount('500');
       setDescription('');
@@ -178,7 +179,7 @@ export const ExpensesScreen: React.FC = () => {
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Store Expenses</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#dc2626', marginTop: '4px' }}>
-            ₹ {totalExpenseAmount.toLocaleString()}
+            ₹ {formatIndianNumber(totalExpenseAmount, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -301,7 +302,7 @@ export const ExpensesScreen: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
-                    ₹ {(e.amount || 0).toLocaleString()}
+                    ₹ {formatIndianNumber(e.amount || 0, { decimals: 2 })}
                   </td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
                     {e.expenseDate || (e.createdAt ? new Date(e.createdAt).toLocaleDateString() : 'Today')}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { useToast } from '../components/Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 interface StockValuationItem {
   variantId: string;
@@ -133,7 +134,7 @@ export const ReportsScreen: React.FC = () => {
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Total Godown Stock Valuation</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
-            ₹ {totalInventoryValuation.toLocaleString()}
+            ₹ {formatIndianNumber(totalInventoryValuation, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -145,13 +146,13 @@ export const ReportsScreen: React.FC = () => {
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Today's Total Sales</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginTop: '4px' }}>
-            ₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}
+            ₹ {formatIndianNumber(dashboardMetrics?.todaySales || 0, { decimals: 2 })}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Receivables (उधारी)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#f59e0b', marginTop: '4px' }}>
-            ₹ {(dashboardMetrics?.totalReceivables || 0).toLocaleString()}
+            ₹ {formatIndianNumber(dashboardMetrics?.totalReceivables || 0, { decimals: 2 })}
           </div>
         </div>
       </div>
@@ -262,7 +263,7 @@ export const ReportsScreen: React.FC = () => {
                       {s.quantity} units
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#2563eb' }}>
-                      ₹ {s.valuation.toLocaleString()}
+                      ₹ {formatIndianNumber(s.valuation, { decimals: 2 })}
                     </td>
                   </tr>
                 ))
@@ -278,15 +279,15 @@ export const ReportsScreen: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '480px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
               <span style={{ color: '#4b5563' }}>Gross Sales Revenue:</span>
-              <strong style={{ color: '#059669' }}>₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}</strong>
+              <strong style={{ color: '#059669' }}>₹ {formatIndianNumber(dashboardMetrics?.todaySales || 0, { decimals: 2 })}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
               <span style={{ color: '#4b5563' }}>Customer Outstanding Khata:</span>
-              <strong>₹ {(dashboardMetrics?.totalReceivables || 0).toLocaleString()}</strong>
+              <strong>₹ {formatIndianNumber(dashboardMetrics?.totalReceivables || 0, { decimals: 2 })}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f3f4f6', paddingBottom: '8px' }}>
               <span style={{ color: '#4b5563' }}>Stock Assets In Godown:</span>
-              <strong style={{ color: '#2563eb' }}>₹ {totalInventoryValuation.toLocaleString()}</strong>
+              <strong style={{ color: '#2563eb' }}>₹ {formatIndianNumber(totalInventoryValuation, { decimals: 2 })}</strong>
             </div>
           </div>
         </div>
@@ -312,11 +313,11 @@ export const ReportsScreen: React.FC = () => {
               <tbody>
                 <tr style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
                   <td style={{ padding: '12px 16px', fontWeight: 600 }}>Standard Rate (18%)</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {(dashboardMetrics?.todaySales || 0).toLocaleString()}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {((dashboardMetrics?.todaySales || 0) * 0.09).toFixed(2)}</td>
-                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {((dashboardMetrics?.todaySales || 0) * 0.09).toFixed(2)}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {formatIndianNumber(dashboardMetrics?.todaySales || 0, { decimals: 2 })}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {formatIndianNumber((dashboardMetrics?.todaySales || 0) * 0.09, { decimals: 2 })}</td>
+                  <td style={{ padding: '12px 16px', textAlign: 'right' }}>₹ {formatIndianNumber((dashboardMetrics?.todaySales || 0) * 0.09, { decimals: 2 })}</td>
                   <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700, color: '#2563eb' }}>
-                    ₹ {((dashboardMetrics?.todaySales || 0) * 0.18).toFixed(2)}
+                    ₹ {formatIndianNumber((dashboardMetrics?.todaySales || 0) * 0.18, { decimals: 2 })}
                   </td>
                 </tr>
               </tbody>
@@ -401,9 +402,9 @@ export const ReportsScreen: React.FC = () => {
                       if (log.newValues.invoiceNumber) {
                         summaryText = `Invoice #${log.newValues.invoiceNumber}${
                           log.newValues.grandTotal !== undefined
-                            ? ` • ₹ ${Number(log.newValues.grandTotal).toLocaleString('en-IN')}`
+                            ? ` • ₹ ${formatIndianNumber(log.newValues.grandTotal, { decimals: 2 })}`
                             : log.newValues.amount !== undefined
-                            ? ` • ₹ ${Number(log.newValues.amount).toLocaleString('en-IN')}`
+                            ? ` • ₹ ${formatIndianNumber(log.newValues.amount, { decimals: 2 })}`
                             : ''
                         }`;
                       } else if (log.newValues.receiptNumber) {
@@ -413,7 +414,7 @@ export const ReportsScreen: React.FC = () => {
                       } else if (log.newValues.name || log.newValues.displayName) {
                         summaryText = String(log.newValues.name || log.newValues.displayName);
                       } else if (log.newValues.amount !== undefined) {
-                        summaryText = `₹ ${Number(log.newValues.amount).toLocaleString('en-IN')}${
+                        summaryText = `₹ ${formatIndianNumber(log.newValues.amount, { decimals: 2 })}${
                           log.newValues.paymentMode ? ` (${log.newValues.paymentMode})` : ''
                         }`;
                       }

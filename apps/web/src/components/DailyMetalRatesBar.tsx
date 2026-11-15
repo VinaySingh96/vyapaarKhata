@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal.js';
 import { useStore } from '../context/StoreContext.js';
 import { useToast } from './Toast.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 export interface DailyMetalRates {
   gold24k: number;    // ₹ per gram (999 pure)
@@ -150,7 +151,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '13px' }}>🟡</span>
           <span style={{ color: '#854d0e', fontWeight: 600 }}>24K:</span>
-          <span style={{ color: '#713f12', fontWeight: 700 }}>₹{rates.gold24k.toLocaleString()}/g</span>
+          <span style={{ color: '#713f12', fontWeight: 700 }}>₹{formatIndianNumber(rates.gold24k)}/g</span>
         </div>
 
         <span style={{ color: '#eab308', opacity: 0.6 }}>|</span>
@@ -158,7 +159,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
         {/* Gold 22K (916) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
           <span style={{ color: '#b45309', fontWeight: 600 }}>22K (916):</span>
-          <span style={{ color: '#78350f', fontWeight: 700 }}>₹{rates.gold22k.toLocaleString()}/g</span>
+          <span style={{ color: '#78350f', fontWeight: 700 }}>₹{formatIndianNumber(rates.gold22k)}/g</span>
         </div>
 
         <span style={{ color: '#eab308', opacity: 0.6 }}>|</span>
@@ -167,7 +168,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
         <div style={{ display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap' }}>
           <span style={{ fontSize: '12px' }}>⚪</span>
           <span style={{ color: '#475569', fontWeight: 600 }}>Silver:</span>
-          <span style={{ color: '#0f172a', fontWeight: 700 }}>₹{rates.silver999.toLocaleString()}/g</span>
+          <span style={{ color: '#0f172a', fontWeight: 700 }}>₹{formatIndianNumber(rates.silver999)}/g</span>
         </div>
 
         <span style={{ color: '#eab308', opacity: 0.6 }}>|</span>
@@ -248,7 +249,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
                   />
                 </div>
                 <span style={{ fontSize: '11px', color: '#b45309', marginTop: '2px', display: 'block' }}>
-                  = ₹{((parseFloat(form24k) || 0) * 10).toLocaleString()} per 10g (Tola)
+                  = ₹{formatIndianNumber(((parseFloat(form24k) || 0) * 10))} per 10g (Tola)
                 </span>
               </div>
 
@@ -269,7 +270,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
                   />
                 </div>
                 <span style={{ fontSize: '11px', color: '#b45309', marginTop: '2px', display: 'block' }}>
-                  = ₹{((parseFloat(form22k) || 0) * 10).toLocaleString()} per 10g (Tola)
+                  = ₹{formatIndianNumber(((parseFloat(form22k) || 0) * 10))} per 10g (Tola)
                 </span>
               </div>
 
@@ -344,7 +345,7 @@ export const DailyMetalRatesBar: React.FC<{ isJewelleryShop?: boolean }> = ({ is
                   />
                 </div>
                 <span style={{ fontSize: '11px', color: '#64748b', marginTop: '2px', display: 'block' }}>
-                  = ₹{((parseFloat(formSilver999) || 0) * 1000).toLocaleString()} per 1 Kg Bar
+                  = ₹{formatIndianNumber(((parseFloat(formSilver999) || 0) * 1000))} per 1 Kg Bar
                 </span>
               </div>
 

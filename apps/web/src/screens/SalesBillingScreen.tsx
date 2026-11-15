@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.js';
 import { Modal } from '../components/Modal.js';
 import { useStore } from '../context/StoreContext.js';
 import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 export interface BillingLine {
   id: string;
@@ -463,7 +464,7 @@ export const SalesBillingScreen: React.FC = () => {
         value: c.id,
         label: c.displayName,
         sublabel: c.billingAddress || c.phone || undefined,
-        badge: c.currentBalance ? `₹${c.currentBalance.toLocaleString()}` : undefined,
+        badge: c.currentBalance ? `₹${formatIndianNumber(c.currentBalance, { decimals: 2 })}` : undefined,
         badgeType: 'neutral',
       });
     });
@@ -657,7 +658,7 @@ export const SalesBillingScreen: React.FC = () => {
         })),
       };
 
-      const successMsg = `${t('sales.invoiceSuccess', { no: invoiceNumber })} | ₹ ${grandTotal.toLocaleString()}`;
+      const successMsg = `${t('sales.invoiceSuccess', { no: invoiceNumber })} | ₹ ${formatIndianNumber(grandTotal, { decimals: 2 })}`;
       setInvoiceSuccess(successMsg);
       toast.success(successMsg);
 
@@ -802,7 +803,7 @@ export const SalesBillingScreen: React.FC = () => {
 
     if (amt + adj > balDue + 0.05) {
       toast.warning(
-        `Total settlement (₹${(amt + adj).toFixed(2)}) cannot exceed balance due (₹${balDue.toFixed(2)})`
+        `Total settlement (₹${formatIndianNumber(amt + adj, { decimals: 2 })}) cannot exceed balance due (₹${formatIndianNumber(balDue, { decimals: 2 })})`
       );
       return;
     }
@@ -831,8 +832,8 @@ export const SalesBillingScreen: React.FC = () => {
       }
 
       toast.success(
-        `Payment of ₹${amt.toLocaleString()} ${
-          adj > 0 ? `(+ ₹${adj.toLocaleString()} adjustment)` : ''
+        `Payment of ₹${formatIndianNumber(amt, { decimals: 2 })} ${
+          adj > 0 ? `(+ ₹${formatIndianNumber(adj, { decimals: 2 })} adjustment)` : ''
         } recorded successfully!`
       );
       setIsPaymentModalOpen(false);
@@ -1413,7 +1414,7 @@ export const SalesBillingScreen: React.FC = () => {
                               />
                             </td>
                             <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                              ₹ {(line.quantity * line.price).toLocaleString()}
+                              ₹ {formatIndianNumber(line.quantity * line.price, { decimals: 2 })}
                             </td>
                             <td style={{ padding: '8px 8px', textAlign: 'center' }}>
                               <button
@@ -1500,11 +1501,11 @@ export const SalesBillingScreen: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px', fontSize: '13.5px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563' }}>
                   <span>{t('sales.subtotal')}</span>
-                  <span>₹ {subtotal.toLocaleString()}</span>
+                  <span>₹ {formatIndianNumber(subtotal, { decimals: 2 })}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563' }}>
                   <span>{t('sales.gst')} (18% Avg)</span>
-                  <span>₹ {gst.toFixed(2)}</span>
+                  <span>₹ {formatIndianNumber(gst, { decimals: 2 })}</span>
                 </div>
                 <div
                   style={{
@@ -1518,7 +1519,7 @@ export const SalesBillingScreen: React.FC = () => {
                   }}
                 >
                   <span>{t('sales.grandTotal')}</span>
-                  <span style={{ color: '#2563eb' }}>₹ {grandTotal.toLocaleString()}</span>
+                  <span style={{ color: '#2563eb' }}>₹ {formatIndianNumber(grandTotal, { decimals: 2 })}</span>
                 </div>
               </div>
 
@@ -1660,25 +1661,25 @@ export const SalesBillingScreen: React.FC = () => {
                 <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Total Invoiced</div>
                   <div style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', marginTop: '4px' }}>
-                    ₹ {totalInvoiced.toLocaleString()}
+                    ₹ {formatIndianNumber(totalInvoiced, { decimals: 2 })}
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#f0fdf4', padding: '14px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                   <div style={{ fontSize: '12px', color: '#166534', fontWeight: 500 }}>Cash/Bank Received</div>
                   <div style={{ fontSize: '20px', fontWeight: 800, color: '#15803d', marginTop: '4px' }}>
-                    ₹ {totalPaid.toLocaleString()}
+                    ₹ {formatIndianNumber(totalPaid, { decimals: 2 })}
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#eef2ff', padding: '14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
                   <div style={{ fontSize: '12px', color: '#3730a3', fontWeight: 500 }}>Kasar / Adjustments</div>
                   <div style={{ fontSize: '20px', fontWeight: 800, color: '#4338ca', marginTop: '4px' }}>
-                    ₹ {totalAdjusted.toLocaleString()}
+                    ₹ {formatIndianNumber(totalAdjusted, { decimals: 2 })}
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#fff1f2', padding: '14px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
                   <div style={{ fontSize: '12px', color: '#9f1239', fontWeight: 500 }}>Net Outstanding Due</div>
                   <div style={{ fontSize: '20px', fontWeight: 800, color: '#e11d48', marginTop: '4px' }}>
-                    ₹ {totalDue.toLocaleString()}
+                    ₹ {formatIndianNumber(totalDue, { decimals: 2 })}
                   </div>
                 </div>
               </div>
@@ -1740,13 +1741,13 @@ export const SalesBillingScreen: React.FC = () => {
                           </div>
                         </td>
                         <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
-                          ₹ {(inv.grandTotal ?? 0).toLocaleString()}
+                          ₹ {formatIndianNumber(inv.grandTotal ?? 0, { decimals: 2 })}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'right' }}>
-                          <div style={{ fontWeight: 700, color: '#059669' }}>₹ {paid.toLocaleString()}</div>
+                          <div style={{ fontWeight: 700, color: '#059669' }}>₹ {formatIndianNumber(paid, { decimals: 2 })}</div>
                           {adj > 0 && (
                             <div style={{ fontSize: '11px', color: '#4338ca', fontWeight: 600 }}>
-                              + ₹ {adj.toLocaleString()} (Kasar)
+                              + ₹ {formatIndianNumber(adj, { decimals: 2 })} (Kasar)
                             </div>
                           )}
                         </td>
@@ -1758,7 +1759,7 @@ export const SalesBillingScreen: React.FC = () => {
                             color: balDue <= 0.001 ? '#059669' : '#dc2626',
                           }}
                         >
-                          ₹ {balDue.toLocaleString()}
+                          ₹ {formatIndianNumber(balDue, { decimals: 2 })}
                         </td>
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           {payStatus === 'paid' && (
@@ -2080,12 +2081,12 @@ export const SalesBillingScreen: React.FC = () => {
                         ? Number(line.quantity).toFixed(3)
                         : line.quantity}
                     </td>
-                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{line.price?.toFixed(2)}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>₹{formatIndianNumber(line.price || 0, { decimals: 2 })}</td>
                     <td style={{ padding: '8px', textAlign: 'right', color: '#64748b' }}>
                       {line.taxRate !== undefined ? `${line.taxRate}%` : isJewelleryShop ? '3%' : '18%'}
                     </td>
                     <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>
-                      ₹{(line.lineTotal || line.quantity * line.price * (1 + (line.taxRate || (isJewelleryShop ? 3 : 18)) / 100)).toFixed(2)}
+                      ₹{formatIndianNumber(line.lineTotal || line.quantity * line.price * (1 + (line.taxRate || (isJewelleryShop ? 3 : 18)) / 100), { decimals: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -2097,15 +2098,15 @@ export const SalesBillingScreen: React.FC = () => {
               <div style={{ width: '260px', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563' }}>
                   <span>Taxable Subtotal:</span>
-                  <span>₹ {selectedInvoiceForModal.subtotal?.toFixed(2)}</span>
+                  <span>₹ {formatIndianNumber(selectedInvoiceForModal.subtotal || 0, { decimals: 2 })}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563' }}>
                   <span>CGST (9%):</span>
-                  <span>₹ {(selectedInvoiceForModal.taxTotal / 2).toFixed(2)}</span>
+                  <span>₹ {formatIndianNumber((selectedInvoiceForModal.taxTotal || 0) / 2, { decimals: 2 })}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563' }}>
                   <span>SGST (9%):</span>
-                  <span>₹ {(selectedInvoiceForModal.taxTotal / 2).toFixed(2)}</span>
+                  <span>₹ {formatIndianNumber((selectedInvoiceForModal.taxTotal || 0) / 2, { decimals: 2 })}</span>
                 </div>
                 <div
                   style={{
@@ -2119,19 +2120,19 @@ export const SalesBillingScreen: React.FC = () => {
                   }}
                 >
                   <span>Grand Total:</span>
-                  <span style={{ color: '#1e3a8a' }}>₹ {selectedInvoiceForModal.grandTotal?.toFixed(2)}</span>
+                  <span style={{ color: '#1e3a8a' }}>₹ {formatIndianNumber(selectedInvoiceForModal.grandTotal || 0, { decimals: 2 })}</span>
                 </div>
 
                 {((selectedInvoiceForModal.amountPaid || 0) > 0 || (selectedInvoiceForModal.adjustmentAmount || 0) > 0) && (
                   <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#059669', fontWeight: 600 }}>
                       <span>Amount Received:</span>
-                      <span>₹ {(selectedInvoiceForModal.amountPaid || 0).toFixed(2)}</span>
+                      <span>₹ {formatIndianNumber(selectedInvoiceForModal.amountPaid || 0, { decimals: 2 })}</span>
                     </div>
                     {(selectedInvoiceForModal.adjustmentAmount || 0) > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4338ca', fontWeight: 600 }}>
                         <span>Kasar / Adjustment:</span>
-                        <span>₹ {(selectedInvoiceForModal.adjustmentAmount || 0).toFixed(2)}</span>
+                        <span>₹ {formatIndianNumber(selectedInvoiceForModal.adjustmentAmount || 0, { decimals: 2 })}</span>
                       </div>
                     )}
                     <div
@@ -2145,7 +2146,7 @@ export const SalesBillingScreen: React.FC = () => {
                       }}
                     >
                       <span>Balance Due:</span>
-                      <span>₹ {(selectedInvoiceForModal.balanceDue || 0).toFixed(2)}</span>
+                      <span>₹ {formatIndianNumber(selectedInvoiceForModal.balanceDue || 0, { decimals: 2 })}</span>
                     </div>
                   </>
                 )}
@@ -2219,7 +2220,7 @@ export const SalesBillingScreen: React.FC = () => {
           <div style={{ padding: '12px', backgroundColor: '#fef2f2', borderRadius: '6px', marginBottom: '16px', fontSize: '13px' }}>
             <div>Invoice: <strong>{invoiceToCancel?.invoiceNumber}</strong></div>
             <div>Customer: <strong>{invoiceToCancel?.customerName}</strong></div>
-            <div>Amount: <strong>₹ {(invoiceToCancel?.grandTotal ?? 0).toLocaleString()}</strong></div>
+            <div>Amount: <strong>₹ {formatIndianNumber(invoiceToCancel?.grandTotal ?? 0, { decimals: 2 })}</strong></div>
           </div>
 
           <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block', marginBottom: '6px' }}>
@@ -2333,18 +2334,18 @@ export const SalesBillingScreen: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', textAlign: 'center' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '11px', color: '#64748b' }}>Bill Total</div>
-                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '14px' }}>₹ {(invoiceForPayment.grandTotal || 0).toLocaleString()}</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '14px' }}>₹ {formatIndianNumber(invoiceForPayment.grandTotal || 0, { decimals: 2 })}</div>
                 </div>
                 <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '11px', color: '#64748b' }}>Paid & Adjusted</div>
                   <div style={{ fontWeight: 700, color: '#059669', fontSize: '14px' }}>
-                    ₹ {((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0)).toLocaleString()}
+                    ₹ {formatIndianNumber((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0), { decimals: 2 })}
                   </div>
                 </div>
                 <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #fecaca' }}>
                   <div style={{ fontSize: '11px', color: '#991b1b' }}>Balance Due</div>
                   <div style={{ fontWeight: 800, color: '#dc2626', fontSize: '14px' }}>
-                    ₹ {(invoiceForPayment.balanceDue !== undefined ? invoiceForPayment.balanceDue : (invoiceForPayment.grandTotal - (invoiceForPayment.amountPaid || 0) - (invoiceForPayment.adjustmentAmount || 0))).toLocaleString()}
+                    ₹ {formatIndianNumber(invoiceForPayment.balanceDue !== undefined ? invoiceForPayment.balanceDue : (invoiceForPayment.grandTotal - (invoiceForPayment.amountPaid || 0) - (invoiceForPayment.adjustmentAmount || 0)), { decimals: 2 })}
                   </div>
                 </div>
               </div>
@@ -2486,7 +2487,7 @@ export const SalesBillingScreen: React.FC = () => {
                   <span>Settlement exceeds invoice #{invoiceForPayment.invoiceNumber} balance due!</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '24px' }}>
-                  Total settlement of ₹ {payTotalSettling.toFixed(2)} exceeds balance due of ₹ {payCurBal.toFixed(2)} by ₹ {(payTotalSettling - payCurBal).toFixed(2)}. Please reduce payment amount or kasar.
+                  Total settlement of ₹ {formatIndianNumber(payTotalSettling, { decimals: 2 })} exceeds balance due of ₹ {formatIndianNumber(payCurBal, { decimals: 2 })} by ₹ {formatIndianNumber(payTotalSettling - payCurBal, { decimals: 2 })}. Please reduce payment amount or kasar.
                 </div>
               </div>
             ) : payRemainingBal > 0.01 ? (
@@ -2504,18 +2505,18 @@ export const SalesBillingScreen: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '14px' }}>
                   <span style={{ fontSize: '18px' }}>⚠️</span>
-                  <span>Amount ₹ {payRemainingBal.toFixed(2)} is still left on invoice #{invoiceForPayment.invoiceNumber}</span>
+                  <span>Amount ₹ {formatIndianNumber(payRemainingBal, { decimals: 2 })} is still left on invoice #{invoiceForPayment.invoiceNumber}</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  <span>Total Bill: <strong>₹ {invoiceForPayment.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></span>
+                  <span>Total Bill: <strong>₹ {formatIndianNumber(invoiceForPayment.grandTotal, { decimals: 2 })}</strong></span>
                   <span>•</span>
-                  <span>Balance Due: <strong>₹ {payCurBal.toFixed(2)}</strong></span>
+                  <span>Balance Due: <strong>₹ {formatIndianNumber(payCurBal, { decimals: 2 })}</strong></span>
                   <span>•</span>
-                  <span>Paying Now: <strong>₹ {payEnteredPay.toFixed(2)}</strong></span>
+                  <span>Paying Now: <strong>₹ {formatIndianNumber(payEnteredPay, { decimals: 2 })}</strong></span>
                   {payEnteredAdj > 0 && (
                     <>
                       <span>•</span>
-                      <span>Kasar: <strong>₹ {payEnteredAdj.toFixed(2)}</strong></span>
+                      <span>Kasar: <strong>₹ {formatIndianNumber(payEnteredAdj, { decimals: 2 })}</strong></span>
                     </>
                   )}
                 </div>
@@ -2535,13 +2536,13 @@ export const SalesBillingScreen: React.FC = () => {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontWeight: 700, fontSize: '14px' }}>
                   <span style={{ fontSize: '18px' }}>✓</span>
-                  <span>Settled against invoice #{invoiceForPayment.invoiceNumber} of ₹ {invoiceForPayment.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
+                  <span>Settled against invoice #{invoiceForPayment.invoiceNumber} of ₹ {formatIndianNumber(invoiceForPayment.grandTotal, { decimals: 2 })} amount</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
                   <span>
-                    Full Settlement: <strong>₹ {payEnteredPay.toFixed(2)}</strong> received
+                    Full Settlement: <strong>₹ {formatIndianNumber(payEnteredPay, { decimals: 2 })}</strong> received
                     {payEnteredAdj > 0 && (
-                      <> + <strong>₹ {payEnteredAdj.toFixed(2)}</strong> Kasar</>
+                      <> + <strong>₹ {formatIndianNumber(payEnteredAdj, { decimals: 2 })}</strong> Kasar</>
                     )}
                   </span>
                   <span>•</span>

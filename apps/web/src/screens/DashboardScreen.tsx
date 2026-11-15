@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
+import { formatIndianNumber } from '../utils/currency.js';
 
 export interface DashboardScreenProps {
   onNavigate?: (nav: string) => void;
@@ -49,11 +50,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate]);
 
-  const todaySalesVal = `₹ ${(metrics?.todaySales ?? 0).toLocaleString()}`;
+  const todaySalesVal = `₹ ${formatIndianNumber(metrics?.todaySales ?? 0, { decimals: 2 })}`;
   const invoicesCount = metrics?.todayInvoicesCount ?? 0;
   const lowStockVal = `${metrics?.lowStockCount ?? 0} ${t('dashboard.items')}`;
-  const receivablesVal = `₹ ${(metrics?.totalReceivables ?? 0).toLocaleString()}`;
-  const valuationVal = `₹ ${(metrics?.totalStockValuation ?? 0).toLocaleString()}`;
+  const receivablesVal = `₹ ${formatIndianNumber(metrics?.totalReceivables ?? 0, { decimals: 2 })}`;
+  const valuationVal = `₹ ${formatIndianNumber(metrics?.totalStockValuation ?? 0, { decimals: 2 })}`;
 
   const kpis = [
     {
@@ -230,7 +231,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
                         {inv.status.toUpperCase()}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>₹ {(inv.grandTotal ?? 0).toLocaleString()}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>₹ {formatIndianNumber(inv.grandTotal ?? 0, { decimals: 2 })}</td>
                     <td style={{ padding: '10px 12px', color: '#6b7280' }}>
                       {inv.postedAt ? new Date(inv.postedAt).toLocaleString() : 'Just now'}
                     </td>
