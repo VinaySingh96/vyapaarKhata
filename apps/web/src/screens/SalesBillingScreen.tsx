@@ -2222,58 +2222,77 @@ export const SalesBillingScreen: React.FC = () => {
       </Modal>
 
       {/* RECEIVE PAYMENT & ADJUSTMENT MODAL */}
-      <Modal
-        isOpen={isPaymentModalOpen}
-        onClose={() => setIsPaymentModalOpen(false)}
-        title={t('sales.receivePaymentModalTitle')}
-        subtitle={
-          invoiceForPayment
-            ? `Receive settlement for Invoice ${invoiceForPayment.invoiceNumber} • Party: ${invoiceForPayment.customerName || 'Customer'}`
-            : undefined
-        }
-        size="md"
-        footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
-            <button
-              type="button"
-              onClick={() => setIsPaymentModalOpen(false)}
-              disabled={isSubmittingPayment}
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #d1d5db',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '13px',
-              }}
-            >
-              {t('btn.cancel')}
-            </button>
-            <button
-              type="submit"
-              form="form-receive-payment"
-              disabled={isSubmittingPayment}
-              style={{
-                backgroundColor: '#059669',
-                color: '#ffffff',
-                border: 'none',
-                padding: '8px 20px',
-                borderRadius: '6px',
-                cursor: isSubmittingPayment ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 1px 2px rgba(5,150,105,0.2)',
-              }}
-            >
-              {isSubmittingPayment ? 'Recording...' : '💳 Record & Post Payment'}
-            </button>
-          </div>
-        }
-      >
+      {(() => {
+        const payCurBal = invoiceForPayment
+          ? invoiceForPayment.balanceDue !== undefined
+            ? invoiceForPayment.balanceDue
+            : Math.max(
+                0,
+                (invoiceForPayment.grandTotal || 0) -
+                  ((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0))
+              )
+          : 0;
+        const payEnteredPay = parseFloat(payAmount) || 0;
+        const payEnteredAdj = parseFloat(payAdjustmentAmount) || 0;
+        const payTotalSettling = payEnteredPay + payEnteredAdj;
+        const payRemainingBal = Math.max(0, payCurBal - payTotalSettling);
+        const payIsOver = invoiceForPayment ? payTotalSettling > payCurBal + 0.01 : false;
+        const isPayBtnDisabled = isSubmittingPayment || payIsOver || payTotalSettling <= 0;
+
+        return (
+          <Modal
+            isOpen={isPaymentModalOpen}
+            onClose={() => setIsPaymentModalOpen(false)}
+            title={t('sales.receivePaymentModalTitle')}
+            subtitle={
+              invoiceForPayment
+                ? `Receive settlement for Invoice ${invoiceForPayment.invoiceNumber} • Party: ${invoiceForPayment.customerName || 'Customer'}`
+                : undefined
+            }
+            size="md"
+            footer={
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsPaymentModalOpen(false)}
+                  disabled={isSubmittingPayment}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                  }}
+                >
+                  {t('btn.cancel')}
+                </button>
+                <button
+                  type="submit"
+                  form="form-receive-payment"
+                  disabled={isPayBtnDisabled}
+                  style={{
+                    backgroundColor: isPayBtnDisabled ? '#9ca3af' : '#059669',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    cursor: isPayBtnDisabled ? 'not-allowed' : 'pointer',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    opacity: isPayBtnDisabled ? 0.7 : 1,
+                    boxShadow: isPayBtnDisabled ? 'none' : '0 1px 2px rgba(5,150,105,0.2)',
+                  }}
+                >
+                  {isSubmittingPayment ? 'Recording...' : '💳 Record & Post Payment'}
+                </button>
+              </div>
+            }
+          >
         {invoiceForPayment && (
           <form id="form-receive-payment" onSubmit={handleConfirmReceivePayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Invoice Summary Box */}
@@ -2428,56 +2447,87 @@ export const SalesBillingScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Settlement Live Calculation Preview */}
-            {(() => {
-              const curBal = invoiceForPayment.balanceDue !== undefined ? invoiceForPayment.balanceDue : (invoiceForPayment.grandTotal - (invoiceForPayment.amountPaid || 0) - (invoiceForPayment.adjustmentAmount || 0));
-              const enteredPay = parseFloat(payAmount) || 0;
-              const enteredAdj = parseFloat(payAdjustmentAmount) || 0;
-              const totalSettling = enteredPay + enteredAdj;
-              const remainingBal = Math.max(0, curBal - totalSettling);
-              const isOver = totalSettling > curBal + 0.05;
-
-              return (
-                <div
-                  style={{
-                    backgroundColor: isOver ? '#fef2f2' : remainingBal <= 0.01 ? '#f0fdf4' : '#fffbeb',
-                    border: `1px solid ${isOver ? '#fca5a5' : remainingBal <= 0.01 ? '#bbf7d0' : '#fde68a'}`,
-                    borderRadius: '8px',
-                    padding: '12px 14px',
-                    fontSize: '12.5px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: '#4b5563' }}>Paying Now:</span>
-                    <span style={{ fontWeight: 600, color: '#059669' }}>₹ {enteredPay.toFixed(2)}</span>
-                  </div>
-                  {enteredAdj > 0 && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ color: '#4b5563' }}>Adjustment / Kasar:</span>
-                      <span style={{ fontWeight: 600, color: '#4338ca' }}>+ ₹ {enteredAdj.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderTop: '1px dashed #d1d5db', paddingTop: '4px' }}>
-                    <span style={{ fontWeight: 700, color: '#111827' }}>Total Settlement:</span>
-                    <span style={{ fontWeight: 800, color: '#111827' }}>₹ {totalSettling.toFixed(2)}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', borderTop: '1px solid #e5e7eb', paddingTop: '4px' }}>
-                    <span style={{ fontWeight: 600, color: '#374151' }}>Remaining Balance Due:</span>
-                    <span style={{ fontWeight: 800, color: isOver ? '#dc2626' : remainingBal <= 0.01 ? '#059669' : '#b45309' }}>
-                      ₹ {remainingBal.toFixed(2)} {remainingBal <= 0.01 ? '✓ (Fully Settled)' : ''}
-                    </span>
-                  </div>
-                  {isOver && (
-                    <div style={{ color: '#dc2626', fontWeight: 700, marginTop: '6px', fontSize: '12px' }}>
-                      ⚠️ Total settlement exceeds balance due by ₹ {(totalSettling - curBal).toFixed(2)}!
-                    </div>
+            {/* Dynamic Information Banners: Red if amount left, Green if settled against invoice */}
+            {payIsOver ? (
+              <div
+                style={{
+                  backgroundColor: '#fef2f2',
+                  border: '1.5px solid #ef4444',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '13.5px' }}>
+                  <span style={{ fontSize: '16px' }}>⚠️</span>
+                  <span>Settlement exceeds invoice #{invoiceForPayment.invoiceNumber} balance due!</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '24px' }}>
+                  Total settlement of ₹ {payTotalSettling.toFixed(2)} exceeds balance due of ₹ {payCurBal.toFixed(2)} by ₹ {(payTotalSettling - payCurBal).toFixed(2)}. Please reduce payment amount or kasar.
+                </div>
+              </div>
+            ) : payRemainingBal > 0.01 ? (
+              /* RED INFORMATION BANNER */
+              <div
+                style={{
+                  backgroundColor: '#fef2f2',
+                  border: '1.5px solid #ef4444',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '5px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#991b1b', fontWeight: 700, fontSize: '14px' }}>
+                  <span style={{ fontSize: '18px' }}>⚠️</span>
+                  <span>Amount ₹ {payRemainingBal.toFixed(2)} is still left on invoice #{invoiceForPayment.invoiceNumber}</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#b91c1c', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  <span>Total Bill: <strong>₹ {invoiceForPayment.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong></span>
+                  <span>•</span>
+                  <span>Balance Due: <strong>₹ {payCurBal.toFixed(2)}</strong></span>
+                  <span>•</span>
+                  <span>Paying Now: <strong>₹ {payEnteredPay.toFixed(2)}</strong></span>
+                  {payEnteredAdj > 0 && (
+                    <>
+                      <span>•</span>
+                      <span>Kasar: <strong>₹ {payEnteredAdj.toFixed(2)}</strong></span>
+                    </>
                   )}
                 </div>
-              );
-            })()}
+              </div>
+            ) : (
+              /* GREEN INFORMATION BANNER */
+              <div
+                style={{
+                  backgroundColor: '#ecfdf5',
+                  border: '1.5px solid #10b981',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '5px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#065f46', fontWeight: 700, fontSize: '14px' }}>
+                  <span style={{ fontSize: '18px' }}>✓</span>
+                  <span>Settled against invoice #{invoiceForPayment.invoiceNumber} of ₹ {invoiceForPayment.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  <span>Full Settlement: <strong>₹ {payEnteredPay.toFixed(2)}</strong> received {payEnteredAdj > 0 ? `+ <strong>₹ ${payEnteredAdj.toFixed(2)}</strong> Kasar` : ''}</span>
+                  <span>•</span>
+                  <span>Remaining Balance: <strong>₹ 0.00 (Fully Settled)</strong></span>
+                </div>
+              </div>
+            )}
           </form>
         )}
       </Modal>
-    </div>
-  );
+    );
+  })()}
+</div>
+);
 };
