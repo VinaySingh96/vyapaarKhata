@@ -104,9 +104,16 @@ export const ProductsScreen: React.FC = () => {
       try {
         const data = new Uint8Array(evt.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        
+        let rawJson: any[] = [];
+        for (const sheetName of workbook.SheetNames) {
+          const ws = workbook.Sheets[sheetName];
+          const sheetRows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          if (sheetRows && sheetRows.length > 0) {
+            rawJson = sheetRows;
+            break;
+          }
+        }
 
         if (!rawJson || rawJson.length === 0) {
           setImportError('The uploaded Excel sheet contains no rows.');
@@ -170,6 +177,9 @@ export const ProductsScreen: React.FC = () => {
     try {
       const res = await apiFetch('/api/v1/products/bulk-import', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ items: parsedImportItems }),
       });
       const json = await res.json();
@@ -1810,6 +1820,9 @@ export const ProductsScreen: React.FC = () => {
             <input
               type="file"
               accept=".xlsx, .xls, .csv"
+              onClick={(e) => {
+                (e.target as HTMLInputElement).value = '';
+              }}
               onChange={handleFileUpload}
               style={{
                 position: 'absolute',

@@ -155,15 +155,16 @@ export const PartiesScreen: React.FC = () => {
       try {
         const data = new Uint8Array(evt.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        if (!firstSheetName) {
-          setImportError('The selected workbook has no sheets.');
-          setParsedImportItems([]);
-          return;
+        
+        let rawJson: any[] = [];
+        for (const sheetName of workbook.SheetNames) {
+          const ws = workbook.Sheets[sheetName];
+          const sheetRows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          if (sheetRows && sheetRows.length > 0) {
+            rawJson = sheetRows;
+            break;
+          }
         }
-
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
         if (!rawJson || rawJson.length === 0) {
           setImportError('The uploaded Excel sheet contains no rows.');
@@ -979,6 +980,9 @@ export const PartiesScreen: React.FC = () => {
             <input
               type="file"
               accept=".xlsx, .xls, .csv"
+              onClick={(e) => {
+                (e.target as HTMLInputElement).value = '';
+              }}
               onChange={handleFileUpload}
               style={{
                 position: 'absolute',

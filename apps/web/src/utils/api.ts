@@ -47,6 +47,11 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
     }
   }
 
+  // Automatically default Content-Type to application/json when sending string body
+  if (init?.body && typeof init.body === 'string' && !customHeaders['Content-Type'] && !customHeaders['content-type']) {
+    customHeaders['Content-Type'] = 'application/json';
+  }
+
   const mergedHeaders = getAuthHeaders(customHeaders);
 
   return fetch(input, {

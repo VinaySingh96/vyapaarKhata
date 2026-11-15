@@ -371,7 +371,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
   // POST /api/v1/products/bulk-import
   app.post<{
     Body: {
-      items: Array<{
+      items?: Array<{
         category?: string;
         name: string;
         sku?: string;
@@ -383,10 +383,20 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
         reorderLevel?: number;
         description?: string;
       }>;
+      products?: Array<any>;
     };
   }>('/bulk-import', async (req, reply) => {
     const tenant = resolveTenant(req);
-    const { items } = req.body || {};
+    let body: any = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        body = {};
+      }
+    }
+    body = body || {};
+    const items = body.items || body.products || (Array.isArray(body) ? body : []);
 
     if (!Array.isArray(items) || items.length === 0) {
       return reply.status(400).send({

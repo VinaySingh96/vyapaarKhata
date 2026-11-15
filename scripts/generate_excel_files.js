@@ -17,23 +17,43 @@ const rentalItems = [
   // 2. Balli
   {
     "Category": "Bamboo & Wooden Balli",
-    "Item Name": "Balli (8-9 ft)",
-    "Item Code / SKU": "BALLI-8-9FT",
+    "Item Name": "Balli (8 ft)",
+    "Item Code / SKU": "BALLI-8FT",
     "Unit": "pcs",
-    "Initial Stock": 300,
+    "Initial Stock": 150,
     "Purchase Rate (Asset Cost)": 80,
     "Daily Rental Rate (Sell Rate)": 1,
-    "Description": "Wooden support balli 8 to 9 feet"
+    "Description": "Wooden support balli 8 feet"
   },
   {
     "Category": "Bamboo & Wooden Balli",
-    "Item Name": "Balli (10-11 ft)",
-    "Item Code / SKU": "BALLI-10-11FT",
+    "Item Name": "Balli (9 ft)",
+    "Item Code / SKU": "BALLI-9FT",
     "Unit": "pcs",
-    "Initial Stock": 400,
+    "Initial Stock": 150,
+    "Purchase Rate (Asset Cost)": 80,
+    "Daily Rental Rate (Sell Rate)": 1,
+    "Description": "Wooden support balli 9 feet"
+  },
+  {
+    "Category": "Bamboo & Wooden Balli",
+    "Item Name": "Balli (10 ft)",
+    "Item Code / SKU": "BALLI-10FT",
+    "Unit": "pcs",
+    "Initial Stock": 200,
     "Purchase Rate (Asset Cost)": 120,
     "Daily Rental Rate (Sell Rate)": 2,
-    "Description": "Wooden support balli 10 to 11 feet"
+    "Description": "Wooden support balli 10 feet"
+  },
+  {
+    "Category": "Bamboo & Wooden Balli",
+    "Item Name": "Balli (11 ft)",
+    "Item Code / SKU": "BALLI-11FT",
+    "Unit": "pcs",
+    "Initial Stock": 200,
+    "Purchase Rate (Asset Cost)": 120,
+    "Daily Rental Rate (Sell Rate)": 2,
+    "Description": "Wooden support balli 11 feet"
   },
   {
     "Category": "Bamboo & Wooden Balli",

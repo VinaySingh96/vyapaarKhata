@@ -42,6 +42,16 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
   });
 
+  // Support text/plain payload containing JSON (e.g. from fetch without explicit Content-Type)
+  app.addContentTypeParser(['text/plain', 'text/json'], { parseAs: 'string' }, (req, body, done) => {
+    try {
+      const json = JSON.parse(body as string);
+      done(null, json);
+    } catch (err: any) {
+      done(null, body);
+    }
+  });
+
   // Global Error Handler
   app.setErrorHandler((error, request, reply) => {
     const requestId = request.id;

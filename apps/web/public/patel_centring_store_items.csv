@@ -1,7 +1,9 @@
 Category,Item Name,Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
 Bamboo & Wooden Balli,Bamboo (10-12 ft),BAMBOO-10FT,pcs,50,120,10,Construction bamboo pole (10-12 ft) for scaffolding and support
-Bamboo & Wooden Balli,Balli (8-9 ft),BALLI-8-9FT,pcs,300,80,1,Wooden support balli 8 to 9 feet
-Bamboo & Wooden Balli,Balli (10-11 ft),BALLI-10-11FT,pcs,400,120,2,Wooden support balli 10 to 11 feet
+Bamboo & Wooden Balli,Balli (8 ft),BALLI-8FT,pcs,150,80,1,Wooden support balli 8 feet
+Bamboo & Wooden Balli,Balli (9 ft),BALLI-9FT,pcs,150,80,1,Wooden support balli 9 feet
+Bamboo & Wooden Balli,Balli (10 ft),BALLI-10FT,pcs,200,120,2,Wooden support balli 10 feet
+Bamboo & Wooden Balli,Balli (11 ft),BALLI-11FT,pcs,200,120,2,Wooden support balli 11 feet
 Bamboo & Wooden Balli,Balli (12 ft),BALLI-12FT,pcs,200,160,13,Wooden support balli 12 feet heavy duty
 Bamboo & Wooden Balli,Balli (15 ft),BALLI-15FT,pcs,50,220,5,Wooden support balli 15 feet extra length
 Pillar Farma (Iron Frame),Farma 9x9 (4 ft),FARMA-9X9-4FT,pcs,10,800,20,"Pillar shuttering iron frame size 9 inch x 9 inch, height 4 ft"
