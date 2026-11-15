@@ -23,6 +23,22 @@ export interface CentralTenant {
   updatedAt: string;
 }
 
+export interface DailySalesEarningsSummary {
+  date: string;
+  sales: number;
+  earnings: number;
+  invoicesCount: number;
+  paymentsCount: number;
+}
+
+export interface MonthlySalesEarningsSummary {
+  month: string;
+  sales: number;
+  earnings: number;
+  invoicesCount: number;
+  paymentsCount: number;
+}
+
 export interface TenantDashboardMetrics {
   tenantId: string;
   tenantName: string;
@@ -30,12 +46,21 @@ export interface TenantDashboardMetrics {
   licenseNumber?: string;
   totalSyncEvents: number;
   lastSyncedAt?: string;
+  // Daily Metrics
   todaySales: number;
+  todayEarnings: number;
+  // Monthly Metrics
   thisMonthSales: number;
+  thisMonthEarnings: number;
+  // All-time Totals
+  totalSales: number;
   totalEarnings: number;
   totalInvoicesCount: number;
   totalPaymentsCount: number;
   eventsByType: Record<string, number>;
+  // Historical Breakdowns
+  dailyBreakdown: DailySalesEarningsSummary[];
+  monthlyBreakdown: MonthlySalesEarningsSummary[];
 }
 
 export interface CentralInstallation {

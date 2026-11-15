@@ -697,7 +697,20 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         }
 
         const t = tJson.data;
-        const d = dJson.success ? dJson.data : { todaySales: 0, thisMonthSales: 0, totalEarnings: 0, totalSyncEvents: 0, totalInvoicesCount: 0, totalPaymentsCount: 0, eventsByType: {} };
+        const d = dJson.success ? dJson.data : {
+          todaySales: 0,
+          todayEarnings: 0,
+          thisMonthSales: 0,
+          thisMonthEarnings: 0,
+          totalSales: 0,
+          totalEarnings: 0,
+          totalSyncEvents: 0,
+          totalInvoicesCount: 0,
+          totalPaymentsCount: 0,
+          eventsByType: {},
+          dailyBreakdown: [],
+          monthlyBreakdown: []
+        };
 
         const isJewel = t.storeType === 'jewellery';
         document.getElementById('detailsTenantName').innerHTML = \`
@@ -731,6 +744,26 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           </span>
         \`).join(' ') || '<span style="color:#94a3b8; font-size: 0.8rem;">No events synced yet</span>';
 
+        let dailyRowsHtml = (d.dailyBreakdown && d.dailyBreakdown.length > 0) ? d.dailyBreakdown.slice(0, 7).map(row => \`
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 5px 8px; font-weight: 600; font-family: monospace;">\${row.date}</td>
+            <td style="padding: 5px 8px; color: #64748b;">\${row.invoicesCount} inv</td>
+            <td style="padding: 5px 8px; color: #047857; font-weight: 700; text-align: right;">₹ \${Number(row.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 5px 8px; color: #64748b;">\${row.paymentsCount} rcpt</td>
+            <td style="padding: 5px 8px; color: #7e22ce; font-weight: 700; text-align: right;">₹ \${Number(row.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          </tr>
+        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 12px; color: #94a3b8;">No daily transactions synced yet</td></tr>';
+
+        let monthlyRowsHtml = (d.monthlyBreakdown && d.monthlyBreakdown.length > 0) ? d.monthlyBreakdown.slice(0, 6).map(row => \`
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 5px 8px; font-weight: 600; font-family: monospace;">\${row.month}</td>
+            <td style="padding: 5px 8px; color: #64748b;">\${row.invoicesCount} inv</td>
+            <td style="padding: 5px 8px; color: #047857; font-weight: 700; text-align: right;">₹ \${Number(row.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td style="padding: 5px 8px; color: #64748b;">\${row.paymentsCount} rcpt</td>
+            <td style="padding: 5px 8px; color: #7e22ce; font-weight: 700; text-align: right;">₹ \${Number(row.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+          </tr>
+        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 12px; color: #94a3b8;">No monthly transactions synced yet</td></tr>';
+
         body.innerHTML = \`
           <!-- Store Credentials & License Card -->
           <div style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
@@ -763,32 +796,98 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           <!-- Financial Dashboard Cards (From Synced Data) -->
           <div style="margin-bottom: 1.25rem;">
             <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-              <span>📈 Synced Store Financial Performance</span>
+              <span>📈 Synced Store Financial Performance (Daily & Monthly)</span>
               <span style="font-size: 0.75rem; color: #64748b; font-weight: 400;">Aggregated securely from sync inbox</span>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px;">
-                <div style="font-size: 0.75rem; color: #065f46; font-weight: 600; text-transform: uppercase;">Today's Sales</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #047857; margin-top: 4px;">
+            
+            <!-- 4 Grid Cards: Daily Sales, Daily Earnings, Monthly Sales, Monthly Earnings -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.7rem; color: #065f46; font-weight: 700; text-transform: uppercase;">📅 Today's Sales</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #047857; margin-top: 4px;">
                   ₹ \${Number(d.todaySales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.725rem; color: #065f46; margin-top: 2px;">Confirmed posted invoices today</div>
+                <div style="font-size: 0.7rem; color: #065f46; margin-top: 2px;">Daily billed amount</div>
               </div>
 
-              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px;">
-                <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">This Month's Sales</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #1d4ed8; margin-top: 4px;">
+              <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.7rem; color: #6b21a8; font-weight: 700; text-transform: uppercase;">💵 Today's Earnings</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #7e22ce; margin-top: 4px;">
+                  ₹ \${Number(d.todayEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+                <div style="font-size: 0.7rem; color: #6b21a8; margin-top: 2px;">Daily collections / cash-in</div>
+              </div>
+
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.7rem; color: #1e40af; font-weight: 700; text-transform: uppercase;">📆 This Month's Sales</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; margin-top: 4px;">
                   ₹ \${Number(d.thisMonthSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.725rem; color: #1e40af; margin-top: 2px;">Monthly net billing volume</div>
+                <div style="font-size: 0.7rem; color: #1e40af; margin-top: 2px;">Monthly billing volume</div>
               </div>
 
-              <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px;">
-                <div style="font-size: 0.75rem; color: #6b21a8; font-weight: 600; text-transform: uppercase;">Total Collections / Earnings</div>
-                <div style="font-size: 1.4rem; font-weight: 800; color: #7e22ce; margin-top: 4px;">
-                  ₹ \${Number(d.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.7rem; color: #9a3412; font-weight: 700; text-transform: uppercase;">💳 This Month's Earnings</div>
+                <div style="font-size: 1.2rem; font-weight: 800; color: #c2410c; margin-top: 4px;">
+                  ₹ \${Number(d.thisMonthEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.725rem; color: #6b21a8; margin-top: 2px;">Cash/UPI/Cheque received</div>
+                <div style="font-size: 0.7rem; color: #9a3412; margin-top: 2px;">Monthly collections</div>
+              </div>
+            </div>
+
+            <!-- All Time Totals Banner -->
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem;">
+              <span>Total Store Billed Sales: <strong style="color: #047857;">₹ \${Number(d.totalSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong> (\${d.totalInvoicesCount} invoices)</span>
+              <span>All-Time Net Collections / Earnings: <strong style="color: #7e22ce;">₹ \${Number(d.totalEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong> (\${d.totalPaymentsCount} receipts)</span>
+            </div>
+          </div>
+
+          <!-- Daily & Monthly Trend Breakdown Tables -->
+          <div style="margin-bottom: 1.25rem;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: #334155; margin-bottom: 8px;">
+              📊 Historical Performance Ledger (Daily & Monthly)
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <!-- Daily Table -->
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                <div style="background: #f1f5f9; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0;">
+                  📅 Daily Breakdown (Recent Days)
+                </div>
+                <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0;">
+                      <th style="padding: 4px 8px; text-align: left;">Date</th>
+                      <th style="padding: 4px 8px; text-align: left;">Inv</th>
+                      <th style="padding: 4px 8px; text-align: right;">Sales</th>
+                      <th style="padding: 4px 8px; text-align: left;">Rcpt</th>
+                      <th style="padding: 4px 8px; text-align: right;">Earnings</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    \${dailyRowsHtml}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Monthly Table -->
+              <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                <div style="background: #f1f5f9; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; color: #334155; border-bottom: 1px solid #e2e8f0;">
+                  📆 Monthly Breakdown
+                </div>
+                <table style="width: 100%; font-size: 0.75rem; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #f8fafc; color: #64748b; border-bottom: 1px solid #e2e8f0;">
+                      <th style="padding: 4px 8px; text-align: left;">Month</th>
+                      <th style="padding: 4px 8px; text-align: left;">Inv</th>
+                      <th style="padding: 4px 8px; text-align: right;">Sales</th>
+                      <th style="padding: 4px 8px; text-align: left;">Rcpt</th>
+                      <th style="padding: 4px 8px; text-align: right;">Earnings</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    \${monthlyRowsHtml}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

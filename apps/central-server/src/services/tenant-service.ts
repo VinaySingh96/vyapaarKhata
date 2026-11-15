@@ -168,12 +168,32 @@ export class TenantService {
     const thisMonthStr = now.toISOString().slice(0, 7);
 
     let todaySales = 0;
+    let todayEarnings = 0;
     let thisMonthSales = 0;
+    let thisMonthEarnings = 0;
+    let totalSales = 0;
     let totalEarnings = 0;
     let totalInvoicesCount = 0;
     let totalPaymentsCount = 0;
     const eventsByType: Record<string, number> = {};
     let lastSyncedAt: string | undefined = undefined;
+
+    const dailyMap: Record<string, { date: string; sales: number; earnings: number; invoicesCount: number; paymentsCount: number }> = {};
+    const monthlyMap: Record<string, { month: string; sales: number; earnings: number; invoicesCount: number; paymentsCount: number }> = {};
+
+    function getOrCreateDaily(date: string) {
+      if (!dailyMap[date]) {
+        dailyMap[date] = { date, sales: 0, earnings: 0, invoicesCount: 0, paymentsCount: 0 };
+      }
+      return dailyMap[date];
+    }
+
+    function getOrCreateMonthly(month: string) {
+      if (!monthlyMap[month]) {
+        monthlyMap[month] = { month, sales: 0, earnings: 0, invoicesCount: 0, paymentsCount: 0 };
+      }
+      return monthlyMap[month];
+    }
 
     for (const r of eventsRes.rows) {
       if (!lastSyncedAt) {
@@ -183,32 +203,71 @@ export class TenantService {
       eventsByType[type] = (eventsByType[type] || 0) + 1;
 
       const payload = typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload || {};
-      const evDate = (payload.postedAt || payload.createdAt || r.received_at).toString().slice(0, 10);
+      const rawDate = payload.postedAt || payload.createdAt || r.received_at;
+      let evDate = todayStr;
+      try {
+        const parsed = new Date(rawDate);
+        if (!isNaN(parsed.getTime())) {
+          evDate = parsed.toISOString().slice(0, 10);
+        }
+      } catch {
+        evDate = todayStr;
+      }
       const evMonth = evDate.slice(0, 7);
 
       if (type === 'sales.invoice.posted') {
         const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
         totalInvoicesCount++;
+        totalSales += grandTotal;
         if (evDate === todayStr) {
           todaySales += grandTotal;
         }
         if (evMonth === thisMonthStr) {
           thisMonthSales += grandTotal;
         }
+        const dRec = getOrCreateDaily(evDate);
+        dRec.sales += grandTotal;
+        dRec.invoicesCount++;
+
+        const mRec = getOrCreateMonthly(evMonth);
+        mRec.sales += grandTotal;
+        mRec.invoicesCount++;
       } else if (type === 'sales.invoice.cancelled') {
         const grandTotal = Number(payload.grandTotal || payload.totalAmount || 0);
+        totalSales = Math.max(0, totalSales - grandTotal);
         if (evDate === todayStr) {
           todaySales = Math.max(0, todaySales - grandTotal);
         }
         if (evMonth === thisMonthStr) {
           thisMonthSales = Math.max(0, thisMonthSales - grandTotal);
         }
+        const dRec = getOrCreateDaily(evDate);
+        dRec.sales = Math.max(0, dRec.sales - grandTotal);
+
+        const mRec = getOrCreateMonthly(evMonth);
+        mRec.sales = Math.max(0, mRec.sales - grandTotal);
       } else if (type === 'payment.posted') {
         const amount = Number(payload.amount || 0);
         totalEarnings += amount;
         totalPaymentsCount++;
+        if (evDate === todayStr) {
+          todayEarnings += amount;
+        }
+        if (evMonth === thisMonthStr) {
+          thisMonthEarnings += amount;
+        }
+        const dRec = getOrCreateDaily(evDate);
+        dRec.earnings += amount;
+        dRec.paymentsCount++;
+
+        const mRec = getOrCreateMonthly(evMonth);
+        mRec.earnings += amount;
+        mRec.paymentsCount++;
       }
     }
+
+    const dailyBreakdown = Object.values(dailyMap).sort((a, b) => b.date.localeCompare(a.date));
+    const monthlyBreakdown = Object.values(monthlyMap).sort((a, b) => b.month.localeCompare(a.month));
 
     return {
       tenantId: t.id,
@@ -218,11 +277,16 @@ export class TenantService {
       totalSyncEvents: eventsRes.rows.length,
       lastSyncedAt,
       todaySales,
+      todayEarnings,
       thisMonthSales,
+      thisMonthEarnings,
+      totalSales,
       totalEarnings,
       totalInvoicesCount,
       totalPaymentsCount,
       eventsByType,
+      dailyBreakdown,
+      monthlyBreakdown,
     };
   }
 
