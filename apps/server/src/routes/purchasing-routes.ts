@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { UnitOfWork, TenantContext, PurchasingService, PurchaseOrder } from '@vyapaarkhata/domain';
+import { UnitOfWork, TenantContext, PurchasingService, PurchaseOrder, PurchaseReceipt, PurchaseBill } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
 
 export interface PurchasingRoutesOptions {
@@ -75,6 +75,33 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
     });
   });
 
+  // POST /api/v1/purchasing/receipts
+  app.post<{ Body: Partial<PurchaseReceipt> }>('/receipts', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const body = req.body || {};
+    const receipt: PurchaseReceipt = {
+      id: body.id || randomUUID(),
+      tenantId: tenant.tenantId,
+      supplierId: body.supplierId || '',
+      purchaseOrderId: body.purchaseOrderId,
+      inventoryLocationId: body.inventoryLocationId || '',
+      receiptNumber: body.receiptNumber || `GRN-${Date.now().toString().slice(-6)}`,
+      status: 'draft',
+      lines: body.lines || [],
+      createdAt: new Date().toISOString(),
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.purchasing.saveReceipt(receipt);
+    });
+
+    return reply.status(201).send({
+      success: true,
+      data: receipt,
+      requestId: req.id,
+    });
+  });
+
   // POST /api/v1/purchasing/receipts/:id/post
   app.post<{ Params: { id: string } }>('/receipts/:id/post', async (req, reply) => {
     const tenant = resolveTenant(req);
@@ -100,6 +127,37 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
     return reply.status(200).send({
       success: true,
       data: bills,
+      requestId: req.id,
+    });
+  });
+
+  // POST /api/v1/purchasing/bills
+  app.post<{ Body: Partial<PurchaseBill> }>('/bills', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const body = req.body || {};
+    const bill: PurchaseBill = {
+      id: body.id || randomUUID(),
+      tenantId: tenant.tenantId,
+      supplierId: body.supplierId || '',
+      businessLocationId: body.businessLocationId || '',
+      billNumber: body.billNumber || `BILL-${Date.now().toString().slice(-6)}`,
+      supplierInvoiceNumber: body.supplierInvoiceNumber,
+      status: 'draft',
+      subtotal: body.subtotal || 0,
+      taxAmount: body.taxAmount || 0,
+      totalAmount: body.totalAmount || 0,
+      amountPaid: 0,
+      lines: body.lines || [],
+      createdAt: new Date().toISOString(),
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.purchasing.saveBill(bill);
+    });
+
+    return reply.status(201).send({
+      success: true,
+      data: bill,
       requestId: req.id,
     });
   });
