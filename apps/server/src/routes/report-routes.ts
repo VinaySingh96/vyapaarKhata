@@ -42,4 +42,19 @@ export const reportRoutes: FastifyPluginAsync<ReportRoutesOptions> = async (app,
       requestId: req.id,
     });
   });
+
+  // GET /api/v1/reports/audit-logs
+  app.get<{ Querystring: { limit?: string } }>('/audit-logs', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : 50;
+    const logs = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.audit.list(tenant.tenantId, limit);
+    });
+
+    return reply.status(200).send({
+      success: true,
+      data: logs,
+      requestId: req.id,
+    });
+  });
 };

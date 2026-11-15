@@ -125,6 +125,25 @@ export interface SettingsRepository {
   updateSettings(tenantId: EntityId, settings: Partial<StoreSettings>): Promise<StoreSettings>;
 }
 
+export interface AuditLogEntry {
+  id: EntityId;
+  tenantId?: EntityId;
+  userId?: EntityId;
+  entityType?: string;
+  entityId?: EntityId;
+  action: string;
+  oldValues?: any;
+  newValues?: any;
+  ipAddress?: string;
+  deviceId?: EntityId;
+  createdAt: string;
+}
+
+export interface AuditRepository {
+  record(entry: Partial<AuditLogEntry>): Promise<void>;
+  list(tenantId: EntityId, limit?: number): Promise<AuditLogEntry[]>;
+}
+
 export interface UnitOfWorkContext {
   invoices: InvoiceRepository;
   products: ProductRepository;
@@ -137,6 +156,7 @@ export interface UnitOfWorkContext {
   expenses: ExpenseRepository;
   reports: ReportRepository;
   settings: SettingsRepository;
+  audit: AuditRepository;
 }
 
 export interface UnitOfWork {

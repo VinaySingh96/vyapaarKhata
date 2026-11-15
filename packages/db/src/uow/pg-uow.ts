@@ -40,6 +40,8 @@ import {
   DashboardMetrics,
   StoreSettings,
   SettingsRepository,
+  AuditLogEntry,
+  AuditRepository,
   EntityId,
 } from '@vyapaarkhata/domain';
 
@@ -2111,6 +2113,55 @@ export class PgUnitOfWork implements UnitOfWork {
         },
       };
 
+      // -----------------------------------------------------------------------
+      // Audit Logs Repository
+      // -----------------------------------------------------------------------
+      const auditRepo: AuditRepository = {
+        record: async (entry: Partial<AuditLogEntry>): Promise<void> => {
+          await client.query(
+            `INSERT INTO audit_logs (
+               id, tenant_id, user_id, entity_type, entity_id, action, old_values, new_values, ip_address, device_id, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+            [
+              entry.id ? ensureUuid(entry.id) : randomUUID(),
+              entry.tenantId ? ensureUuid(entry.tenantId) : null,
+              entry.userId ? ensureUuid(entry.userId) : null,
+              entry.entityType || null,
+              entry.entityId ? ensureUuid(entry.entityId) : null,
+              entry.action || 'MUTATION',
+              entry.oldValues ? JSON.stringify(entry.oldValues) : null,
+              entry.newValues ? JSON.stringify(entry.newValues) : null,
+              entry.ipAddress || null,
+              entry.deviceId ? ensureUuid(entry.deviceId) : null,
+            ]
+          );
+        },
+
+        list: async (tenantId: EntityId, limit: number = 50): Promise<AuditLogEntry[]> => {
+          const res = await client.query(
+            `SELECT id, tenant_id, user_id, entity_type, entity_id, action, old_values, new_values, ip_address, device_id, created_at
+             FROM audit_logs
+             WHERE tenant_id = $1 OR tenant_id IS NULL
+             ORDER BY created_at DESC
+             LIMIT $2`,
+            [tenantId, limit]
+          );
+          return res.rows.map((r) => ({
+            id: r.id,
+            tenantId: r.tenant_id,
+            userId: r.user_id,
+            entityType: r.entity_type,
+            entityId: r.entity_id,
+            action: r.action,
+            oldValues: r.old_values,
+            newValues: r.new_values,
+            ipAddress: r.ip_address,
+            deviceId: r.device_id,
+            createdAt: new Date(r.created_at).toISOString(),
+          }));
+        },
+      };
+
       const result = await work({
         invoices: invoiceRepo,
         products: productRepo,
@@ -2123,6 +2174,7 @@ export class PgUnitOfWork implements UnitOfWork {
         expenses: expenseRepo,
         reports: reportRepo,
         settings: settingsRepo,
+        audit: auditRepo,
       });
 
       await client.query('COMMIT');
@@ -2132,6 +2184,31 @@ export class PgUnitOfWork implements UnitOfWork {
       throw error;
     } finally {
       client.release();
+    }
+  }
+
+  async recordAuditLog(entry: Partial<AuditLogEntry>): Promise<void> {
+    const logClient = await this.pool.connect();
+    try {
+      await logClient.query(
+        `INSERT INTO audit_logs (
+           id, tenant_id, user_id, entity_type, entity_id, action, old_values, new_values, ip_address, device_id, created_at
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+        [
+          entry.id ? ensureUuid(entry.id) : randomUUID(),
+          entry.tenantId ? ensureUuid(entry.tenantId) : null,
+          entry.userId ? ensureUuid(entry.userId) : null,
+          entry.entityType || null,
+          entry.entityId ? ensureUuid(entry.entityId) : null,
+          entry.action || 'MUTATION',
+          entry.oldValues ? JSON.stringify(entry.oldValues) : null,
+          entry.newValues ? JSON.stringify(entry.newValues) : null,
+          entry.ipAddress || null,
+          entry.deviceId ? ensureUuid(entry.deviceId) : null,
+        ]
+      );
+    } finally {
+      logClient.release();
     }
   }
 }

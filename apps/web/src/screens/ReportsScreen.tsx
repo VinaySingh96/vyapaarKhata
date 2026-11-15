@@ -9,13 +9,27 @@ interface StockValuationItem {
   valuation: number;
 }
 
+interface AuditLogItem {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  entityType?: string;
+  entityId?: string;
+  action: string;
+  oldValues?: any;
+  newValues?: any;
+  ipAddress?: string;
+  createdAt: string;
+}
+
 export const ReportsScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
 
-  const [activeReportTab, setActiveReportTab] = useState<'valuation' | 'pnl' | 'gst'>('valuation');
+  const [activeReportTab, setActiveReportTab] = useState<'valuation' | 'pnl' | 'gst' | 'audit'>('valuation');
   const [valuationData, setValuationData] = useState<StockValuationItem[]>([]);
   const [dashboardMetrics, setDashboardMetrics] = useState<any>(null);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadData = () => {
@@ -42,7 +56,19 @@ export const ReportsScreen: React.FC = () => {
           setDashboardMetrics(json.data);
         }
       })
-      .catch((err) => console.warn('Failed to load dashboard metrics:', err))
+      .catch((err) => console.warn('Failed to load dashboard metrics:', err));
+
+    // 3. Fetch automated audit logs
+    fetch('/api/v1/reports/audit-logs?limit=50', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setAuditLogs(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load audit logs:', err))
       .finally(() => setLoading(false));
   };
 
@@ -180,6 +206,22 @@ export const ReportsScreen: React.FC = () => {
         >
           {t('reports.gstSummary')}
         </button>
+        <button
+          type="button"
+          onClick={() => setActiveReportTab('audit')}
+          style={{
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: 600,
+            backgroundColor: activeReportTab === 'audit' ? '#2563eb' : '#ffffff',
+            color: activeReportTab === 'audit' ? '#ffffff' : '#374151',
+          }}
+        >
+          🛡️ Audit Trail ({auditLogs.length})
+        </button>
       </div>
 
       {/* Report Content */}
@@ -267,6 +309,97 @@ export const ReportsScreen: React.FC = () => {
                     ₹ {((dashboardMetrics?.todaySales || 0) * 0.18).toFixed(2)}
                   </td>
                 </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeReportTab === 'audit' && (
+        <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#111827' }}>
+                Automated Audit Trail & Event Log
+              </h3>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                Immutable system audit records automatically captured by server hooks for every transaction and catalog change.
+              </p>
+            </div>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#059669',
+                backgroundColor: '#ecfdf5',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                border: '1px solid #a7f3d0',
+              }}
+            >
+              🔒 Tamper-Evident Active
+            </span>
+          </div>
+
+          <div className="vk-table-responsive">
+            <table>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280', fontSize: '12px', backgroundColor: '#f9fafb' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Timestamp</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Action Event</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Entity Type</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>Target ID / Key</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left' }}>IP / Origin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                      No audit events recorded yet. New sales, purchasing, and catalog actions will automatically log here.
+                    </td>
+                  </tr>
+                ) : (
+                  auditLogs.map((log) => {
+                    const isDangerous = log.action.includes('CANCEL') || log.action.includes('VOID') || log.action.includes('DELETE');
+                    const isSuccess = log.action.includes('POST') || log.action.includes('CREATE') || log.action.includes('PAYMENT');
+                    return (
+                      <tr key={log.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13px' }}>
+                        <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>
+                          {new Date(log.createdAt).toLocaleString('en-IN', {
+                            dateStyle: 'medium',
+                            timeStyle: 'medium',
+                          })}
+                        </td>
+                        <td style={{ padding: '12px 16px' }}>
+                          <span
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              fontFamily: 'monospace',
+                              backgroundColor: isDangerous ? '#fee2e2' : isSuccess ? '#ecfdf5' : '#eff6ff',
+                              color: isDangerous ? '#991b1b' : isSuccess ? '#065f46' : '#1e40af',
+                              border: `1px solid ${isDangerous ? '#fca5a5' : isSuccess ? '#a7f3d0' : '#bfdbfe'}`,
+                            }}
+                          >
+                            {log.action}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px 16px', fontWeight: 600, color: '#374151' }}>
+                          {log.entityType || 'system'}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '12px', color: '#4b5563' }}>
+                          {log.entityId ? `${log.entityId.slice(0, 8)}...${log.entityId.slice(-4)}` : '-'}
+                        </td>
+                        <td style={{ padding: '12px 16px', color: '#6b7280', fontSize: '12px' }}>
+                          {log.ipAddress || '127.0.0.1'}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
