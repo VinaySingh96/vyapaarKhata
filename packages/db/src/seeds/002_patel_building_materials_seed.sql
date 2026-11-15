@@ -6,6 +6,9 @@
 
 BEGIN;
 
+ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "name_hi" character varying(255);
+ALTER TABLE "product_variants" ADD COLUMN IF NOT EXISTS "variant_name_hi" character varying(255);
+
 -- ----------------------------------------------------------------------------
 -- 1. Tenant & Brand & Business Profile
 -- ----------------------------------------------------------------------------
@@ -154,194 +157,194 @@ ON CONFLICT ("id") DO UPDATE SET
 -- ==================== CATEGORY A: CEMENT (HSN: 2523, GST: 28%) ====================
 -- Product 1: OPC 53 Grade Cement
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0010001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0010000-0000-0000-0000-000000000001', 'goods', 'OPC 53 Grade Cement',
+  'c0010000-0000-0000-0000-000000000001', 'goods', 'OPC 53 Grade Cement', 'ओपीसी 53 ग्रेड सीमेंट',
   'Ordinary Portland Cement 53 Grade for high-strength RCC structural work', 'UltraTech / ACC / Ambuja',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000005', '2523', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0010001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-ULT-OPC53-50KG', 'UltraTech OPC 53 Grade - 50 kg Bag', 340.00, 390.00, '20', TRUE, NOW()),
-  ('b0010001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-ACC-OPC53-50KG', 'ACC OPC 53 Grade - 50 kg Bag', 335.00, 385.00, '20', TRUE, NOW()),
-  ('b0010001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-AMB-OPC53-50KG', 'Ambuja OPC 53 Grade - 50 kg Bag', 335.00, 385.00, '20', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0010001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-ULT-OPC53-50KG', 'UltraTech OPC 53 Grade - 50 kg Bag', 'अल्ट्राटेक ओपीसी 53 ग्रेड - 50 किग्रा बोरी', 340.00, 390.00, '20', TRUE, NOW()),
+  ('b0010001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-ACC-OPC53-50KG', 'ACC OPC 53 Grade - 50 kg Bag', 'एसीसी ओपीसी 53 ग्रेड - 50 किग्रा बोरी', 335.00, 385.00, '20', TRUE, NOW()),
+  ('b0010001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0010001-0000-0000-0000-000000000001', 'CEM-AMB-OPC53-50KG', 'Ambuja OPC 53 Grade - 50 kg Bag', 'अंबुजा ओपीसी 53 ग्रेड - 50 किग्रा बोरी', 335.00, 385.00, '20', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- Product 2: PPC Cement
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0010002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0010000-0000-0000-0000-000000000001', 'goods', 'Portland Pozzolana Cement (PPC)',
+  'c0010000-0000-0000-0000-000000000001', 'goods', 'Portland Pozzolana Cement (PPC)', 'पीपीसी सीमेंट (पोर्टलैंड पोजोलाना)',
   'Premium PPC cement ideal for plastering, masonry, and foundations', 'UltraTech / ACC / Ambuja',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000005', '2523', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0010002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-ULT-PPC-50KG', 'UltraTech PPC - 50 kg Bag', 320.00, 365.00, '25', TRUE, NOW()),
-  ('b0010002-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-ACC-PPC-50KG', 'ACC PPC - 50 kg Bag', 315.00, 360.00, '25', TRUE, NOW()),
-  ('b0010002-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-AMB-PPC-50KG', 'Ambuja PPC - 50 kg Bag', 315.00, 360.00, '25', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0010002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-ULT-PPC-50KG', 'UltraTech PPC - 50 kg Bag', 'अल्ट्राटेक पीपीसी - 50 किग्रा बोरी', 320.00, 365.00, '25', TRUE, NOW()),
+  ('b0010002-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-ACC-PPC-50KG', 'ACC PPC - 50 kg Bag', 'एसीसी पीपीसी - 50 किग्रा बोरी', 315.00, 360.00, '25', TRUE, NOW()),
+  ('b0010002-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0010002-0000-0000-0000-000000000001', 'CEM-AMB-PPC-50KG', 'Ambuja PPC - 50 kg Bag', 'अंबुजा पीपीसी - 50 किग्रा बोरी', 315.00, 360.00, '25', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- Product 3: White Cement
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0010003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0010000-0000-0000-0000-000000000001', 'goods', 'Birla White Cement',
+  'c0010000-0000-0000-0000-000000000001', 'goods', 'Birla White Cement', 'बिरला वाइट सफेद सीमेंट',
   'Premium white Portland cement for flooring, decorative works and tile fixing', 'Birla White',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000005', '2523', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0010003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010003-0000-0000-0000-000000000001', 'CEM-BW-WHITE-25KG', 'Birla White Cement - 25 kg Bag', 480.00, 550.00, '5', TRUE, NOW()),
-  ('b0010003-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010003-0000-0000-0000-000000000001', 'CEM-BW-WHITE-50KG', 'Birla White Cement - 50 kg Bag', 920.00, 1050.00, '5', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0010003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0010003-0000-0000-0000-000000000001', 'CEM-BW-WHITE-25KG', 'Birla White Cement - 25 kg Bag', 'बिरला वाइट सीमेंट - 25 किग्रा बोरी', 480.00, 550.00, '5', TRUE, NOW()),
+  ('b0010003-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0010003-0000-0000-0000-000000000001', 'CEM-BW-WHITE-50KG', 'Birla White Cement - 50 kg Bag', 'बिरला वाइट सीमेंट - 50 किग्रा बोरी', 920.00, 1050.00, '5', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ==================== CATEGORY B: STEEL & TMT (HSN: 7214, GST: 18%) ====================
 -- Product 4: Tata Tiscon TMT Fe500D
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0020001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0020000-0000-0000-0000-000000000001', 'goods', 'Tata Tiscon Fe500D TMT Bars',
+  'c0020000-0000-0000-0000-000000000001', 'goods', 'Tata Tiscon Fe500D TMT Bars', 'टाटा टिस्कॉन Fe500D टीएमटी सरिया',
   'High ductility primary steel TMT reinforcement bars conforming to IS 1786', 'Tata Tiscon',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000004', '7214', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0020001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-08MM', 'Tata Tiscon Fe500D 8mm TMT Bar', 56.00, 68.00, '500', TRUE, NOW()),
-  ('b0020001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-10MM', 'Tata Tiscon Fe500D 10mm TMT Bar', 55.00, 67.00, '500', TRUE, NOW()),
-  ('b0020001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-12MM', 'Tata Tiscon Fe500D 12mm TMT Bar', 54.00, 65.00, '500', TRUE, NOW()),
-  ('b0020001-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-16MM', 'Tata Tiscon Fe500D 16mm TMT Bar', 54.00, 65.00, '500', TRUE, NOW()),
-  ('b0020001-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-20MM', 'Tata Tiscon Fe500D 20mm TMT Bar', 54.00, 65.00, '300', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0020001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-08MM', 'Tata Tiscon Fe500D 8mm TMT Bar', 'टाटा टिस्कॉन Fe500D 8एमएम सरिया', 56.00, 68.00, '500', TRUE, NOW()),
+  ('b0020001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-10MM', 'Tata Tiscon Fe500D 10mm TMT Bar', 'टाटा टिस्कॉन Fe500D 10एमएम सरिया', 55.00, 67.00, '500', TRUE, NOW()),
+  ('b0020001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-12MM', 'Tata Tiscon Fe500D 12mm TMT Bar', 'टाटा टिस्कॉन Fe500D 12एमएम सरिया', 54.00, 65.00, '500', TRUE, NOW()),
+  ('b0020001-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-16MM', 'Tata Tiscon Fe500D 16mm TMT Bar', 'टाटा टिस्कॉन Fe500D 16एमएम सरिया', 54.00, 65.00, '500', TRUE, NOW()),
+  ('b0020001-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000001', 'a0020001-0000-0000-0000-000000000001', 'TMT-TATA-FE500D-20MM', 'Tata Tiscon Fe500D 20mm TMT Bar', 'टाटा टिस्कॉन Fe500D 20एमएम सरिया', 54.00, 65.00, '300', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- Product 5: JSW Neosteel TMT Fe550D
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0020002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0020000-0000-0000-0000-000000000001', 'goods', 'JSW Neosteel Fe550D TMT Bars',
+  'c0020000-0000-0000-0000-000000000001', 'goods', 'JSW Neosteel Fe550D TMT Bars', 'जेएसडब्ल्यू नियोस्टील Fe550D टीएमटी सरिया',
   'Super-strength TMT rebar engineered for bridges, high-rises and residential load-bearing', 'JSW Neosteel',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000004', '7214', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0020002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-10MM', 'JSW Neosteel Fe550D 10mm TMT Bar', 53.00, 64.00, '300', TRUE, NOW()),
-  ('b0020002-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-12MM', 'JSW Neosteel Fe550D 12mm TMT Bar', 52.00, 63.00, '400', TRUE, NOW()),
-  ('b0020002-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-16MM', 'JSW Neosteel Fe550D 16mm TMT Bar', 52.00, 63.00, '300', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0020002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-10MM', 'JSW Neosteel Fe550D 10mm TMT Bar', 'जेएसडब्ल्यू नियोस्टील Fe550D 10एमएम सरिया', 53.00, 64.00, '300', TRUE, NOW()),
+  ('b0020002-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-12MM', 'JSW Neosteel Fe550D 12mm TMT Bar', 'जेएसडब्ल्यू नियोस्टील Fe550D 12एमएम सरिया', 52.00, 63.00, '400', TRUE, NOW()),
+  ('b0020002-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0020002-0000-0000-0000-000000000001', 'TMT-JSW-FE550D-16MM', 'JSW Neosteel Fe550D 16mm TMT Bar', 'जेएसडब्ल्यू नियोस्टील Fe550D 16एमएम सरिया', 52.00, 63.00, '300', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ==================== CATEGORY C: SAND (HSN: 2505, GST: 5%) ====================
 -- Product 6: Natural River Sand
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0030001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0030000-0000-0000-0000-000000000001', 'goods', 'Natural River Sand',
+  'c0030000-0000-0000-0000-000000000001', 'goods', 'Natural River Sand', 'प्राकृतिक नदी की बालू / लाल बालू (छाना हुआ)',
   'Washed and screened coarse river sand for concrete slab casting and foundations', 'Narmada River Sand',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2505', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES (
   'b0030001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'a0030001-0000-0000-0000-000000000001', 'SAND-RIVER-CFT', 'Natural River Sand - Screened', 42.00, 55.00, '200', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+  'a0030001-0000-0000-0000-000000000001', 'SAND-RIVER-CFT', 'Natural River Sand - Screened', 'नर्मदा नदी लाल बालू - ढलाई बालू', 42.00, 55.00, '200', TRUE, NOW()
+) ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- Product 7: M-Sand & P-Sand
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES
-  ('a0030002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0030000-0000-0000-0000-000000000001', 'goods', 'Manufactured Sand (M-Sand)', 'Crushed granite stone sand (Zone II) designed as an eco-friendly replacement for river sand', 'Quarry Manufactured', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2505', TRUE, NOW()),
-  ('a0030003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0030000-0000-0000-0000-000000000001', 'goods', 'Plastering Sand (P-Sand)', 'Super-fine manufactured sand specially sieved (0-2.36mm) for smooth wall plastering', 'Quarry Manufactured', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2505', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('a0030002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0030000-0000-0000-0000-000000000001', 'goods', 'Manufactured Sand (M-Sand)', 'एम-सैंड (कंक्रीट बालू)', 'Crushed granite stone sand (Zone II) designed as an eco-friendly replacement for river sand', 'Quarry Manufactured', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2505', TRUE, NOW()),
+  ('a0030003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0030000-0000-0000-0000-000000000001', 'goods', 'Plastering Sand (P-Sand)', 'पी-सैंड (प्लास्टर महीन बालू)', 'Super-fine manufactured sand specially sieved (0-2.36mm) for smooth wall plastering', 'Quarry Manufactured', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2505', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0030002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0030002-0000-0000-0000-000000000001', 'SAND-MSAND-CFT', 'M-Sand for Concrete 0-4.75mm', 32.00, 42.00, '200', TRUE, NOW()),
-  ('b0030003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0030003-0000-0000-0000-000000000001', 'SAND-PSAND-CFT', 'P-Sand Fine Plaster 0-2.36mm', 36.00, 46.00, '200', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0030002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0030002-0000-0000-0000-000000000001', 'SAND-MSAND-CFT', 'M-Sand for Concrete 0-4.75mm', 'एम-सैंड कंक्रीट ढलाई हेतु', 32.00, 42.00, '200', TRUE, NOW()),
+  ('b0030003-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0030003-0000-0000-0000-000000000001', 'SAND-PSAND-CFT', 'P-Sand Fine Plaster 0-2.36mm', 'पी-सैंड महीन प्लास्टर बालू', 36.00, 46.00, '200', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ==================== CATEGORY D: AGGREGATES & GITTI (HSN: 2517, GST: 5%) ====================
 -- Product 8: Crushed Stone Aggregates / Gitti
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0040001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0040000-0000-0000-0000-000000000001', 'goods', 'Crushed Stone Aggregate (Black Stone / Gitti)',
+  'c0040000-0000-0000-0000-000000000001', 'goods', 'Crushed Stone Aggregate (Black Stone / Gitti)', 'क्रश्ड स्टोन गिट्टी (नीली/काली बेसाल्ट)',
   'Hard blue/black basalt crushed stone aggregate for RCC slab, column and road construction', 'Blue Metal Basalt',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '2517', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0040001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-10MM-CFT', 'Crushed Stone Aggregate 10mm Gitti', 28.00, 36.00, '250', TRUE, NOW()),
-  ('b0040001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-20MM-CFT', 'Crushed Stone Aggregate 20mm Gitti', 26.00, 34.00, '300', TRUE, NOW()),
-  ('b0040001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-40MM-CFT', 'Crushed Stone Aggregate 40mm Gitti', 24.00, 31.00, '200', TRUE, NOW()),
-  ('b0040001-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'STONE-DUST-CFT', 'Stone Dust / Quarry Dust', 18.00, 24.00, '150', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0040001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-10MM-CFT', 'Crushed Stone Aggregate 10mm Gitti', 'क्रश्ड स्टोन 10एमएम गिट्टी (जीरा गिट्टी)', 28.00, 36.00, '250', TRUE, NOW()),
+  ('b0040001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-20MM-CFT', 'Crushed Stone Aggregate 20mm Gitti', 'क्रश्ड स्टोन 20एमएम गिट्टी (छत ढलाई गिट्टी)', 26.00, 34.00, '300', TRUE, NOW()),
+  ('b0040001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'GITTI-40MM-CFT', 'Crushed Stone Aggregate 40mm Gitti', 'क्रश्ड स्टोन 40एमएम गिट्टी (नींव गिट्टी)', 24.00, 31.00, '200', TRUE, NOW()),
+  ('b0040001-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'a0040001-0000-0000-0000-000000000001', 'STONE-DUST-CFT', 'Stone Dust / Quarry Dust', 'स्टोन डस्ट / पत्थर का चूरा', 18.00, 24.00, '150', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ==================== CATEGORY E: BINDING WIRE (HSN: 7217, GST: 18%) ====================
 -- Product 9: Annealed & GI Binding Wire
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES (
   'a0050001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001',
-  'c0050000-0000-0000-0000-000000000001', 'goods', 'Construction Binding Wire',
+  'c0050000-0000-0000-0000-000000000001', 'goods', 'Construction Binding Wire', 'कंस्ट्रक्शन बाइंडिंग वायर (सरिया बांधने का तार)',
   'Soft annealed black & galvanized wire for tying TMT rebar reinforcement meshes', 'Kamdhenu / Tata Wiron',
   TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000004', '7217', TRUE, NOW()
-) ON CONFLICT ("id") DO NOTHING;
+) ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0050001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-ANNEALED-18G', 'Black Annealed Binding Wire 18 Gauge', 68.00, 82.00, '50', TRUE, NOW()),
-  ('b0050001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-ANNEALED-16G', 'Black Annealed Binding Wire 16 Gauge', 66.00, 80.00, '50', TRUE, NOW()),
-  ('b0050001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-GI-20G', 'Galvanized GI Binding Wire 20 Gauge', 78.00, 95.00, '30', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0050001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-ANNEALED-18G', 'Black Annealed Binding Wire 18 Gauge', 'काला बाइंडिंग तार 18 गेज', 68.00, 82.00, '50', TRUE, NOW()),
+  ('b0050001-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-ANNEALED-16G', 'Black Annealed Binding Wire 16 Gauge', 'काला बाइंडिंग तार 16 गेज (मोटा तार)', 66.00, 80.00, '50', TRUE, NOW()),
+  ('b0050001-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'a0050001-0000-0000-0000-000000000001', 'BW-GI-20G', 'Galvanized GI Binding Wire 20 Gauge', 'गैल्वनाइज्ड जीआई बाइंडिंग तार 20 गेज', 78.00, 95.00, '30', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ==================== CATEGORY F & G: BRICKS & CHEMICALS ====================
 INSERT INTO "products" (
-  "id", "tenant_id", "category_id", "product_type", "name", "description", "brand_name",
+  "id", "tenant_id", "category_id", "product_type", "name", "name_hi", "description", "brand_name",
   "is_stock_tracked", "tracking_method", "valuation_method", "base_unit_id", "default_tax_category_id", "hsn_sac_code", "is_active", "created_at"
 ) VALUES
-  ('a0060001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0060000-0000-0000-0000-000000000001', 'goods', 'Red Clay Kiln Bricks', 'Standard kiln-burnt red clay construction bricks (9x4x3 inches)', 'Local Kiln Grade 1', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', '6901', TRUE, NOW()),
-  ('a0060002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0060000-0000-0000-0000-000000000001', 'goods', 'AAC Lightweight Blocks', 'Autoclaved aerated concrete blocks 600x200x150mm for thermal insulation and high structural speed', 'Siporex / Magicrete', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', '6815', TRUE, NOW()),
-  ('a0070001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0070000-0000-0000-0000-000000000001', 'goods', 'Dr. Fixit Waterproofing Chemical 5L', 'Integral liquid waterproofing compound for concrete and mortar plaster', 'Dr. Fixit', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000004', '3824', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('a0060001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0060000-0000-0000-0000-000000000001', 'goods', 'Red Clay Kiln Bricks', 'लाल पक्की ईंट (भट्ठा ईंट)', 'Standard kiln-burnt red clay construction bricks (9x4x3 inches)', 'Local Kiln Grade 1', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', '6901', TRUE, NOW()),
+  ('a0060002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0060000-0000-0000-0000-000000000001', 'goods', 'AAC Lightweight Blocks', 'एएसी लाइटवेट ब्लॉक्स (हल्की ईंट)', 'Autoclaved aerated concrete blocks 600x200x150mm for thermal insulation and high structural speed', 'Siporex / Magicrete', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', '6815', TRUE, NOW()),
+  ('a0070001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'c0070000-0000-0000-0000-000000000001', 'goods', 'Dr. Fixit Waterproofing Chemical 5L', 'डॉ. फिक्सिट वाटरप्रूफिंग केमिकल 5 लीटर', 'Integral liquid waterproofing compound for concrete and mortar plaster', 'Dr. Fixit', TRUE, 'quantity', 'weighted_average', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000004', '3824', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "name_hi" = EXCLUDED.name_hi;
 
 INSERT INTO "product_variants" (
-  "id", "tenant_id", "product_id", "sku", "variant_name", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
+  "id", "tenant_id", "product_id", "sku", "variant_name", "variant_name_hi", "purchase_price", "selling_price", "reorder_level", "is_active", "created_at"
 ) VALUES
-  ('b0060001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0060001-0000-0000-0000-000000000001', 'BRICK-RED-STD', 'Standard Red Clay Kiln Brick 9x4x3', 7.50, 9.50, '1000', TRUE, NOW()),
-  ('b0060002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0060002-0000-0000-0000-000000000001', 'BLOCK-AAC-600', 'AAC Block 600x200x150mm Grade 1', 55.00, 70.00, '200', TRUE, NOW()),
-  ('b0070001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0070001-0000-0000-0000-000000000001', 'CHEM-DF-5L', 'Dr. Fixit Waterproofing Chemical 5L', 980.00, 1250.00, '10', TRUE, NOW())
-ON CONFLICT ("id") DO NOTHING;
+  ('b0060001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0060001-0000-0000-0000-000000000001', 'BRICK-RED-STD', 'Standard Red Clay Kiln Brick 9x4x3', 'लाल पक्की भट्ठा ईंट (मानक 9x4x3)', 7.50, 9.50, '1000', TRUE, NOW()),
+  ('b0060002-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0060002-0000-0000-0000-000000000001', 'BLOCK-AAC-600', 'AAC Block 600x200x150mm Grade 1', 'एएसी ब्लॉक 600x200x150 ग्रेड 1', 55.00, 70.00, '200', TRUE, NOW()),
+  ('b0070001-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'a0070001-0000-0000-0000-000000000001', 'CHEM-DF-5L', 'Dr. Fixit Waterproofing Chemical 5L', 'डॉ. फिक्सिट वाटरप्रूफिंग केमिकल 5 लीटर', 980.00, 1250.00, '10', TRUE, NOW())
+ON CONFLICT ("id") DO UPDATE SET "variant_name_hi" = EXCLUDED.variant_name_hi;
 
 -- ----------------------------------------------------------------------------
 -- 6. Parties (Suppliers & Customers)

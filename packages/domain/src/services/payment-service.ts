@@ -14,6 +14,9 @@ export interface PostPaymentCommand {
     documentType: 'sales_invoice' | 'purchase_bill';
     documentId: string;
     amount: number;
+    adjustmentAmount?: number;
+    adjustmentType?: string;
+    notes?: string;
   }>;
   timestamp?: string;
 }
@@ -44,22 +47,44 @@ export class PaymentService {
         throw new Error(`Cannot post cancelled payment ${paymentId}`);
       }
 
-      // 1. Record Party Ledger Entry
+      // 1. Record Party Ledger Entry for Payment
       // Inbound (Customer Collection): Credit customer (reduces receivable asset)
       // Outbound (Supplier Settlement): Debit supplier (reduces payable liability)
-      const ledgerEntry: PartyLedgerEntry = {
-        id: `ple-pay-${payment.id}`,
-        tenantId: tenantContext.tenantId,
-        partyId: payment.partyId,
-        entryType: payment.direction === 'inbound' ? 'credit' : 'debit',
-        amount: payment.amount,
-        referenceDocumentType: 'payment',
-        referenceDocumentId: payment.id,
-        createdAt: now,
-      };
-      await ctx.partyLedger.recordEntry(ledgerEntry);
+      if (payment.amount > 0) {
+        const ledgerEntry: PartyLedgerEntry = {
+          id: `ple-pay-${payment.id}`,
+          tenantId: tenantContext.tenantId,
+          partyId: payment.partyId,
+          entryType: payment.direction === 'inbound' ? 'credit' : 'debit',
+          amount: payment.amount,
+          referenceDocumentType: 'payment',
+          referenceDocumentId: payment.id,
+          createdAt: now,
+        };
+        await ctx.partyLedger.recordEntry(ledgerEntry);
+      }
 
-      // 2. Process Allocations if provided (supports partial, advance, and multi-document)
+      // 2. Record Party Ledger Entry for Adjustment / Discount (if any)
+      const totalAdj =
+        (allocations || []).reduce((sum, a) => sum + (a.adjustmentAmount || 0), 0) ||
+        (payment.adjustmentAmount || 0);
+
+      if (totalAdj > 0) {
+        const adjLedgerEntry: PartyLedgerEntry = {
+          id: `ple-adj-${payment.id}`,
+          tenantId: tenantContext.tenantId,
+          partyId: payment.partyId,
+          entryType: payment.direction === 'inbound' ? 'credit' : 'debit',
+          amount: totalAdj,
+          referenceDocumentType: 'payment_adjustment',
+          referenceDocumentId: payment.id,
+          createdAt: now,
+        };
+        await ctx.partyLedger.recordEntry(adjLedgerEntry);
+        payment.adjustmentAmount = totalAdj;
+      }
+
+      // 3. Process Allocations if provided (supports partial, full settlement, and adjustments)
       if (allocations && allocations.length > 0) {
         let totalAllocated = 0;
         for (const alloc of allocations) {
@@ -71,6 +96,9 @@ export class PaymentService {
             documentType: alloc.documentType,
             documentId: alloc.documentId,
             allocatedAmount: alloc.amount,
+            adjustmentAmount: alloc.adjustmentAmount || 0,
+            adjustmentType: alloc.adjustmentType || payment.adjustmentType || undefined,
+            notes: alloc.notes || payment.notes || undefined,
             createdAt: now,
           };
           await ctx.payments.recordAllocation(allocationEntity);
@@ -84,7 +112,7 @@ export class PaymentService {
         }
       }
 
-      // 3. Mark payment posted
+      // 4. Mark payment posted
       payment.status = 'posted';
       payment.postedAt = now;
       await ctx.payments.savePayment(payment);

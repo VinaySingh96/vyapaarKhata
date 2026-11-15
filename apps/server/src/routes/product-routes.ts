@@ -127,6 +127,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       name: body.name || 'New Product',
+      nameHi: body.nameHi || (body as any).name_hi || undefined,
       description: body.description,
       categoryId: body.categoryId,
       productType: body.productType || 'goods',

@@ -29,6 +29,8 @@ export interface SalesInvoiceLine {
   unitSymbol?: string;
 }
 
+export type InvoicePaymentStatus = 'paid' | 'partial' | 'unpaid' | 'cancelled';
+
 export interface SalesInvoice {
   id: EntityId;
   tenantId: EntityId;
@@ -42,10 +44,24 @@ export interface SalesInvoice {
   subtotal: number;
   taxTotal: number;
   grandTotal: number;
+  amountPaid?: number;
+  adjustmentAmount?: number;
+  balanceDue?: number;
+  paymentStatus?: InvoicePaymentStatus;
+  paymentMode?: string;
   postedAt?: string;
   cancelledAt?: string;
   idempotencyKey?: string;
   lines: SalesInvoiceLine[];
+  payments?: Array<{
+    paymentId: string;
+    paymentNumber: string;
+    amount: number;
+    adjustmentAmount?: number;
+    adjustmentType?: string;
+    paymentMode?: string;
+    postedAt?: string;
+  }>;
 }
 
 export type MovementType =
@@ -83,6 +99,7 @@ export interface StockBalance {
   quantityAvailable?: number;
   reorderLevel?: number;
   itemName?: string;
+  itemNameHi?: string;
   sku?: string;
   unit?: string;
   locationName?: string;
@@ -206,6 +223,9 @@ export interface PaymentAllocation {
   documentType: 'sales_invoice' | 'purchase_bill';
   documentId: EntityId;
   allocatedAmount: number;
+  adjustmentAmount?: number;
+  adjustmentType?: string;
+  notes?: string;
   createdAt: string;
 }
 
@@ -213,13 +233,18 @@ export interface Payment {
   id: EntityId;
   tenantId: EntityId;
   partyId: EntityId;
+  partyName?: string;
   financialAccountId?: EntityId;
   paymentMethodId?: EntityId;
   paymentNumber: string;
   direction: PaymentDirection;
   status: PaymentStatus;
   amount: number;
+  adjustmentAmount?: number;
+  adjustmentType?: string;
+  paymentMode?: string;
   referenceNumber?: string;
+  notes?: string;
   allocations: PaymentAllocation[];
   postedAt?: string;
   createdAt: string;
@@ -234,6 +259,7 @@ export interface ProductVariant {
   sku: string;
   barcode?: string;
   variantName: string;
+  variantNameHi?: string;
   attributeCombination?: Record<string, string>;
   purchasePrice?: number;
   sellingPrice?: number;
@@ -248,6 +274,7 @@ export interface Product {
   id: EntityId;
   tenantId: EntityId;
   name: string;
+  nameHi?: string;
   slug?: string;
   description?: string;
   categoryId?: EntityId;

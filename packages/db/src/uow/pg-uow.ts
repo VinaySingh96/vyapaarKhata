@@ -66,11 +66,15 @@ export class PgUnitOfWork implements UnitOfWork {
             `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
                     p.phone as customer_phone, pa.address_line_1 as customer_address,
                     si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
-                    si.posted_at, si.created_at
+                    si.posted_at, si.created_at,
+                    COALESCE(SUM(alloc.allocated_amount), 0) as amount_paid,
+                    COALESCE(SUM(alloc.adjustment_amount), 0) as adjustment_amount
              FROM sales_invoices si
              LEFT JOIN parties p ON p.id = si.party_id
              LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
-             WHERE si.tenant_id = $1 AND si.id = $2`,
+             LEFT JOIN payment_allocations alloc ON alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'
+             WHERE si.tenant_id = $1 AND si.id = $2
+             GROUP BY si.id, p.display_name, p.phone, pa.address_line_1`,
             [tenantId, id]
           );
 
@@ -111,6 +115,33 @@ export class PgUnitOfWork implements UnitOfWork {
             unitSymbol: l.unit_symbol || 'pcs',
           }));
 
+          // Fetch payment allocations for this invoice
+          const payRes = await client.query(
+            `SELECT p.id as payment_id, p.payment_number, p.amount, p.direction, p.payment_mode,
+                    p.reference_number, p.posted_at,
+                    alloc.allocated_amount, alloc.adjustment_amount, alloc.adjustment_type, alloc.notes
+             FROM payment_allocations alloc
+             JOIN payments p ON p.id = alloc.payment_id
+             WHERE alloc.document_id = $1 AND alloc.document_type = 'sales_invoice'
+             ORDER BY p.posted_at DESC, alloc.created_at DESC`,
+            [id]
+          );
+
+          const grandTotal = parseFloat(r.total_amount || '0');
+          const amountPaid = parseFloat(r.amount_paid || '0');
+          const adjustmentAmount = parseFloat(r.adjustment_amount || '0');
+          const balanceDue = Math.max(0, grandTotal - (amountPaid + adjustmentAmount));
+          let paymentStatus: any = 'unpaid';
+          if (r.status === 'cancelled') {
+            paymentStatus = 'cancelled';
+          } else if (balanceDue <= 0.001) {
+            paymentStatus = 'paid';
+          } else if (amountPaid + adjustmentAmount > 0) {
+            paymentStatus = 'partial';
+          } else {
+            paymentStatus = 'unpaid';
+          }
+
           return {
             id: r.id,
             tenantId: r.tenant_id,
@@ -123,9 +154,22 @@ export class PgUnitOfWork implements UnitOfWork {
             status: r.status as InvoiceStatus,
             subtotal: parseFloat(r.subtotal || '0'),
             taxTotal: parseFloat(r.tax_amount || '0'),
-            grandTotal: parseFloat(r.total_amount || '0'),
+            grandTotal,
+            amountPaid,
+            adjustmentAmount,
+            balanceDue,
+            paymentStatus,
             postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
             lines,
+            payments: payRes.rows.map((pr: any) => ({
+              paymentId: pr.payment_id,
+              paymentNumber: pr.payment_number,
+              amount: parseFloat(pr.allocated_amount || pr.amount || '0'),
+              adjustmentAmount: parseFloat(pr.adjustment_amount || '0'),
+              adjustmentType: pr.adjustment_type || undefined,
+              paymentMode: pr.payment_mode || undefined,
+              postedAt: pr.posted_at ? new Date(pr.posted_at).toISOString() : undefined,
+            })),
           };
         },
 
@@ -134,32 +178,57 @@ export class PgUnitOfWork implements UnitOfWork {
             `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
                     p.phone as customer_phone, pa.address_line_1 as customer_address,
                     si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
-                    si.posted_at, si.created_at
+                    si.posted_at, si.created_at,
+                    COALESCE(SUM(alloc.allocated_amount), 0) as amount_paid,
+                    COALESCE(SUM(alloc.adjustment_amount), 0) as adjustment_amount
              FROM sales_invoices si
              LEFT JOIN parties p ON p.id = si.party_id
              LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
+             LEFT JOIN payment_allocations alloc ON alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'
              WHERE si.tenant_id = $1
+             GROUP BY si.id, p.display_name, p.phone, pa.address_line_1
              ORDER BY si.created_at DESC
              LIMIT $2`,
             [tenantId, limit]
           );
 
-          return res.rows.map((r) => ({
-            id: r.id,
-            tenantId: r.tenant_id,
-            businessLocationId: r.business_location_id,
-            invoiceNumber: r.invoice_number,
-            customerId: r.party_id,
-            customerName: r.customer_name || 'Counter Customer',
-            customerAddress: r.customer_address || undefined,
-            customerPhone: r.customer_phone || undefined,
-            status: r.status as InvoiceStatus,
-            subtotal: parseFloat(r.subtotal || '0'),
-            taxTotal: parseFloat(r.tax_amount || '0'),
-            grandTotal: parseFloat(r.total_amount || '0'),
-            postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
-            lines: [],
-          }));
+          return res.rows.map((r) => {
+            const grandTotal = parseFloat(r.total_amount || '0');
+            const amountPaid = parseFloat(r.amount_paid || '0');
+            const adjustmentAmount = parseFloat(r.adjustment_amount || '0');
+            const balanceDue = Math.max(0, grandTotal - (amountPaid + adjustmentAmount));
+            let paymentStatus: any = 'unpaid';
+            if (r.status === 'cancelled') {
+              paymentStatus = 'cancelled';
+            } else if (balanceDue <= 0.001) {
+              paymentStatus = 'paid';
+            } else if (amountPaid + adjustmentAmount > 0) {
+              paymentStatus = 'partial';
+            } else {
+              paymentStatus = 'unpaid';
+            }
+
+            return {
+              id: r.id,
+              tenantId: r.tenant_id,
+              businessLocationId: r.business_location_id,
+              invoiceNumber: r.invoice_number,
+              customerId: r.party_id,
+              customerName: r.customer_name || 'Counter Customer',
+              customerAddress: r.customer_address || undefined,
+              customerPhone: r.customer_phone || undefined,
+              status: r.status as InvoiceStatus,
+              subtotal: parseFloat(r.subtotal || '0'),
+              taxTotal: parseFloat(r.tax_amount || '0'),
+              grandTotal,
+              amountPaid,
+              adjustmentAmount,
+              balanceDue,
+              paymentStatus,
+              postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
+              lines: [],
+            };
+          });
         },
 
         save: async (invoice: SalesInvoice): Promise<void> => {
@@ -248,7 +317,7 @@ export class PgUnitOfWork implements UnitOfWork {
       const productRepo: ProductRepository = {
         list: async (tenantId: EntityId, categoryId?: EntityId): Promise<Product[]> => {
           const res = await client.query(
-            `SELECT p.id, p.tenant_id, p.category_id, c.name as category_name, p.product_type, p.name, p.description,
+            `SELECT p.id, p.tenant_id, p.category_id, c.name as category_name, p.product_type, p.name, p.name_hi, p.description,
                     p.brand_name, p.hsn_sac_code, p.base_unit_id, u.name as unit_name, u.symbol as unit_symbol,
                     p.is_stock_tracked, p.tracking_method, p.valuation_method, p.is_active, p.created_at,
                     COALESCE(SUM(sb.quantity_on_hand::numeric), 0) as total_stock,
@@ -264,14 +333,14 @@ export class PgUnitOfWork implements UnitOfWork {
              LEFT JOIN product_variants pv ON pv.product_id = p.id
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
              WHERE p.tenant_id = $1 AND ($2::uuid IS NULL OR p.category_id = $2)
-             GROUP BY p.id, c.name, u.name, u.symbol
+             GROUP BY p.id, p.name_hi, c.name, u.name, u.symbol
              ORDER BY p.name ASC`,
             [tenantId, categoryId || null]
           );
 
           // Fetch all variants with their individual stock_on_hand
           const variantsRes = await client.query(
-            `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name,
+            `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.variant_name_hi,
                     pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
                     COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
              FROM product_variants pv
@@ -291,6 +360,7 @@ export class PgUnitOfWork implements UnitOfWork {
               sku: vr.sku,
               barcode: vr.barcode || undefined,
               variantName: vr.variant_name,
+              variantNameHi: vr.variant_name_hi || undefined,
               purchasePrice: parseFloat(vr.purchase_price || '0'),
               sellingPrice: parseFloat(vr.selling_price || '0'),
               mrp: vr.mrp ? parseFloat(vr.mrp) : undefined,
@@ -311,6 +381,7 @@ export class PgUnitOfWork implements UnitOfWork {
               id: r.id,
               tenantId: r.tenant_id,
               name: r.name,
+              nameHi: r.name_hi || undefined,
               description: r.description || undefined,
               categoryId: r.category_id || undefined,
               categoryName: r.category_name || undefined,
@@ -339,7 +410,7 @@ export class PgUnitOfWork implements UnitOfWork {
 
         findById: async (tenantId: EntityId, id: EntityId): Promise<Product | null> => {
           const res = await client.query(
-            `SELECT p.id, p.tenant_id, p.category_id, c.name as category_name, p.product_type, p.name, p.description,
+            `SELECT p.id, p.tenant_id, p.category_id, c.name as category_name, p.product_type, p.name, p.name_hi, p.description,
                     p.brand_name, p.hsn_sac_code, p.base_unit_id, u.name as unit_name, u.symbol as unit_symbol,
                     p.is_stock_tracked, p.tracking_method, p.valuation_method, p.is_active, p.created_at
              FROM products p
@@ -352,7 +423,7 @@ export class PgUnitOfWork implements UnitOfWork {
           const r = res.rows[0];
 
           const variantsRes = await client.query(
-            `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
+            `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.variant_name_hi, pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
                     COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
@@ -367,6 +438,7 @@ export class PgUnitOfWork implements UnitOfWork {
             sku: v.sku || '',
             barcode: v.barcode || undefined,
             variantName: v.variant_name || 'Standard',
+            variantNameHi: v.variant_name_hi || undefined,
             purchasePrice: parseFloat(v.purchase_price || '0'),
             sellingPrice: parseFloat(v.selling_price || '0'),
             mrp: v.mrp ? parseFloat(v.mrp) : undefined,
@@ -380,6 +452,7 @@ export class PgUnitOfWork implements UnitOfWork {
             id: r.id,
             tenantId: r.tenant_id,
             name: r.name,
+            nameHi: r.name_hi || undefined,
             description: r.description || undefined,
             categoryId: r.category_id || undefined,
             categoryName: r.category_name || undefined,
@@ -405,11 +478,12 @@ export class PgUnitOfWork implements UnitOfWork {
           const productId = ensureUuid(product.id);
           await client.query(
             `INSERT INTO products (
-               id, tenant_id, category_id, product_type, name, description, is_stock_tracked, tracking_method, valuation_method, base_unit_id, hsn_sac_code, is_active, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+               id, tenant_id, category_id, product_type, name, name_hi, description, is_stock_tracked, tracking_method, valuation_method, base_unit_id, hsn_sac_code, is_active, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
              ON CONFLICT (id) DO UPDATE SET
                category_id = EXCLUDED.category_id,
                name = EXCLUDED.name,
+               name_hi = EXCLUDED.name_hi,
                description = EXCLUDED.description,
                base_unit_id = EXCLUDED.base_unit_id,
                hsn_sac_code = EXCLUDED.hsn_sac_code,
@@ -421,6 +495,7 @@ export class PgUnitOfWork implements UnitOfWork {
               product.categoryId ? ensureUuid(product.categoryId) : null,
               product.productType || 'goods',
               product.name,
+              product.nameHi || null,
               product.description || null,
               product.isStockTracked !== false,
               product.trackingMethod || 'none',
@@ -435,11 +510,13 @@ export class PgUnitOfWork implements UnitOfWork {
           const variantId = product.variants?.[0]?.id ? ensureUuid(product.variants[0].id) : randomUUID();
           await client.query(
             `INSERT INTO product_variants (
-               id, tenant_id, product_id, sku, barcode, variant_name, purchase_price, selling_price, mrp, reorder_level, is_active, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+               id, tenant_id, product_id, sku, barcode, variant_name, variant_name_hi, purchase_price, selling_price, mrp, reorder_level, is_active, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
              ON CONFLICT (id) DO UPDATE SET
                sku = EXCLUDED.sku,
                barcode = EXCLUDED.barcode,
+               variant_name = EXCLUDED.variant_name,
+               variant_name_hi = EXCLUDED.variant_name_hi,
                purchase_price = EXCLUDED.purchase_price,
                selling_price = EXCLUDED.selling_price,
                mrp = EXCLUDED.mrp,
@@ -452,6 +529,7 @@ export class PgUnitOfWork implements UnitOfWork {
               product.sku || product.variants?.[0]?.sku || `SKU-${product.name.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
               product.barcode || product.variants?.[0]?.barcode || null,
               product.variants?.[0]?.variantName || 'Standard',
+              product.variants?.[0]?.variantNameHi || product.nameHi || null,
               product.purchasePrice || 0,
               product.sellingPrice || 0,
               product.mrp ? String(product.mrp) : null,
@@ -617,7 +695,7 @@ export class PgUnitOfWork implements UnitOfWork {
                     COALESCE(sb.quantity_available::numeric, 0) as quantity_available,
                     COALESCE(sb.updated_at, pv.created_at) as updated_at,
                     COALESCE(pv.reorder_level::numeric, 0) as reorder_level,
-                    pv.variant_name, pv.sku, p.name as product_name,
+                    pv.variant_name, pv.variant_name_hi, pv.sku, p.name as product_name, p.name_hi as product_name_hi,
                     u.symbol as unit_symbol,
                     COALESCE(il.name, (SELECT name FROM inventory_locations WHERE tenant_id = $1 AND is_default = true LIMIT 1), 'Main Godown') as location_name
              FROM product_variants pv
@@ -650,6 +728,7 @@ export class PgUnitOfWork implements UnitOfWork {
               quantityAvailable: available,
               reorderLevel: reorder,
               itemName: r.variant_name || r.product_name,
+              itemNameHi: r.variant_name_hi || r.product_name_hi || undefined,
               sku: r.sku,
               unit: r.unit_symbol,
               locationName: r.location_name,
@@ -1536,20 +1615,28 @@ export class PgUnitOfWork implements UnitOfWork {
       const paymentRepo: PaymentRepository = {
         list: async (tenantId: EntityId): Promise<Payment[]> => {
           const res = await client.query(
-            `SELECT id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, direction, status, amount, reference_number, posted_at, created_at
-             FROM payments WHERE tenant_id = $1 ORDER BY created_at DESC`,
+            `SELECT p.id, p.tenant_id, p.party_id, p.financial_account_id, p.payment_method_id, p.payment_number, p.direction, p.status, p.amount, p.reference_number, p.adjustment_amount, p.adjustment_type, p.payment_mode, p.notes, p.posted_at, p.created_at,
+                    COALESCE(prt.display_name, prt.legal_name, 'Unknown Party') as party_name
+             FROM payments p
+             LEFT JOIN parties prt ON prt.id = p.party_id
+             WHERE p.tenant_id = $1 ORDER BY p.created_at DESC`,
             [tenantId]
           );
           return res.rows.map((r) => ({
             id: r.id,
             tenantId: r.tenant_id,
             partyId: r.party_id,
+            partyName: r.party_name,
             financialAccountId: r.financial_account_id || undefined,
             paymentMethodId: r.payment_method_id || undefined,
             paymentNumber: r.payment_number,
             direction: r.direction,
             status: r.status,
             amount: parseFloat(r.amount),
+            adjustmentAmount: r.adjustment_amount ? parseFloat(r.adjustment_amount) : 0,
+            adjustmentType: r.adjustment_type || undefined,
+            paymentMode: r.payment_mode || undefined,
+            notes: r.notes || undefined,
             referenceNumber: r.reference_number || undefined,
             postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
             createdAt: new Date(r.created_at).toISOString(),
@@ -1559,14 +1646,17 @@ export class PgUnitOfWork implements UnitOfWork {
 
         findPaymentById: async (tenantId: EntityId, id: EntityId) => {
           const res = await client.query(
-            `SELECT id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, direction, status, amount, reference_number, posted_at, created_at
-             FROM payments WHERE tenant_id = $1 AND id = $2`,
+            `SELECT p.id, p.tenant_id, p.party_id, p.financial_account_id, p.payment_method_id, p.payment_number, p.direction, p.status, p.amount, p.reference_number, p.adjustment_amount, p.adjustment_type, p.payment_mode, p.notes, p.posted_at, p.created_at,
+                    COALESCE(prt.display_name, prt.legal_name, 'Unknown Party') as party_name
+             FROM payments p
+             LEFT JOIN parties prt ON prt.id = p.party_id
+             WHERE p.tenant_id = $1 AND p.id = $2`,
             [tenantId, id]
           );
           if (res.rows.length === 0) return null;
           const r = res.rows[0];
           const allocRes = await client.query(
-            `SELECT id, payment_id, document_type, document_id, allocated_amount, created_at
+            `SELECT id, payment_id, document_type, document_id, allocated_amount, adjustment_amount, adjustment_type, notes, created_at
              FROM payment_allocations WHERE payment_id = $1`,
             [id]
           );
@@ -1574,12 +1664,17 @@ export class PgUnitOfWork implements UnitOfWork {
             id: r.id,
             tenantId: r.tenant_id,
             partyId: r.party_id,
+            partyName: r.party_name,
             financialAccountId: r.financial_account_id || undefined,
             paymentMethodId: r.payment_method_id || undefined,
             paymentNumber: r.payment_number,
             direction: r.direction,
             status: r.status,
             amount: parseFloat(r.amount),
+            adjustmentAmount: r.adjustment_amount ? parseFloat(r.adjustment_amount) : 0,
+            adjustmentType: r.adjustment_type || undefined,
+            paymentMode: r.payment_mode || undefined,
+            notes: r.notes || undefined,
             referenceNumber: r.reference_number || undefined,
             postedAt: r.posted_at ? new Date(r.posted_at).toISOString() : undefined,
             createdAt: new Date(r.created_at).toISOString(),
@@ -1590,6 +1685,9 @@ export class PgUnitOfWork implements UnitOfWork {
               documentType: a.document_type,
               documentId: a.document_id,
               allocatedAmount: parseFloat(a.allocated_amount),
+              adjustmentAmount: a.adjustment_amount ? parseFloat(a.adjustment_amount) : 0,
+              adjustmentType: a.adjustment_type || undefined,
+              notes: a.notes || undefined,
               createdAt: new Date(a.created_at).toISOString(),
             })),
           };
@@ -1607,10 +1705,15 @@ export class PgUnitOfWork implements UnitOfWork {
 
           await client.query(
             `INSERT INTO payments (
-               id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, payment_date, direction, status, amount, reference_number, posted_at, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, $7, $8, $9, $10, $11, NOW())
+               id, tenant_id, party_id, financial_account_id, payment_method_id, payment_number, payment_date, direction, status, amount, reference_number, adjustment_amount, adjustment_type, payment_mode, notes, posted_at, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
              ON CONFLICT (id) DO UPDATE SET
                status = EXCLUDED.status,
+               amount = EXCLUDED.amount,
+               adjustment_amount = EXCLUDED.adjustment_amount,
+               adjustment_type = EXCLUDED.adjustment_type,
+               payment_mode = EXCLUDED.payment_mode,
+               notes = EXCLUDED.notes,
                posted_at = EXCLUDED.posted_at`,
             [
               ensureUuid(payment.id),
@@ -1623,6 +1726,10 @@ export class PgUnitOfWork implements UnitOfWork {
               payment.status,
               payment.amount,
               payment.referenceNumber || null,
+              payment.adjustmentAmount || 0,
+              payment.adjustmentType || null,
+              payment.paymentMode || null,
+              payment.notes || null,
               payment.postedAt ? new Date(payment.postedAt) : null,
             ]
           );
@@ -1631,8 +1738,8 @@ export class PgUnitOfWork implements UnitOfWork {
         recordAllocation: async (alloc: any) => {
           await client.query(
             `INSERT INTO payment_allocations (
-               id, tenant_id, payment_id, document_type, document_id, allocated_amount, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+               id, tenant_id, payment_id, document_type, document_id, allocated_amount, adjustment_amount, adjustment_type, notes, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
             [
               ensureUuid(alloc.id),
               alloc.tenantId,
@@ -1640,6 +1747,9 @@ export class PgUnitOfWork implements UnitOfWork {
               alloc.documentType,
               ensureUuid(alloc.documentId),
               alloc.allocatedAmount,
+              alloc.adjustmentAmount || 0,
+              alloc.adjustmentType || null,
+              alloc.notes || null,
             ]
           );
         },
@@ -1841,9 +1951,10 @@ export class PgUnitOfWork implements UnitOfWork {
           }
 
           const r = res.rows[0];
-          const fullAddress = [r.address_line_1, r.city, r.state_code, r.postal_code]
-            .filter(Boolean)
-            .join(', ');
+          let fullAddress = r.address_line_1 || '';
+          if (!fullAddress) {
+            fullAddress = [r.city, r.state_code, r.postal_code].filter(Boolean).join(', ');
+          }
 
           return {
             tenantId: r.tenant_id,

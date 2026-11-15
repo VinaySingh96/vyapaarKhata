@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast.js';
 interface ProductItem {
   id: string;
   name: string;
+  nameHi?: string;
   categoryName?: string;
   sku?: string;
   barcode?: string;
@@ -32,6 +33,7 @@ export const ProductsScreen: React.FC = () => {
 
   // Form State for Add Product
   const [newProductName, setNewProductName] = useState('');
+  const [newProductNameHi, setNewProductNameHi] = useState('');
   const [newCategory, setNewCategory] = useState('General Goods');
   const [newSku, setNewSku] = useState('');
   const [newBarcode, setNewBarcode] = useState('');
@@ -54,6 +56,7 @@ export const ProductsScreen: React.FC = () => {
           const mapped: ProductItem[] = json.data.map((p: any) => ({
             id: p.id,
             name: p.name,
+            nameHi: p.nameHi || p.name_hi,
             categoryName: p.categoryName || 'General Goods',
             sku: p.sku || 'SKU',
             barcode: p.barcode,
@@ -85,10 +88,12 @@ export const ProductsScreen: React.FC = () => {
 
   const filteredProducts = products.filter((p) => {
     const matchesCategory = selectedCategory === 'all' || p.categoryName === selectedCategory;
+    const q = searchTerm.toLowerCase();
     const matchesSearch =
-      (p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (p.barcode?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+      (p.name?.toLowerCase().includes(q) || false) ||
+      (p.nameHi?.toLowerCase().includes(q) || false) ||
+      (p.sku?.toLowerCase().includes(q) || false) ||
+      (p.barcode?.toLowerCase().includes(q) || false);
     return matchesCategory && matchesSearch;
   });
 
@@ -119,6 +124,7 @@ export const ProductsScreen: React.FC = () => {
         body: JSON.stringify({
           id: prodId,
           name: newProductName.trim(),
+          nameHi: newProductNameHi.trim() || undefined,
           sku: generatedSku,
           barcode: newBarcode.trim() || undefined,
           purchasePrice: parseFloat(newPurchasePrice) || 0,
@@ -140,6 +146,7 @@ export const ProductsScreen: React.FC = () => {
       toast.success(t('products.createdSuccess'));
       setShowAddModal(false);
       setNewProductName('');
+      setNewProductNameHi('');
       setNewSku('');
       setNewBarcode('');
       loadProducts();
@@ -332,7 +339,12 @@ export const ProductsScreen: React.FC = () => {
                 return (
                   <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6', fontSize: '13.5px' }}>
                     <td style={{ padding: '12px 16px', fontWeight: 600, color: '#111827' }}>
-                      {p.name}
+                      <div>{p.name}</div>
+                      {p.nameHi && (
+                        <div style={{ fontSize: '12px', fontWeight: 500, color: '#4f46e5', marginTop: '2px' }}>
+                          {p.nameHi}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '12px 16px', color: '#4b5563' }}>{p.categoryName || '—'}</td>
                     <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#374151' }}>
@@ -423,9 +435,22 @@ export const ProductsScreen: React.FC = () => {
             <input
               type="text"
               required
-              placeholder="e.g. Birla White WallCare Putty 40kg"
+              placeholder="e.g. UltraTech Super Cement 50kg"
               value={newProductName}
               onChange={(e) => setNewProductName(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Product Name in Hindi (हिंदी में नाम / क्षेत्रीय नाम)
+            </label>
+            <input
+              type="text"
+              placeholder="उदा. अल्ट्राटेक सुपर सीमेंट 50 किग्रा"
+              value={newProductNameHi}
+              onChange={(e) => setNewProductNameHi(e.target.value)}
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
             />
           </div>

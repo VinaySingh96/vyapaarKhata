@@ -1,5 +1,12 @@
 import { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { InvoicePostingService, TenantContext, UnitOfWork, SalesInvoice } from '@vyapaarkhata/domain';
+import {
+  InvoicePostingService,
+  PaymentService,
+  TenantContext,
+  UnitOfWork,
+  SalesInvoice,
+  Payment,
+} from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
 
 export interface SalesRoutesOptions {
@@ -8,6 +15,7 @@ export interface SalesRoutesOptions {
 
 export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, opts) => {
   const service = new InvoicePostingService(opts.uow);
+  const paymentService = new PaymentService(opts.uow);
 
   function resolveTenantContext(req: any): TenantContext {
     return {
@@ -100,6 +108,140 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     return reply.status(200).send({
       success: true,
       data: result,
+      requestId: req.id,
+    });
+  });
+
+  // POST /api/v1/sales/invoices/:id/payments (Receive payment against invoice with optional adjustment)
+  app.post<{
+    Params: { id: string };
+    Body: {
+      amount?: number;
+      adjustmentAmount?: number;
+      adjustmentType?: string;
+      paymentMode?: string;
+      referenceNumber?: string;
+      notes?: string;
+    };
+  }>('/invoices/:id/payments', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const invoiceId = req.params.id;
+    const body = req.body || {};
+
+    const amount = Math.max(0, typeof body.amount === 'number' ? body.amount : parseFloat(body.amount as any) || 0);
+    const adjustmentAmount = Math.max(
+      0,
+      typeof body.adjustmentAmount === 'number'
+        ? body.adjustmentAmount
+        : parseFloat(body.adjustmentAmount as any) || 0
+    );
+
+    if (amount <= 0 && adjustmentAmount <= 0) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'INVALID_AMOUNT',
+          message: 'Total settlement (payment amount + adjustment) must be greater than zero.',
+        },
+      });
+    }
+
+    const invoice = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.invoices.findById(tenantContext.tenantId, invoiceId);
+    });
+
+    if (!invoice) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Invoice ${invoiceId} not found` },
+      });
+    }
+
+    if (invoice.status === 'cancelled') {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'INVALID_STATUS', message: 'Cannot record payment for a cancelled invoice' },
+      });
+    }
+
+    const currentBalanceDue =
+      invoice.balanceDue !== undefined
+        ? invoice.balanceDue
+        : Math.max(0, invoice.grandTotal - ((invoice.amountPaid || 0) + (invoice.adjustmentAmount || 0)));
+
+    if (amount + adjustmentAmount > currentBalanceDue + 0.05) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'EXCEEDS_BALANCE',
+          message: `Total settlement (₹${(amount + adjustmentAmount).toFixed(
+            2
+          )}) exceeds current balance due (₹${currentBalanceDue.toFixed(2)})`,
+        },
+      });
+    }
+
+    const paymentId = randomUUID();
+    const payment: Payment = {
+      id: paymentId,
+      tenantId: tenantContext.tenantId,
+      partyId: invoice.customerId,
+      paymentNumber: `PAY-${Date.now().toString().slice(-6)}`,
+      direction: 'inbound',
+      status: 'draft',
+      amount,
+      adjustmentAmount,
+      adjustmentType: body.adjustmentType || (adjustmentAmount > 0 ? 'round_off' : undefined),
+      paymentMode: body.paymentMode || 'cash',
+      referenceNumber: body.referenceNumber,
+      notes: body.notes,
+      allocations: [
+        {
+          id: randomUUID(),
+          tenantId: tenantContext.tenantId,
+          paymentId,
+          documentType: 'sales_invoice',
+          documentId: invoice.id,
+          allocatedAmount: amount,
+          adjustmentAmount,
+          adjustmentType: body.adjustmentType || (adjustmentAmount > 0 ? 'round_off' : undefined),
+          notes: body.notes,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      createdAt: new Date().toISOString(),
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.payments.savePayment(payment);
+    });
+
+    const postedPayment = await paymentService.postPayment({
+      tenantContext,
+      paymentId,
+      allocations: [
+        {
+          documentType: 'sales_invoice',
+          documentId: invoice.id,
+          amount,
+          adjustmentAmount,
+          adjustmentType: body.adjustmentType || (adjustmentAmount > 0 ? 'round_off' : undefined),
+          notes: body.notes,
+        },
+      ],
+    });
+
+    const updatedInvoice = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.invoices.findById(tenantContext.tenantId, invoiceId);
+    });
+
+    return reply.status(200).send({
+      success: true,
+      data: {
+        payment: postedPayment,
+        invoice: updatedInvoice,
+      },
+      message: 'Payment and adjustment recorded successfully',
       requestId: req.id,
     });
   });

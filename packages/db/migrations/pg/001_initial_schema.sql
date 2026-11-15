@@ -299,6 +299,7 @@ CREATE TABLE IF NOT EXISTS "products" (
   "category_id" UUID,
   "product_type" VARCHAR(255) NOT NULL DEFAULT 'goods',
   "name" VARCHAR(255),
+  "name_hi" VARCHAR(255),
   "description" TEXT,
   "brand_name" VARCHAR(255),
   "manufacturer" VARCHAR(255),
@@ -324,6 +325,7 @@ CREATE TABLE IF NOT EXISTS "product_variants" (
   "sku" VARCHAR(255),
   "barcode" VARCHAR(255),
   "variant_name" VARCHAR(255),
+  "variant_name_hi" VARCHAR(255),
   "purchase_price" NUMERIC(15, 2),
   "selling_price" NUMERIC(15, 2),
   "mrp" VARCHAR(255),
@@ -1002,6 +1004,9 @@ CREATE TABLE IF NOT EXISTS "payments" (
   "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
   "payment_date" DATE NOT NULL,
   "amount" NUMERIC(15, 2),
+  "adjustment_amount" NUMERIC(15, 2) DEFAULT 0,
+  "adjustment_type" VARCHAR(255),
+  "payment_mode" VARCHAR(255),
   "reference_number" VARCHAR(255),
   "notes" TEXT,
   "created_by" UUID,
@@ -1017,6 +1022,9 @@ CREATE TABLE IF NOT EXISTS "payment_allocations" (
   "document_type" VARCHAR(255),
   "document_id" UUID NOT NULL,
   "allocated_amount" NUMERIC(15, 2),
+  "adjustment_amount" NUMERIC(15, 2) DEFAULT 0,
+  "adjustment_type" VARCHAR(255),
+  "notes" TEXT,
   "created_at" TIMESTAMPTZ NOT NULL
 );
 

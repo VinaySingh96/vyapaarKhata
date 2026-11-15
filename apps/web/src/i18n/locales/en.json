@@ -246,5 +246,12 @@
   "sales.cancelledSuccess": "Invoice cancelled and inventory stock restored!",
   "sales.colActions": "Actions",
   "sales.customerNameAddress": "Customer & Village",
-  "sales.confirmCancelBtn": "Yes, Cancel Invoice"
+  "sales.confirmCancelBtn": "Yes, Cancel Invoice",
+  "sales.receivePayment": "Receive Payment",
+  "sales.paymentStatus": "Payment Status",
+  "sales.balanceDue": "Balance Due",
+  "sales.paidAndAdjusted": "Paid & Settled",
+  "sales.adjustmentAmount": "Adjustment / Kasar",
+  "sales.adjustmentType": "Adjustment Type",
+  "sales.receivePaymentModalTitle": "Receive Payment against Invoice"
 }

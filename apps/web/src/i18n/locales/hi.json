@@ -246,5 +246,12 @@
   "sales.cancelledSuccess": "बिल रद्द कर दिया गया और स्टॉक इन्वेंट्री में वापस जुड़ गया!",
   "sales.colActions": "कार्यवाही",
   "sales.customerNameAddress": "ग्राहक एवं गांव",
-  "sales.confirmCancelBtn": "हां, बिल रद्द करें"
+  "sales.confirmCancelBtn": "हां, बिल रद्द करें",
+  "sales.receivePayment": "भुगतान प्राप्त करें",
+  "sales.paymentStatus": "भुगतान स्थिति",
+  "sales.balanceDue": "बाकी रकम",
+  "sales.paidAndAdjusted": "जमा व कसर",
+  "sales.adjustmentAmount": "कसर / छूट",
+  "sales.adjustmentType": "कसर का प्रकार",
+  "sales.receivePaymentModalTitle": "बिल के विरुद्ध भुगतान और कसर दर्ज करें"
 }

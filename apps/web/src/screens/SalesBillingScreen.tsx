@@ -10,6 +10,7 @@ export interface BillingLine {
   productId: string;
   variantId: string;
   name: string;
+  nameHi?: string;
   sku: string;
   unit: string;
   unitId: string;
@@ -25,6 +26,7 @@ interface ProductItem {
   productId: string;
   variantId: string;
   name: string;
+  nameHi?: string;
   sku: string;
   sellingPrice: number;
   totalStock: number;
@@ -53,10 +55,15 @@ interface InvoiceRecord {
   subtotal: number;
   taxTotal: number;
   grandTotal: number;
+  amountPaid?: number;
+  adjustmentAmount?: number;
+  balanceDue?: number;
+  paymentStatus?: 'paid' | 'partial' | 'unpaid' | 'cancelled';
   paymentMode?: string;
   postedAt?: string;
   cancelledAt?: string;
   lines?: any[];
+  payments?: any[];
 }
 
 export const SalesBillingScreen: React.FC = () => {
@@ -110,6 +117,17 @@ export const SalesBillingScreen: React.FC = () => {
   const [cancelReason, setCancelReason] = useState<string>('Customer returned goods');
   const [isCancelling, setIsCancelling] = useState(false);
 
+  // Payment Receipt & Adjustment Modal State
+  const [invoiceForPayment, setInvoiceForPayment] = useState<InvoiceRecord | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [payAmount, setPayAmount] = useState<string>('');
+  const [payAdjustmentAmount, setPayAdjustmentAmount] = useState<string>('0');
+  const [payAdjustmentType, setPayAdjustmentType] = useState<string>('round_off');
+  const [payPaymentMode, setPayPaymentMode] = useState<string>('cash');
+  const [payReference, setPayReference] = useState<string>('');
+  const [payNotes, setPayNotes] = useState<string>('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+
   // Load products, customers and invoices
   const loadData = () => {
     // 1. Fetch products
@@ -128,6 +146,7 @@ export const SalesBillingScreen: React.FC = () => {
                   productId: p.id,
                   variantId: v.id,
                   name: v.variantName || `${p.name} (${v.sku})`,
+                  nameHi: v.variantNameHi || p.nameHi,
                   sku: v.sku || p.sku || 'SKU',
                   sellingPrice: v.sellingPrice !== undefined ? v.sellingPrice : (p.sellingPrice || 0),
                   totalStock: v.stockOnHand !== undefined ? v.stockOnHand : 0,
@@ -143,6 +162,7 @@ export const SalesBillingScreen: React.FC = () => {
                 productId: p.id,
                 variantId: p.defaultVariantId || p.id,
                 name: p.name,
+                nameHi: p.nameHi,
                 sku: p.sku || 'SKU',
                 sellingPrice: p.sellingPrice || 0,
                 totalStock: p.totalStock !== undefined ? p.totalStock : 0,
@@ -166,6 +186,7 @@ export const SalesBillingScreen: React.FC = () => {
                 productId: first.productId,
                 variantId: first.variantId,
                 name: first.name,
+                nameHi: first.nameHi,
                 sku: first.sku,
                 unit: first.baseUnitSymbol,
                 unitId: first.baseUnitId,
@@ -331,6 +352,7 @@ export const SalesBillingScreen: React.FC = () => {
         productId: targetProduct.productId,
         variantId: targetProduct.variantId,
         name: targetProduct.name,
+        nameHi: targetProduct.nameHi,
         sku: targetProduct.sku,
         unit: targetProduct.baseUnitSymbol,
         unitId: targetProduct.baseUnitId,
@@ -362,6 +384,7 @@ export const SalesBillingScreen: React.FC = () => {
               productId: targetProduct.productId,
               variantId: targetProduct.variantId,
               name: targetProduct.name,
+              nameHi: targetProduct.nameHi,
               sku: targetProduct.sku,
               unit: targetProduct.baseUnitSymbol,
               unitId: targetProduct.baseUnitId,
@@ -412,7 +435,7 @@ export const SalesBillingScreen: React.FC = () => {
       return {
         value: p.id,
         label: p.name,
-        sublabel: p.sku,
+        sublabel: p.nameHi ? `${p.nameHi} • ${p.sku}` : p.sku,
         price: p.sellingPrice,
         unit: p.baseUnitSymbol,
         badge: isOutOfStock ? '0 stock' : `${p.totalStock} ${p.baseUnitSymbol}`,
@@ -599,6 +622,7 @@ export const SalesBillingScreen: React.FC = () => {
         lines: lines.map((l, idx) => ({
           sno: idx + 1,
           name: l.name,
+          nameHi: l.nameHi,
           sku: l.sku,
           unit: l.unit,
           quantity: l.quantity,
@@ -693,6 +717,107 @@ export const SalesBillingScreen: React.FC = () => {
       toast.error(err.message || 'Could not cancel invoice');
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  // Open Receive Payment & Adjustment Modal
+  const handleOpenPaymentModal = (inv: InvoiceRecord) => {
+    const balDue =
+      inv.balanceDue !== undefined
+        ? inv.balanceDue
+        : Math.max(0, inv.grandTotal - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
+    setInvoiceForPayment(inv);
+    setPayAmount(balDue > 0 ? balDue.toFixed(2) : '0');
+    setPayAdjustmentAmount('0');
+    setPayAdjustmentType('round_off');
+    setPayPaymentMode('cash');
+    setPayReference('');
+    setPayNotes('');
+    setIsPaymentModalOpen(true);
+  };
+
+  // Helper: auto-calculate Kasar / Round-off difference
+  const handleSetQuickKasar = () => {
+    if (!invoiceForPayment) return;
+    const balDue =
+      invoiceForPayment.balanceDue !== undefined
+        ? invoiceForPayment.balanceDue
+        : Math.max(
+            0,
+            invoiceForPayment.grandTotal -
+              ((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0))
+          );
+    const enteredPay = parseFloat(payAmount) || 0;
+    if (enteredPay < balDue) {
+      const remainingDiff = Math.max(0, balDue - enteredPay);
+      setPayAdjustmentAmount(remainingDiff.toFixed(2));
+    }
+  };
+
+  // Submit Receive Payment & Adjustment
+  const handleConfirmReceivePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!invoiceForPayment) return;
+
+    const amt = parseFloat(payAmount) || 0;
+    const adj = parseFloat(payAdjustmentAmount) || 0;
+
+    if (amt <= 0 && adj <= 0) {
+      toast.warning('Please enter a payment amount or adjustment greater than 0');
+      return;
+    }
+
+    const balDue =
+      invoiceForPayment.balanceDue !== undefined
+        ? invoiceForPayment.balanceDue
+        : Math.max(
+            0,
+            invoiceForPayment.grandTotal -
+              ((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0))
+          );
+
+    if (amt + adj > balDue + 0.05) {
+      toast.warning(
+        `Total settlement (₹${(amt + adj).toFixed(2)}) cannot exceed balance due (₹${balDue.toFixed(2)})`
+      );
+      return;
+    }
+
+    setIsSubmittingPayment(true);
+    try {
+      const res = await fetch(`/api/v1/sales/invoices/${invoiceForPayment.id}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          amount: amt,
+          adjustmentAmount: adj,
+          adjustmentType: adj > 0 ? payAdjustmentType : undefined,
+          paymentMode: payPaymentMode,
+          referenceNumber: payReference.trim() || undefined,
+          notes: payNotes.trim() || undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to record payment');
+      }
+
+      toast.success(
+        `Payment of ₹${amt.toLocaleString()} ${
+          adj > 0 ? `(+ ₹${adj.toLocaleString()} adjustment)` : ''
+        } recorded successfully!`
+      );
+      setIsPaymentModalOpen(false);
+      setInvoiceForPayment(null);
+      loadData();
+    } catch (err: any) {
+      toast.error(err.message || 'Error recording payment');
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
@@ -1486,6 +1611,50 @@ export const SalesBillingScreen: React.FC = () => {
             </button>
           </div>
 
+          {/* History KPI Cards */}
+          {(() => {
+            const validInvs = invoices.filter((i) => i.status !== 'cancelled');
+            const totalInvoiced = validInvs.reduce((acc, i) => acc + (i.grandTotal || 0), 0);
+            const totalPaid = validInvs.reduce((acc, i) => acc + (i.amountPaid || 0), 0);
+            const totalAdjusted = validInvs.reduce((acc, i) => acc + (i.adjustmentAmount || 0), 0);
+            const totalDue = validInvs.reduce((acc, i) => {
+              const due =
+                i.balanceDue !== undefined
+                  ? i.balanceDue
+                  : Math.max(0, (i.grandTotal || 0) - ((i.amountPaid || 0) + (i.adjustmentAmount || 0)));
+              return acc + due;
+            }, 0);
+
+            return (
+              <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
+                <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>Total Invoiced</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', marginTop: '4px' }}>
+                    ₹ {totalInvoiced.toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#f0fdf4', padding: '14px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                  <div style={{ fontSize: '12px', color: '#166534', fontWeight: 500 }}>Cash/Bank Received</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#15803d', marginTop: '4px' }}>
+                    ₹ {totalPaid.toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#eef2ff', padding: '14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
+                  <div style={{ fontSize: '12px', color: '#3730a3', fontWeight: 500 }}>Kasar / Adjustments</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#4338ca', marginTop: '4px' }}>
+                    ₹ {totalAdjusted.toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#fff1f2', padding: '14px', borderRadius: '8px', border: '1px solid #fecdd3' }}>
+                  <div style={{ fontSize: '12px', color: '#9f1239', fontWeight: 500 }}>Net Outstanding Due</div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: '#e11d48', marginTop: '4px' }}>
+                    ₹ {totalDue.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="vk-table-responsive">
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
@@ -1493,96 +1662,205 @@ export const SalesBillingScreen: React.FC = () => {
                   <th style={{ padding: '10px 12px' }}>{t('sales.invoiceNo')}</th>
                   <th style={{ padding: '10px 12px' }}>Date</th>
                   <th style={{ padding: '10px 12px' }}>{t('sales.customerNameAddress')}</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>Amount</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'center' }}>Status</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>Total Bill</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>{t('sales.paidAndAdjusted')}</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right' }}>{t('sales.balanceDue')}</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'center' }}>{t('sales.paymentStatus')}</th>
                   <th style={{ padding: '10px 12px', textAlign: 'center' }}>{t('sales.colActions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {invoices.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+                    <td colSpan={8} style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
                       No sales invoices recorded yet.
                     </td>
                   </tr>
                 ) : (
-                  invoices.map((inv) => (
-                    <tr key={inv.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '12px', fontWeight: 700, color: '#111827' }}>
-                        {inv.invoiceNumber}
-                      </td>
-                      <td style={{ padding: '12px', color: '#4b5563', fontSize: '12px' }}>
-                        {inv.postedAt ? new Date(inv.postedAt).toLocaleString() : 'Just now'}
-                      </td>
-                      <td style={{ padding: '12px' }}>
-                        <div style={{ fontWeight: 600, color: '#111827' }}>{inv.customerName || 'Counter Customer'}</div>
-                        <div style={{ fontSize: '11px', color: '#6b7280' }}>
-                          📍 {inv.customerAddress || 'Local'} {inv.customerPhone ? `• ${inv.customerPhone}` : ''}
-                        </div>
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
-                        ₹ {(inv.grandTotal ?? 0).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <span
+                  invoices.map((inv) => {
+                    const paid = inv.amountPaid || 0;
+                    const adj = inv.adjustmentAmount || 0;
+                    const totalSettled = paid + adj;
+                    const balDue =
+                      inv.balanceDue !== undefined
+                        ? inv.balanceDue
+                        : Math.max(0, (inv.grandTotal || 0) - totalSettled);
+
+                    const payStatus =
+                      inv.status === 'cancelled'
+                        ? 'cancelled'
+                        : inv.paymentStatus ||
+                          (balDue <= 0.001 ? 'paid' : totalSettled > 0 ? 'partial' : 'unpaid');
+
+                    return (
+                      <tr key={inv.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: '#111827' }}>
+                          <div>{inv.invoiceNumber}</div>
+                          {inv.status === 'cancelled' && (
+                            <span style={{ fontSize: '10px', color: '#dc2626', fontWeight: 700 }}>CANCELLED</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px', color: '#4b5563', fontSize: '12px' }}>
+                          {inv.postedAt ? new Date(inv.postedAt).toLocaleString() : 'Just now'}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontWeight: 600, color: '#111827' }}>{inv.customerName || 'Counter Customer'}</div>
+                          <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                            📍 {inv.customerAddress || 'Local'} {inv.customerPhone ? `• ${inv.customerPhone}` : ''}
+                          </div>
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
+                          ₹ {(inv.grandTotal ?? 0).toLocaleString()}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'right' }}>
+                          <div style={{ fontWeight: 700, color: '#059669' }}>₹ {paid.toLocaleString()}</div>
+                          {adj > 0 && (
+                            <div style={{ fontSize: '11px', color: '#4338ca', fontWeight: 600 }}>
+                              + ₹ {adj.toLocaleString()} (Kasar)
+                            </div>
+                          )}
+                        </td>
+                        <td
                           style={{
-                            padding: '3px 8px',
-                            borderRadius: '12px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            backgroundColor: inv.status === 'posted' ? '#ecfdf5' : '#fef2f2',
-                            color: inv.status === 'posted' ? '#065f46' : '#991b1b',
+                            padding: '12px',
+                            textAlign: 'right',
+                            fontWeight: 800,
+                            color: balDue <= 0.001 ? '#059669' : '#dc2626',
                           }}
                         >
-                          {inv.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
-                          <button
-                            type="button"
-                            onClick={() => handleViewInvoiceModal(inv)}
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: '4px',
-                              border: '1px solid #cbd5e1',
-                              backgroundColor: '#ffffff',
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              color: '#2563eb',
-                            }}
-                            title="View and Print Invoice"
-                          >
-                            👁️ View / Print
-                          </button>
-
-                          {inv.status === 'posted' && (
+                          ₹ {balDue.toLocaleString()}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          {payStatus === 'paid' && (
+                            <span
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: '#ecfdf5',
+                                color: '#065f46',
+                                border: '1px solid #a7f3d0',
+                              }}
+                            >
+                              ✓ PAID
+                            </span>
+                          )}
+                          {payStatus === 'partial' && (
+                            <span
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: '#fffbeb',
+                                color: '#b45309',
+                                border: '1px solid #fde68a',
+                              }}
+                            >
+                              ⏳ PARTIAL
+                            </span>
+                          )}
+                          {payStatus === 'unpaid' && (
+                            <span
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: '#fef2f2',
+                                color: '#dc2626',
+                                border: '1px solid #fecaca',
+                              }}
+                            >
+                              ⚠️ UNPAID
+                            </span>
+                          )}
+                          {payStatus === 'cancelled' && (
+                            <span
+                              style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                backgroundColor: '#f3f4f6',
+                                color: '#6b7280',
+                              }}
+                            >
+                              VOID
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
                             <button
                               type="button"
-                              onClick={() => {
-                                setInvoiceToCancel(inv);
-                                setIsCancelModalOpen(true);
-                              }}
+                              onClick={() => handleViewInvoiceModal(inv)}
                               style={{
-                                padding: '4px 10px',
+                                padding: '4px 8px',
                                 borderRadius: '4px',
-                                border: '1px solid #fecaca',
-                                backgroundColor: '#fef2f2',
+                                border: '1px solid #cbd5e1',
+                                backgroundColor: '#ffffff',
                                 fontSize: '12px',
                                 fontWeight: 600,
                                 cursor: 'pointer',
-                                color: '#dc2626',
+                                color: '#2563eb',
                               }}
-                              title="Cancel / Void Invoice"
+                              title="View and Print Invoice"
                             >
-                              🗑️ Cancel
+                              👁️ View
                             </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+
+                            {inv.status === 'posted' && balDue > 0.001 && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenPaymentModal(inv)}
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #a7f3d0',
+                                  backgroundColor: '#ecfdf5',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  color: '#065f46',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                                title="Receive Payment & Adjustment"
+                              >
+                                💳 Pay
+                              </button>
+                            )}
+
+                            {inv.status === 'posted' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setInvoiceToCancel(inv);
+                                  setIsCancelModalOpen(true);
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #fecaca',
+                                  backgroundColor: '#fef2f2',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  color: '#dc2626',
+                                }}
+                                title="Cancel / Void Invoice"
+                              >
+                                🗑️ Void
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -1759,7 +2037,10 @@ export const SalesBillingScreen: React.FC = () => {
                   <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '8px', textAlign: 'center', color: '#64748b' }}>{idx + 1}</td>
                     <td style={{ padding: '8px', fontWeight: 600 }}>
-                      {line.name}
+                      <div>{line.name}</div>
+                      {line.nameHi && (
+                        <div style={{ fontSize: '11px', color: '#4338ca', fontWeight: 500 }}>{line.nameHi}</div>
+                      )}
                       <div style={{ fontSize: '10.5px', color: '#64748b' }}>SKU: {line.sku}</div>
                     </td>
                     <td style={{ padding: '8px', textAlign: 'center' }}>{line.unit}</td>
@@ -1803,6 +2084,34 @@ export const SalesBillingScreen: React.FC = () => {
                   <span>Grand Total:</span>
                   <span style={{ color: '#1e3a8a' }}>₹ {selectedInvoiceForModal.grandTotal?.toFixed(2)}</span>
                 </div>
+
+                {((selectedInvoiceForModal.amountPaid || 0) > 0 || (selectedInvoiceForModal.adjustmentAmount || 0) > 0) && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#059669', fontWeight: 600 }}>
+                      <span>Amount Received:</span>
+                      <span>₹ {(selectedInvoiceForModal.amountPaid || 0).toFixed(2)}</span>
+                    </div>
+                    {(selectedInvoiceForModal.adjustmentAmount || 0) > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4338ca', fontWeight: 600 }}>
+                        <span>Kasar / Adjustment:</span>
+                        <span>₹ {(selectedInvoiceForModal.adjustmentAmount || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontWeight: 700,
+                        color: (selectedInvoiceForModal.balanceDue || 0) <= 0.01 ? '#059669' : '#dc2626',
+                        borderTop: '1px dashed #cbd5e1',
+                        paddingTop: '4px',
+                      }}
+                    >
+                      <span>Balance Due:</span>
+                      <span>₹ {(selectedInvoiceForModal.balanceDue || 0).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1894,6 +2203,264 @@ export const SalesBillingScreen: React.FC = () => {
             }}
           />
         </div>
+      </Modal>
+
+      {/* RECEIVE PAYMENT & ADJUSTMENT MODAL */}
+      <Modal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        title={t('sales.receivePaymentModalTitle')}
+        subtitle={
+          invoiceForPayment
+            ? `Receive settlement for Invoice ${invoiceForPayment.invoiceNumber} • Party: ${invoiceForPayment.customerName || 'Customer'}`
+            : undefined
+        }
+        size="md"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={() => setIsPaymentModalOpen(false)}
+              disabled={isSubmittingPayment}
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-receive-payment"
+              disabled={isSubmittingPayment}
+              style={{
+                backgroundColor: '#059669',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                cursor: isSubmittingPayment ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 1px 2px rgba(5,150,105,0.2)',
+              }}
+            >
+              {isSubmittingPayment ? 'Recording...' : '💳 Record & Post Payment'}
+            </button>
+          </div>
+        }
+      >
+        {invoiceForPayment && (
+          <form id="form-receive-payment" onSubmit={handleConfirmReceivePayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Invoice Summary Box */}
+            <div
+              style={{
+                backgroundColor: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                padding: '14px',
+                fontSize: '13px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px' }}>
+                <span style={{ color: '#64748b' }}>Customer:</span>
+                <span style={{ fontWeight: 700, color: '#0f172a' }}>{invoiceForPayment.customerName || 'Customer'}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', textAlign: 'center' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>Bill Total</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '14px' }}>₹ {(invoiceForPayment.grandTotal || 0).toLocaleString()}</div>
+                </div>
+                <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>Paid & Adjusted</div>
+                  <div style={{ fontWeight: 700, color: '#059669', fontSize: '14px' }}>
+                    ₹ {((invoiceForPayment.amountPaid || 0) + (invoiceForPayment.adjustmentAmount || 0)).toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#ffffff', padding: '8px', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                  <div style={{ fontSize: '11px', color: '#991b1b' }}>Balance Due</div>
+                  <div style={{ fontWeight: 800, color: '#dc2626', fontSize: '14px' }}>
+                    ₹ {(invoiceForPayment.balanceDue !== undefined ? invoiceForPayment.balanceDue : (invoiceForPayment.grandTotal - (invoiceForPayment.amountPaid || 0) - (invoiceForPayment.adjustmentAmount || 0))).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Inputs: Amount Paid and Kasar */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                  Amount Received (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  placeholder="0.00"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: 700, color: '#059669', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151' }}>
+                    Adjustment / Kasar (₹)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSetQuickKasar}
+                    style={{
+                      fontSize: '11px',
+                      color: '#2563eb',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      fontWeight: 600,
+                      textDecoration: 'underline',
+                    }}
+                    title="Calculate remaining round-off automatically"
+                  >
+                    ⚡ Auto Kasar
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={payAdjustmentAmount}
+                  onChange={(e) => setPayAdjustmentAmount(e.target.value)}
+                  placeholder="0.00"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', fontWeight: 700, color: '#4338ca', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* Adjustment Type & Payment Mode */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                  Adjustment Reason / Type
+                </label>
+                <select
+                  value={payAdjustmentType}
+                  onChange={(e) => setPayAdjustmentType(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                >
+                  <option value="round_off">Round-off / Kasar (कसर)</option>
+                  <option value="cash_discount">Cash Discount (नकद छूट)</option>
+                  <option value="damage_allowance">Damaged Goods Allowance (खराबी भत्ता)</option>
+                  <option value="short_settlement">Short Payment Write-off (बट्टा खाता)</option>
+                  <option value="other">Other Concession (अन्य)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                  Payment Mode
+                </label>
+                <select
+                  value={payPaymentMode}
+                  onChange={(e) => setPayPaymentMode(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+                >
+                  <option value="cash">💵 Cash (रोकड़)</option>
+                  <option value="upi">📱 UPI / QR (PhonePe / GPay)</option>
+                  <option value="bank">🏦 Bank Transfer (NEFT / RTGS)</option>
+                  <option value="cheque">📝 Cheque (चेक)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Reference & Notes */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                  Ref / UTR / Cheque No. (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={payReference}
+                  onChange={(e) => setPayReference(e.target.value)}
+                  placeholder="e.g. UTR12345678"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                  Notes / Remarks (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={payNotes}
+                  onChange={(e) => setPayNotes(e.target.value)}
+                  placeholder="e.g. Settled in full with kasar"
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box' }}
+                />
+              </div>
+            </div>
+
+            {/* Settlement Live Calculation Preview */}
+            {(() => {
+              const curBal = invoiceForPayment.balanceDue !== undefined ? invoiceForPayment.balanceDue : (invoiceForPayment.grandTotal - (invoiceForPayment.amountPaid || 0) - (invoiceForPayment.adjustmentAmount || 0));
+              const enteredPay = parseFloat(payAmount) || 0;
+              const enteredAdj = parseFloat(payAdjustmentAmount) || 0;
+              const totalSettling = enteredPay + enteredAdj;
+              const remainingBal = Math.max(0, curBal - totalSettling);
+              const isOver = totalSettling > curBal + 0.05;
+
+              return (
+                <div
+                  style={{
+                    backgroundColor: isOver ? '#fef2f2' : remainingBal <= 0.01 ? '#f0fdf4' : '#fffbeb',
+                    border: `1px solid ${isOver ? '#fca5a5' : remainingBal <= 0.01 ? '#bbf7d0' : '#fde68a'}`,
+                    borderRadius: '8px',
+                    padding: '12px 14px',
+                    fontSize: '12.5px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ color: '#4b5563' }}>Paying Now:</span>
+                    <span style={{ fontWeight: 600, color: '#059669' }}>₹ {enteredPay.toFixed(2)}</span>
+                  </div>
+                  {enteredAdj > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ color: '#4b5563' }}>Adjustment / Kasar:</span>
+                      <span style={{ fontWeight: 600, color: '#4338ca' }}>+ ₹ {enteredAdj.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderTop: '1px dashed #d1d5db', paddingTop: '4px' }}>
+                    <span style={{ fontWeight: 700, color: '#111827' }}>Total Settlement:</span>
+                    <span style={{ fontWeight: 800, color: '#111827' }}>₹ {totalSettling.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', borderTop: '1px solid #e5e7eb', paddingTop: '4px' }}>
+                    <span style={{ fontWeight: 600, color: '#374151' }}>Remaining Balance Due:</span>
+                    <span style={{ fontWeight: 800, color: isOver ? '#dc2626' : remainingBal <= 0.01 ? '#059669' : '#b45309' }}>
+                      ₹ {remainingBal.toFixed(2)} {remainingBal <= 0.01 ? '✓ (Fully Settled)' : ''}
+                    </span>
+                  </div>
+                  {isOver && (
+                    <div style={{ color: '#dc2626', fontWeight: 700, marginTop: '6px', fontSize: '12px' }}>
+                      ⚠️ Total settlement exceeds balance due by ₹ {(totalSettling - curBal).toFixed(2)}!
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </form>
+        )}
       </Modal>
     </div>
   );

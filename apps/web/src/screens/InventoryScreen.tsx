@@ -9,6 +9,7 @@ export interface StockBalanceItem {
   variantId: string;
   productId?: string;
   itemName?: string;
+  itemNameHi?: string;
   sku?: string;
   unit?: string;
   locationId?: string;
@@ -120,7 +121,7 @@ export const InventoryScreen: React.FC = () => {
       return {
         value: b.variantId,
         label: b.itemName || b.sku || 'Catalog Item',
-        sublabel: `SKU: ${b.sku} | Loc: ${b.locationName || 'Main Godown'}`,
+        sublabel: b.itemNameHi ? `${b.itemNameHi} • SKU: ${b.sku}` : `SKU: ${b.sku} | Loc: ${b.locationName || 'Main Godown'}`,
         badge: `${onHand} ${b.unit || 'units'}`,
         badgeType: onHand === 0 ? 'danger' : onHand <= (b.reorderLevel || 10) ? 'warning' : 'success',
       };
@@ -373,6 +374,9 @@ export const InventoryScreen: React.FC = () => {
                   }}
                 />
                 <span>{item.itemName}</span>
+                {item.itemNameHi && (
+                  <span style={{ fontSize: '11px', opacity: 0.85 }}>({item.itemNameHi})</span>
+                )}
                 <span
                   style={{
                     backgroundColor: '#dc2626',
@@ -423,6 +427,9 @@ export const InventoryScreen: React.FC = () => {
                   }}
                 />
                 <span>{item.itemName}</span>
+                {item.itemNameHi && (
+                  <span style={{ fontSize: '11px', opacity: 0.85 }}>({item.itemNameHi})</span>
+                )}
                 <span
                   style={{
                     backgroundColor: '#f59e0b',
@@ -617,6 +624,11 @@ export const InventoryScreen: React.FC = () => {
                           />
                           <div>
                             <div>{name}</div>
+                            {b.itemNameHi && (
+                              <div style={{ fontSize: '12px', color: '#4f46e5', fontWeight: 500, marginTop: '1px' }}>
+                                {b.itemNameHi}
+                              </div>
+                            )}
                             <div
                               style={{
                                 fontSize: '11px',
@@ -850,6 +862,11 @@ export const InventoryScreen: React.FC = () => {
               <div style={{ fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>
                 {editingItem.itemName}
               </div>
+              {editingItem.itemNameHi && (
+                <div style={{ fontSize: '13px', color: '#4f46e5', fontWeight: 500, marginTop: '2px' }}>
+                  {editingItem.itemNameHi}
+                </div>
+              )}
               <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
                 SKU: <span style={{ fontFamily: 'monospace' }}>{editingItem.sku}</span> | Godown:{' '}
                 <strong>{editingItem.locationName || 'Main Godown'}</strong>

@@ -12,8 +12,11 @@ interface PaymentItem {
   direction: 'inbound' | 'outbound';
   status: string;
   amount: number;
-  referenceNumber?: string;
+  adjustmentAmount?: number;
+  adjustmentType?: string;
   paymentMode?: string;
+  referenceNumber?: string;
+  notes?: string;
   postedAt?: string;
   createdAt: string;
 }
@@ -22,6 +25,19 @@ interface PartyOption {
   id: string;
   displayName: string;
   partyType: string;
+}
+
+interface InvoiceOption {
+  id: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName?: string;
+  grandTotal: number;
+  amountPaid?: number;
+  adjustmentAmount?: number;
+  balanceDue?: number;
+  paymentStatus?: string;
+  status: string;
 }
 
 export const PaymentsScreen: React.FC = () => {
@@ -35,12 +51,17 @@ export const PaymentsScreen: React.FC = () => {
 
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [parties, setParties] = useState<PartyOption[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceOption[]>([]);
 
   // Form state
   const [direction, setDirection] = useState<'inbound' | 'outbound'>('inbound');
   const [selectedPartyId, setSelectedPartyId] = useState('');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState('');
   const [amount, setAmount] = useState('1000');
+  const [adjustmentAmount, setAdjustmentAmount] = useState('0');
+  const [adjustmentType, setAdjustmentType] = useState('round_off');
   const [reference, setReference] = useState('');
+  const [notes, setNotes] = useState('');
   const [paymentMode, setPaymentMode] = useState('cash');
 
   const loadData = () => {
@@ -70,7 +91,19 @@ export const PaymentsScreen: React.FC = () => {
           }
         }
       })
-      .catch((err) => console.warn('Failed to load parties:', err))
+      .catch((err) => console.warn('Failed to load parties:', err));
+
+    // 3. Fetch sales invoices
+    fetch('/api/v1/sales/invoices', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setInvoices(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load invoices:', err))
       .finally(() => setLoading(false));
   };
 
@@ -91,11 +124,55 @@ export const PaymentsScreen: React.FC = () => {
     .filter((p) => p.direction === 'outbound')
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
+  const totalAdjustments = payments
+    .reduce((sum, p) => sum + (p.adjustmentAmount || 0), 0);
+
+  // Filter invoices for selected party
+  const partyPendingInvoices = invoices.filter(
+    (inv) =>
+      inv.customerId === selectedPartyId &&
+      inv.status === 'posted' &&
+      (inv.balanceDue === undefined || inv.balanceDue > 0.001)
+  );
+
+  const handleSelectInvoice = (invId: string) => {
+    setSelectedInvoiceId(invId);
+    if (invId) {
+      const inv = invoices.find((i) => i.id === invId);
+      if (inv) {
+        const bal =
+          inv.balanceDue !== undefined
+            ? inv.balanceDue
+            : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
+        setAmount(bal.toFixed(2));
+        setAdjustmentAmount('0');
+      }
+    }
+  };
+
+  const handleSetAutoKasar = () => {
+    if (selectedInvoiceId) {
+      const inv = invoices.find((i) => i.id === selectedInvoiceId);
+      if (inv) {
+        const bal =
+          inv.balanceDue !== undefined
+            ? inv.balanceDue
+            : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
+        const pay = parseFloat(amount) || 0;
+        if (pay < bal) {
+          setAdjustmentAmount((bal - pay).toFixed(2));
+        }
+      }
+    }
+  };
+
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsedAmount = parseFloat(amount);
-    if (!parsedAmount || parsedAmount <= 0) {
-      toast.warning('Please enter a valid payment amount');
+    const parsedAmount = parseFloat(amount) || 0;
+    const parsedAdj = parseFloat(adjustmentAmount) || 0;
+
+    if (parsedAmount <= 0 && parsedAdj <= 0) {
+      toast.warning('Please enter a valid payment amount or adjustment greater than 0');
       return;
     }
     if (!selectedPartyId) {
@@ -105,50 +182,91 @@ export const PaymentsScreen: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const paymentId = crypto.randomUUID();
-      const paymentNumber = `PAY-${direction === 'inbound' ? 'REC' : 'OUT'}-${Date.now().toString().slice(-6)}`;
+      if (selectedInvoiceId && direction === 'inbound') {
+        const res = await fetch(`/api/v1/sales/invoices/${selectedInvoiceId}/payments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({
+            amount: parsedAmount,
+            adjustmentAmount: parsedAdj,
+            adjustmentType: parsedAdj > 0 ? adjustmentType : undefined,
+            paymentMode,
+            referenceNumber: reference.trim() || undefined,
+            notes: notes.trim() || undefined,
+          }),
+        });
 
-      // 1. Create draft payment
-      const res = await fetch('/api/v1/payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-        },
-        body: JSON.stringify({
-          id: paymentId,
-          partyId: selectedPartyId,
-          paymentNumber,
-          direction,
-          amount: parsedAmount,
-          referenceNumber: reference.trim() || undefined,
-        }),
-      });
+        const json = await res.json();
+        if (!json.success) {
+          throw new Error(json.error?.message || 'Failed to record payment on invoice');
+        }
 
-      const json = await res.json();
-      if (!json.success) {
-        throw new Error(json.error?.message || 'Failed to record payment');
+        toast.success(
+          `Payment of ₹${parsedAmount.toLocaleString()} ${
+            parsedAdj > 0 ? `(+ ₹${parsedAdj.toLocaleString()} Kasar)` : ''
+          } settled on invoice!`
+        );
+      } else {
+        const paymentId = crypto.randomUUID();
+        const paymentNumber = `PAY-${direction === 'inbound' ? 'REC' : 'OUT'}-${Date.now().toString().slice(-6)}`;
+
+        // 1. Create draft payment
+        const res = await fetch('/api/v1/payments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({
+            id: paymentId,
+            partyId: selectedPartyId,
+            paymentNumber,
+            direction,
+            amount: parsedAmount,
+            adjustmentAmount: parsedAdj,
+            adjustmentType: parsedAdj > 0 ? adjustmentType : undefined,
+            paymentMode,
+            notes: notes.trim() || undefined,
+            referenceNumber: reference.trim() || undefined,
+          }),
+        });
+
+        const json = await res.json();
+        if (!json.success) {
+          throw new Error(json.error?.message || 'Failed to record payment');
+        }
+
+        // 2. Post payment atomically to party ledger
+        const postRes = await fetch(`/api/v1/payments/${paymentId}/post`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({}),
+        });
+
+        const postJson = await postRes.json();
+        if (!postJson.success) {
+          throw new Error(postJson.error?.message || 'Failed to post payment');
+        }
+
+        toast.success(
+          `Payment ${paymentNumber} for ₹ ${parsedAmount.toLocaleString()} ${
+            parsedAdj > 0 ? `(+ ₹${parsedAdj.toLocaleString()} Kasar)` : ''
+          } posted to ledger!`
+        );
       }
 
-      // 2. Post payment atomically to party ledger
-      const postRes = await fetch(`/api/v1/payments/${paymentId}/post`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-        },
-        body: JSON.stringify({}),
-      });
-
-      const postJson = await postRes.json();
-      if (!postJson.success) {
-        throw new Error(postJson.error?.message || 'Failed to post payment');
-      }
-
-      toast.success(`Payment ${paymentNumber} for ₹ ${parsedAmount.toLocaleString()} posted to ledger!`);
       setShowRecordModal(false);
       setAmount('1000');
+      setAdjustmentAmount('0');
+      setSelectedInvoiceId('');
       setReference('');
+      setNotes('');
       loadData();
     } catch (err: any) {
       toast.error(err.message || 'Error processing payment');
@@ -215,9 +333,9 @@ export const PaymentsScreen: React.FC = () => {
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Net Cash Inflow</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>
-            ₹ {(totalInbound - totalOutbound).toLocaleString()}
+          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Settlement Kasar / Discount</div>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#4338ca', marginTop: '4px' }}>
+            ₹ {totalAdjustments.toLocaleString()}
           </div>
         </div>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -318,7 +436,9 @@ export const PaymentsScreen: React.FC = () => {
               <th style={{ padding: '12px 16px', textAlign: 'left' }}>Party / Account</th>
               <th style={{ padding: '12px 16px', textAlign: 'left' }}>Flow Type</th>
               <th style={{ padding: '12px 16px', textAlign: 'left' }}>Reference / UTR</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Amount</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Amount Paid</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Adjustment / Kasar</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right' }}>Total Settled</th>
               <th style={{ padding: '12px 16px', textAlign: 'center' }}>Status</th>
               <th style={{ padding: '12px 16px', textAlign: 'right' }}>Date</th>
             </tr>
@@ -326,7 +446,7 @@ export const PaymentsScreen: React.FC = () => {
           <tbody>
             {filteredPayments.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                <td colSpan={9} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
                   No transactions found for the selected filter.
                 </td>
               </tr>
@@ -369,6 +489,18 @@ export const PaymentsScreen: React.FC = () => {
                       }}
                     >
                       {p.direction === 'inbound' ? '+' : '-'} ₹ {(p.amount || 0).toLocaleString()}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                      {(p.adjustmentAmount || 0) > 0 ? (
+                        <span style={{ fontWeight: 600, color: '#4338ca', fontSize: '12.5px' }}>
+                          ₹ {(p.adjustmentAmount || 0).toLocaleString()}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#9ca3af' }}>-</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 800, color: '#111827' }}>
+                      ₹ {((p.amount || 0) + (p.adjustmentAmount || 0)).toLocaleString()}
                     </td>
                     <td style={{ padding: '12px 16px', textAlign: 'center' }}>
                       <span
@@ -447,7 +579,10 @@ export const PaymentsScreen: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <button
                 type="button"
-                onClick={() => setDirection('inbound')}
+                onClick={() => {
+                  setDirection('inbound');
+                  setSelectedInvoiceId('');
+                }}
                 style={{
                   padding: '10px',
                   borderRadius: '6px',
@@ -463,7 +598,10 @@ export const PaymentsScreen: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setDirection('outbound')}
+                onClick={() => {
+                  setDirection('outbound');
+                  setSelectedInvoiceId('');
+                }}
                 style={{
                   padding: '10px',
                   borderRadius: '6px',
@@ -486,7 +624,10 @@ export const PaymentsScreen: React.FC = () => {
             </label>
             <select
               value={selectedPartyId}
-              onChange={(e) => setSelectedPartyId(e.target.value)}
+              onChange={(e) => {
+                setSelectedPartyId(e.target.value);
+                setSelectedInvoiceId('');
+              }}
               required
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
             >
@@ -498,21 +639,102 @@ export const PaymentsScreen: React.FC = () => {
             </select>
           </div>
 
+          {/* If Inbound and customer has unpaid invoices, show invoice selector */}
+          {direction === 'inbound' && partyPendingInvoices.length > 0 && (
+            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#1e40af', display: 'block', marginBottom: '4px' }}>
+                🧾 Link to Sales Invoice (Optional)
+              </label>
+              <select
+                value={selectedInvoiceId}
+                onChange={(e) => handleSelectInvoice(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', backgroundColor: '#ffffff' }}
+              >
+                <option value="">-- General Account Receipt (No Specific Invoice) --</option>
+                {partyPendingInvoices.map((inv) => {
+                  const bal =
+                    inv.balanceDue !== undefined
+                      ? inv.balanceDue
+                      : Math.max(0, (inv.grandTotal || 0) - ((inv.amountPaid || 0) + (inv.adjustmentAmount || 0)));
+                  return (
+                    <option key={inv.id} value={inv.id}>
+                      {inv.invoiceNumber} — Total ₹{inv.grandTotal.toLocaleString()} (Due: ₹{bal.toLocaleString()})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
-                Amount (₹) *
+                Amount Paid (₹) *
               </label>
               <input
                 type="number"
-                min="1"
+                min="0"
                 step="any"
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700 }}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700, color: '#059669', boxSizing: 'border-box' }}
               />
             </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151' }}>
+                  Adjustment / Kasar (₹)
+                </label>
+                {selectedInvoiceId && (
+                  <button
+                    type="button"
+                    onClick={handleSetAutoKasar}
+                    style={{
+                      fontSize: '11px',
+                      color: '#2563eb',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      fontWeight: 600,
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    ⚡ Auto Kasar
+                  </button>
+                )}
+              </div>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={adjustmentAmount}
+                onChange={(e) => setAdjustmentAmount(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', fontWeight: 700, color: '#4338ca', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Adjustment Reason
+              </label>
+              <select
+                value={adjustmentType}
+                onChange={(e) => setAdjustmentType(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
+              >
+                <option value="round_off">Round-off / Kasar (कसर)</option>
+                <option value="cash_discount">Cash Discount (नकद छूट)</option>
+                <option value="damage_allowance">Damaged Goods Allowance</option>
+                <option value="short_settlement">Short Payment Write-off</option>
+                <option value="other">Other Concession</option>
+              </select>
+            </div>
+
             <div>
               <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
                 Payment Mode
@@ -520,28 +742,70 @@ export const PaymentsScreen: React.FC = () => {
               <select
                 value={paymentMode}
                 onChange={(e) => setPaymentMode(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}
               >
-                <option value="cash">Cash Counter</option>
-                <option value="upi">UPI / QR Code</option>
-                <option value="bank">Bank Transfer (NEFT/RTGS)</option>
-                <option value="cheque">Cheque</option>
+                <option value="cash">💵 Cash Counter</option>
+                <option value="upi">📱 UPI / QR Code</option>
+                <option value="bank">🏦 Bank Transfer (NEFT/RTGS)</option>
+                <option value="cheque">📝 Cheque</option>
               </select>
             </div>
           </div>
 
-          <div>
-            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
-              Reference / UTR / Cheque Number
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. UTR-AXIS-991823"
-              value={reference}
-              onChange={(e) => setReference(e.target.value)}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Reference / UTR / Cheque Number
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. UTR-AXIS-991823"
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                Notes / Narration
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Cleared bill with kasar"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
           </div>
+
+          {/* Settlement Calculation Preview */}
+          {(() => {
+            const pAmt = parseFloat(amount) || 0;
+            const pAdj = parseFloat(adjustmentAmount) || 0;
+            return (
+              <div
+                style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '10px 14px',
+                  fontSize: '12.5px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span style={{ color: '#4b5563' }}>
+                  Net Khata Credit: <strong>₹ {pAmt.toFixed(2)}</strong> paid {pAdj > 0 ? `+ ₹ ${pAdj.toFixed(2)} Kasar` : ''}
+                </span>
+                <span style={{ fontWeight: 800, color: '#059669', fontSize: '14px' }}>
+                  Total Settlement: ₹ {(pAmt + pAdj).toFixed(2)}
+                </span>
+              </div>
+            );
+          })()}
         </form>
       </Modal>
     </div>
