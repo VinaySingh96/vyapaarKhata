@@ -113,7 +113,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         body: JSON.stringify({ licenseNumber: lic.trim(), secretKey: secret.trim() }),
       });
 
-      const json = await res.json();
+      const raw = await res.text();
+      let json: any = null;
+      try {
+        json = raw ? JSON.parse(raw) : null;
+      } catch {
+        json = null;
+      }
+
+      if (!res.ok || !json) {
+        const errorMsg =
+          json?.error?.message ||
+          (res.status >= 500
+            ? `Store backend connection error (HTTP ${res.status}). Please check if local backend is running.`
+            : `Authentication failed (HTTP ${res.status}): ${raw.slice(0, 150) || 'Unknown error'}`);
+        return { success: false, message: errorMsg };
+      }
+
       if (!json.success || !json.data) {
         return { success: false, message: json.error?.message || 'Authentication failed' };
       }
@@ -165,8 +181,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
       });
-      const json = await res.json();
-      if (json.success && json.data) {
+      const raw = await res.text();
+      let json: any = null;
+      try {
+        json = raw ? JSON.parse(raw) : null;
+      } catch {
+        json = null;
+      }
+
+      if (json?.success && json?.data) {
         const live: StoreSettings = {
           storeName: json.data.storeName || json.data.tradeName || DEFAULT_SETTINGS.storeName,
           tradeName: json.data.tradeName,

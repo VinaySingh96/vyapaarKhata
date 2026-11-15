@@ -259,10 +259,12 @@ export class VyapaarKhataApiClient {
       return this.request<Payment[]>('/api/v1/payments', { method: 'GET' });
     },
 
-    postPayment: async (data: { paymentId: string; allocations?: any[] }) => {
-      return this.request(`/api/v1/payments/${data.paymentId}/post`, {
+    postPayment: async (paymentIdOrData: string | { paymentId: string; allocations?: any[] }, allocations?: any[]) => {
+      const paymentId = typeof paymentIdOrData === 'string' ? paymentIdOrData : paymentIdOrData.paymentId;
+      const allocs = typeof paymentIdOrData === 'string' ? allocations : paymentIdOrData.allocations;
+      return this.request(`/api/v1/payments/${paymentId}/post`, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ allocations: allocs }),
       });
     },
 
@@ -307,4 +309,8 @@ export class VyapaarKhataApiClient {
       return this.request<any[]>('/api/v1/reports/stock-valuation', { method: 'GET' });
     },
   };
+}
+
+export function createApiClient(opts: ApiClientOptions): VyapaarKhataApiClient {
+  return new VyapaarKhataApiClient(opts);
 }

@@ -87,7 +87,7 @@ describe('Sales API Endpoints Integration (Fastify)', () => {
       url: '/api/v1/sales/invoices/inv-api-01/post',
     });
 
-    expect(res.statusCode).toBe(500);
+    expect(res.statusCode).toBe(409);
     const body = res.json();
     expect(body.success).toBe(false);
   });

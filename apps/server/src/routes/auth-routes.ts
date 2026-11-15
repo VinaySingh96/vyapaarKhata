@@ -22,8 +22,20 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
         body: JSON.stringify(req.body || {}),
       });
 
-      const json = await centralRes.json();
-      return reply.status(centralRes.status).send(json);
+      const raw = await centralRes.text();
+      let data: any;
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {
+          success: false,
+          error: {
+            code: 'CENTRAL_INVALID_RESPONSE',
+            message: `Central Cloud returned non-JSON response (HTTP ${centralRes.status}): ${raw.slice(0, 200)}`,
+          },
+        };
+      }
+      return reply.status(centralRes.status).send(data);
     } catch (err: any) {
       return reply.status(503).send({
         success: false,
@@ -48,8 +60,20 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
         body: JSON.stringify(req.body || {}),
       });
 
-      const json = await centralRes.json();
-      return reply.status(centralRes.status).send(json);
+      const raw = await centralRes.text();
+      let data: any;
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {
+          success: false,
+          error: {
+            code: 'CENTRAL_INVALID_RESPONSE',
+            message: `Central Cloud returned non-JSON response (HTTP ${centralRes.status}): ${raw.slice(0, 200)}`,
+          },
+        };
+      }
+      return reply.status(centralRes.status).send(data);
     } catch (err: any) {
       return reply.status(503).send({
         success: false,

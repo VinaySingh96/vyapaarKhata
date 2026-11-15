@@ -1,3 +1,5 @@
+const BACKEND_TARGET = process.env.VITE_BACKEND_URL || 'http://127.0.0.1:4002';
+
 export default {
   root: '.',
   server: {
@@ -5,31 +7,31 @@ export default {
     host: '127.0.0.1',
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/openapi.yaml': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/docs': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/swagger': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/scalar': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
       '/ready': {
-        target: 'http://127.0.0.1:4000',
+        target: BACKEND_TARGET,
         changeOrigin: true,
       },
     },

@@ -6,8 +6,15 @@ export const LicenseLoginScreen: React.FC = () => {
   const { loginWithLicense, licenseNumber } = useStore();
   const toast = useToast();
 
-  const [inputLicense, setInputLicense] = useState(licenseNumber || '');
-  const [inputSecret, setInputSecret] = useState('');
+  const isJewelleryPort = typeof window !== 'undefined' && window.location.port === '3003';
+  const currentPort = typeof window !== 'undefined' ? window.location.port : '3000';
+
+  const [inputLicense, setInputLicense] = useState(
+    licenseNumber || (isJewelleryPort ? 'LIC-JW-2026-2002' : 'LIC-BM-2026-1001')
+  );
+  const [inputSecret, setInputSecret] = useState(
+    isJewelleryPort ? 'sk_janardan_jw_live_48219' : 'sk_patel_bm_live_98374'
+  );
   const [showSecret, setShowSecret] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -278,6 +285,12 @@ export const LicenseLoginScreen: React.FC = () => {
 
           {/* Quick Preset Buttons for Developer & Demo testing */}
           <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ marginBottom: '10px', fontSize: '11.5px', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>🖥️ Terminal Port: <strong>:{currentPort}</strong> ({isJewelleryPort ? 'Janardan Jewellery' : 'Patel Building Materials'})</span>
+              <a href="http://127.0.0.1:5000/admin" target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>
+                Central Admin ↗
+              </a>
+            </div>
             <div
               style={{
                 fontSize: '11.5px',
@@ -285,7 +298,7 @@ export const LicenseLoginScreen: React.FC = () => {
                 color: '#64748b',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                marginBottom: '10px',
+                marginBottom: '8px',
               }}
             >
               Demo / Fast-Fill Store Credentials:
