@@ -1674,8 +1674,10 @@ export class PgUnitOfWork implements UnitOfWork {
           // Low Stock Count and Total Stock Valuation
           const stockRes = await client.query(
             `SELECT 
-               COUNT(CASE WHEN COALESCE(sb.quantity_on_hand::numeric, 0) <= COALESCE(pv.reorder_level::numeric, 0) THEN 1 END) as low_stock_count,
-               COALESCE(SUM(COALESCE(sb.quantity_on_hand::numeric, 0) * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
+               COUNT(CASE WHEN (CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END) <= COALESCE(NULLIF(pv.reorder_level, '')::numeric, 0) THEN 1 END) as low_stock_count,
+               COALESCE(SUM(
+                 CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0) ELSE 0 END
+               ), 0) as total_valuation
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
              WHERE pv.tenant_id = $1`,
@@ -1694,6 +1696,9 @@ export class PgUnitOfWork implements UnitOfWork {
           // Recent Movements
           const recentMovements = await inventoryRepo.listMovements(tenantId, 5);
 
+          const rawValuation = parseFloat(stockRes.rows[0]?.total_valuation || '0');
+          const totalStockValuation = isNaN(rawValuation) ? 0 : rawValuation;
+
           return {
             todaySales: parseFloat(salesRes.rows[0]?.today_sales || '0'),
             todayInvoicesCount: parseInt(salesRes.rows[0]?.count || '0', 10),
@@ -1701,7 +1706,7 @@ export class PgUnitOfWork implements UnitOfWork {
             totalPayables: parseFloat(recRes.rows[0]?.payables || '0'),
             lowStockCount: parseInt(stockRes.rows[0]?.low_stock_count || '0', 10),
             totalProductsCount: parseInt(prodCountRes.rows[0]?.total_products || '0', 10),
-            totalStockValuation: parseFloat(stockRes.rows[0]?.total_valuation || '0'),
+            totalStockValuation,
             recentInvoices,
             recentMovements,
           };
@@ -1710,8 +1715,8 @@ export class PgUnitOfWork implements UnitOfWork {
         getStockValuation: async (tenantId: EntityId) => {
           const res = await client.query(
             `SELECT pv.id as variant_id, p.name as product_name,
-                    COALESCE(SUM(sb.quantity_on_hand::numeric), 0) as quantity,
-                    COALESCE(SUM(sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0)), 0) as valuation
+                    COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END), 0) as quantity,
+                    COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0) ELSE 0 END), 0) as valuation
              FROM products p
              JOIN product_variants pv ON pv.product_id = p.id
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
@@ -1723,8 +1728,8 @@ export class PgUnitOfWork implements UnitOfWork {
           return res.rows.map((r) => ({
             variantId: r.variant_id,
             productName: r.product_name,
-            quantity: parseFloat(r.quantity),
-            valuation: parseFloat(r.valuation),
+            quantity: isNaN(parseFloat(r.quantity)) ? 0 : parseFloat(r.quantity),
+            valuation: isNaN(parseFloat(r.valuation)) ? 0 : parseFloat(r.valuation),
           }));
         },
       };

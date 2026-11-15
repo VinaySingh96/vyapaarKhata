@@ -49,11 +49,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onNavigate]);
 
-  const todaySalesVal = metrics ? `₹ ${metrics.todaySales.toLocaleString()}` : '₹ 2,242';
-  const invoicesCount = metrics ? metrics.todayInvoicesCount : 1;
-  const lowStockVal = metrics ? `${metrics.lowStockCount} ${t('dashboard.items')}` : `0 ${t('dashboard.items')}`;
-  const receivablesVal = metrics ? `₹ ${metrics.totalReceivables.toLocaleString()}` : '₹ 0';
-  const valuationVal = metrics ? `₹ ${metrics?.totalStockValuation?.toLocaleString()}` : '₹ 4,650';
+  const todaySalesVal = `₹ ${(metrics?.todaySales ?? 0).toLocaleString()}`;
+  const invoicesCount = metrics?.todayInvoicesCount ?? 0;
+  const lowStockVal = `${metrics?.lowStockCount ?? 0} ${t('dashboard.items')}`;
+  const receivablesVal = `₹ ${(metrics?.totalReceivables ?? 0).toLocaleString()}`;
+  const valuationVal = `₹ ${(metrics?.totalStockValuation ?? 0).toLocaleString()}`;
 
   const kpis = [
     {
@@ -230,7 +230,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
                         {inv.status.toUpperCase()}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>₹ {inv.grandTotal?.toLocaleString()}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>₹ {(inv.grandTotal ?? 0).toLocaleString()}</td>
                     <td style={{ padding: '10px 12px', color: '#6b7280' }}>
                       {inv.postedAt ? new Date(inv.postedAt).toLocaleString() : 'Just now'}
                     </td>

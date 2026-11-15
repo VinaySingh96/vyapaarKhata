@@ -1386,7 +1386,7 @@ export const SalesBillingScreen: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
-                        ₹ {inv.grandTotal?.toLocaleString()}
+                        ₹ {(inv.grandTotal ?? 0).toLocaleString()}
                       </td>
                       <td style={{ padding: '12px', textAlign: 'center' }}>
                         <span
@@ -1738,7 +1738,7 @@ export const SalesBillingScreen: React.FC = () => {
           <div style={{ padding: '12px', backgroundColor: '#fef2f2', borderRadius: '6px', marginBottom: '16px', fontSize: '13px' }}>
             <div>Invoice: <strong>{invoiceToCancel?.invoiceNumber}</strong></div>
             <div>Customer: <strong>{invoiceToCancel?.customerName}</strong></div>
-            <div>Amount: <strong>₹ {invoiceToCancel?.grandTotal?.toLocaleString()}</strong></div>
+            <div>Amount: <strong>₹ {(invoiceToCancel?.grandTotal ?? 0).toLocaleString()}</strong></div>
           </div>
 
           <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block', marginBottom: '6px' }}>
