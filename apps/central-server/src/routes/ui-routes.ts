@@ -275,6 +275,38 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       overflow-x: auto;
       max-height: 250px;
     }
+
+    /* Toast Notification System */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.08);
+      animation: toastSlideIn 0.25s ease forwards;
+      max-width: 380px;
+    }
+    @keyframes toastSlideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast-success { background: #0f172a; color: #34d399; border: 1.5px solid #059669; }
+    .toast-error { background: #0f172a; color: #f87171; border: 1.5px solid #dc2626; }
+    .toast-info { background: #0f172a; color: #38bdf8; border: 1.5px solid #0284c7; }
   </style>
 </head>
 <body>
@@ -485,6 +517,73 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     </div>
   </div>
 
+  <!-- Reusable Custom Confirmation Modal -->
+  <div class="modal-overlay" id="customConfirmModal">
+    <div class="modal-content" style="max-width: 460px; border-radius: 12px; overflow: hidden;">
+      <div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <div style="font-weight: 700; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 8px;" id="confirmModalTitle">
+          Confirm Action
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeConfirmModal()" style="border:none; background:none; font-size:1.1rem; cursor:pointer; color: #64748b;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <p id="confirmModalMessage" style="font-size: 0.925rem; color: #475569; line-height: 1.6; margin: 0;"></p>
+      </div>
+      <div class="modal-footer" style="padding: 0.85rem 1.25rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.6rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmModalActionBtn" onclick="executeConfirmModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated Tenant Onboarded Modal -->
+  <div class="modal-overlay" id="tenantCreatedModal">
+    <div class="modal-content" style="max-width: 520px; border-radius: 14px; overflow: hidden; border-top: 5px solid #10b981;">
+      <div class="modal-header" style="background: #f0fdf4; border-bottom: 1px solid #bbf7d0;">
+        <div style="font-weight: 800; font-size: 1.15rem; color: #166534; display: flex; align-items: center; gap: 8px;">
+          <span>🎉</span> Store Tenant Onboarded Successfully
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeTenantCreatedModal()" style="border:none; background:none; font-size:1.1rem; cursor:pointer; color: #15803d;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem;">
+        <p style="font-size: 0.875rem; color: #475569; margin-bottom: 1.25rem;">
+          The store has been provisioned on the Central Cloud. Use these credentials to authenticate and unlock the store terminal POS:
+        </p>
+
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.85rem;">
+          <div style="font-size: 0.725rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+            Store Organization
+          </div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: #0f172a;" id="createdTenantName">-</div>
+          <div style="font-size: 0.8rem; color: #2563eb; font-weight: 600; margin-top: 3px;" id="createdTenantType">-</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.725rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Store License Number</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCopyCreatedLic" style="padding: 3px 8px; font-size: 0.75rem;">📋 Copy</button>
+          </div>
+          <div style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: #0f172a;" id="createdTenantLicense">-</div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.725rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Store Secret Key</span>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCopyCreatedKey" style="padding: 3px 8px; font-size: 0.75rem;">📋 Copy</button>
+          </div>
+          <div style="font-family: monospace; font-size: 0.975rem; font-weight: 700; color: #b45309; word-break: break-all;" id="createdTenantSecret">-</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 1rem 1.25rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <a id="createdTenantDashLink" href="#" class="btn btn-primary" style="text-decoration: none;">📊 Open Store Dashboard</a>
+        <button type="button" class="btn btn-secondary" onclick="closeTenantCreatedModal()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Floating Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <script>
     // Clock
     setInterval(() => {
@@ -591,30 +690,96 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    // Toggle Tenant Status
-    async function toggleTenantStatus(id, newStatus) {
-      if (!confirm(\`Are you sure you want to mark this tenant as \${newStatus}?\`)) return;
-      try {
-        const res = await fetch(\`/api/v1/admin/tenants/\${id}/status\`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-        const json = await res.json();
-        if (json.success) {
-          loadTenants();
-          loadMetrics();
-        } else {
-          alert('Error: ' + json.error?.message);
-        }
-      } catch (err) {
-        alert('Action failed: ' + err.message);
+    // Toast Notification Dispatcher
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast-item toast-' + type;
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+      toast.innerHTML = \`<span style="font-size: 1.1rem; font-weight: 800;">\${icon}</span><span>\${message}</span>\`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        toast.style.transform = 'translateY(12px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 3500);
+    }
+
+    // Custom Confirmation Modal Helper
+    let pendingConfirmAction = null;
+    function openConfirmModal(title, message, confirmText, btnClass, onConfirm) {
+      document.getElementById('confirmModalTitle').innerHTML = title;
+      document.getElementById('confirmModalMessage').textContent = message;
+      const confirmBtn = document.getElementById('confirmModalActionBtn');
+      confirmBtn.textContent = confirmText || 'Confirm';
+      confirmBtn.className = 'btn ' + (btnClass || 'btn-primary');
+      pendingConfirmAction = onConfirm;
+      document.getElementById('customConfirmModal').style.display = 'flex';
+    }
+    function closeConfirmModal() {
+      document.getElementById('customConfirmModal').style.display = 'none';
+      pendingConfirmAction = null;
+    }
+    function executeConfirmModal() {
+      if (pendingConfirmAction) {
+        pendingConfirmAction();
       }
+      closeConfirmModal();
+    }
+
+    // Toggle Tenant Status (With Custom Confirmation Modal & Toast)
+    function toggleTenantStatus(id, newStatus) {
+      const isSuspended = newStatus === 'suspended';
+      openConfirmModal(
+        isSuspended ? '⚠️ Suspend Store Tenant?' : '✅ Activate Store Tenant?',
+        isSuspended
+          ? 'Are you sure you want to suspend this store tenant? Terminals associated with this store will not be able to authenticate or sync until reactivated.'
+          : 'Are you sure you want to activate this store tenant? Terminals will immediately be able to authenticate and push sync events.',
+        isSuspended ? 'Yes, Suspend Tenant' : 'Yes, Activate Tenant',
+        isSuspended ? 'btn-danger' : 'btn-success',
+        async () => {
+          try {
+            const res = await fetch(\`/api/v1/admin/tenants/\${id}/status\`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus })
+            });
+            const json = await res.json();
+            if (json.success) {
+              showToast(\`Store tenant status updated to \${newStatus}\`, 'success');
+              loadTenants();
+              loadMetrics();
+            } else {
+              showToast('Error: ' + (json.error?.message || 'Update failed'), 'error');
+            }
+          } catch (err) {
+            showToast('Action failed: ' + err.message, 'error');
+          }
+        }
+      );
     }
 
     // Modal Helpers
     function openCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'flex'; }
     function closeCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'none'; }
+
+    function openTenantCreatedModal(tenant) {
+      document.getElementById('createdTenantName').textContent = tenant.name + (tenant.legalName ? \` (\${tenant.legalName})\` : '');
+      document.getElementById('createdTenantType').textContent = tenant.storeType === 'jewellery' ? '💍 Jewellery & Bullion POS Profile' : '🏗️ Building Materials & Hardware POS Profile';
+      document.getElementById('createdTenantLicense').textContent = tenant.licenseNumber;
+      document.getElementById('createdTenantSecret').textContent = tenant.secretKey;
+      document.getElementById('createdTenantDashLink').href = '/admin/tenants/' + tenant.id;
+
+      document.getElementById('btnCopyCreatedLic').onclick = () => copyToClipboard(tenant.licenseNumber, 'Store License Number');
+      document.getElementById('btnCopyCreatedKey').onclick = () => copyToClipboard(tenant.secretKey, 'Store Secret Key');
+
+      document.getElementById('tenantCreatedModal').style.display = 'flex';
+    }
+    function closeTenantCreatedModal() {
+      document.getElementById('tenantCreatedModal').style.display = 'none';
+    }
 
     async function handleCreateTenant(e) {
       e.preventDefault();
@@ -643,20 +808,21 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           form.reset();
           loadTenants();
           loadMetrics();
-          alert(\`Tenant onboarded successfully!\\n\\nLicense Number: \${json.data.licenseNumber}\\nSecret Key: \${json.data.secretKey}\\nIndustry Mode: \${json.data.storeType}\`);
+          showToast('Store tenant onboarded successfully!', 'success');
+          openTenantCreatedModal(json.data);
         } else {
-          alert('Failed to create tenant: ' + json.error?.message);
+          showToast('Failed to create tenant: ' + (json.error?.message || 'Server error'), 'error');
         }
       } catch (err) {
-        alert('Error creating tenant: ' + err.message);
+        showToast('Error creating tenant: ' + err.message, 'error');
       }
     }
 
     function copyToClipboard(text, label) {
       navigator.clipboard.writeText(text).then(() => {
-        alert(label + ' copied to clipboard!');
+        showToast(label + ' copied to clipboard! 📋', 'success');
       }).catch(() => {
-        prompt('Copy manually:', text);
+        showToast('Failed to copy to clipboard', 'error');
       });
     }
 

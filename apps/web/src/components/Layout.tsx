@@ -3,6 +3,7 @@ import { SyncStatusBadge } from './SyncStatusBadge.js';
 import { DailyMetalRatesBar } from './DailyMetalRatesBar.js';
 import { useI18n, Language } from '../i18n/index.js';
 import { useStore } from '../context/StoreContext.js';
+import { useToast } from './Toast.js';
 
 export interface LayoutProps {
   children: React.ReactNode;
@@ -19,7 +20,9 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   const { t, language, setLanguage } = useI18n();
   const { storeType, licenseNumber, logoutLicense } = useStore();
+  const toast = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
 
   const navItems = [
     { id: 'dashboard', label: t('nav.dashboard') },
@@ -210,11 +213,7 @@ export const Layout: React.FC<LayoutProps> = ({
               <button
                 type="button"
                 id="btn-logout-license"
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to log out and lock this store terminal?')) {
-                    logoutLicense();
-                  }
-                }}
+                onClick={() => setShowLockConfirm(true)}
                 title="Disconnect License and Lock Terminal"
                 style={{
                   display: 'flex',
@@ -303,6 +302,154 @@ export const Layout: React.FC<LayoutProps> = ({
           {children}
         </section>
       </main>
+
+      {/* Custom Lock Terminal Confirmation Modal */}
+      {showLockConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lock-modal-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '16px',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowLockConfirm(false);
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '14px',
+              maxWidth: '440px',
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              borderTop: '5px solid #ef4444',
+              animation: 'scaleIn 0.15s ease',
+            }}
+          >
+            <div
+              style={{
+                padding: '18px 20px',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#fef2f2',
+              }}
+            >
+              <div
+                id="lock-modal-title"
+                style={{
+                  fontWeight: 800,
+                  fontSize: '16px',
+                  color: '#991b1b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>🔒</span> Lock Store Terminal?
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLockConfirm(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  color: '#991b1b',
+                  padding: '2px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ padding: '20px' }}>
+              <p style={{ margin: 0, fontSize: '13.5px', color: '#475569', lineHeight: 1.6 }}>
+                Logging out will disconnect the active store license (
+                <strong style={{ color: '#0f172a', fontFamily: 'monospace' }}>
+                  {licenseNumber}
+                </strong>
+                ) and lock this terminal.
+              </p>
+              <p
+                style={{
+                  margin: '10px 0 0',
+                  fontSize: '12.5px',
+                  color: '#b45309',
+                  backgroundColor: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                }}
+              >
+                ⚠️ You will need your Store License Number and Secret Key to unlock and resume operations.
+              </p>
+            </div>
+
+            <div
+              style={{
+                padding: '14px 20px',
+                borderTop: '1px solid #f1f5f9',
+                background: '#f8fafc',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowLockConfirm(false)}
+                style={{
+                  padding: '9px 16px',
+                  backgroundColor: '#ffffff',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '7px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#334155',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-lock-terminal"
+                onClick={() => {
+                  logoutLicense();
+                  toast.info('Terminal locked successfully.');
+                  setShowLockConfirm(false);
+                }}
+                style={{
+                  padding: '9px 16px',
+                  backgroundColor: '#ef4444',
+                  border: 'none',
+                  borderRadius: '7px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(239, 68, 68, 0.25)',
+                }}
+              >
+                🔒 Yes, Lock Terminal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

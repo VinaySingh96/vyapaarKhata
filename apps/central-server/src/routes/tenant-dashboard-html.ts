@@ -142,6 +142,75 @@ export function renderTenantDashboardPage(tenantId: string): string {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .grid-2 { grid-template-columns: 1fr; }
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 460px;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .modal-header {
+      padding: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+    }
+    .modal-body { padding: 1.25rem; }
+    .modal-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      background: #f8fafc;
+    }
+
+    /* Toast Notification System */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.08);
+      animation: toastSlideIn 0.25s ease forwards;
+      max-width: 380px;
+    }
+    @keyframes toastSlideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast-success { background: #0f172a; color: #34d399; border: 1.5px solid #059669; }
+    .toast-error { background: #0f172a; color: #f87171; border: 1.5px solid #dc2626; }
+    .toast-info { background: #0f172a; color: #38bdf8; border: 1.5px solid #0284c7; }
   </style>
 </head>
 <body>
@@ -168,6 +237,28 @@ export function renderTenantDashboardPage(tenantId: string): string {
     </div>
   </div>
 
+  <!-- Reusable Confirmation Modal -->
+  <div class="modal-overlay" id="customConfirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 700; font-size: 1.05rem; color: #0f172a; display: flex; align-items: center; gap: 8px;" id="confirmModalTitle">
+          Confirm Action
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeConfirmModal()" style="border:none; background:none; font-size:1.1rem; cursor:pointer; color: #64748b;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage" style="font-size: 0.925rem; color: #475569; line-height: 1.6; margin: 0;"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmModalActionBtn" onclick="executeConfirmModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Floating Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <script>
     const tenantId = "${tenantId}";
 
@@ -176,31 +267,81 @@ export function renderTenantDashboardPage(tenantId: string): string {
     }, 1000);
     document.getElementById('pageTime').textContent = new Date().toLocaleTimeString();
 
+    // Toast Notification Dispatcher
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast-item toast-' + type;
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+      toast.innerHTML = \`<span style="font-size: 1.1rem; font-weight: 800;">\${icon}</span><span>\${message}</span>\`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+        toast.style.transform = 'translateY(12px)';
+        setTimeout(() => toast.remove(), 250);
+      }, 3500);
+    }
+
+    // Custom Confirmation Modal Helper
+    let pendingConfirmAction = null;
+    function openConfirmModal(title, message, confirmText, btnClass, onConfirm) {
+      document.getElementById('confirmModalTitle').innerHTML = title;
+      document.getElementById('confirmModalMessage').textContent = message;
+      const confirmBtn = document.getElementById('confirmModalActionBtn');
+      confirmBtn.textContent = confirmText || 'Confirm';
+      confirmBtn.className = 'btn ' + (btnClass || 'btn-primary');
+      pendingConfirmAction = onConfirm;
+      document.getElementById('customConfirmModal').style.display = 'flex';
+    }
+    function closeConfirmModal() {
+      document.getElementById('customConfirmModal').style.display = 'none';
+      pendingConfirmAction = null;
+    }
+    function executeConfirmModal() {
+      if (pendingConfirmAction) {
+        pendingConfirmAction();
+      }
+      closeConfirmModal();
+    }
+
     function copyToClipboard(text, label) {
       navigator.clipboard.writeText(text).then(() => {
-        alert(label + ' copied to clipboard!');
+        showToast(label + ' copied to clipboard! 📋', 'success');
       }).catch(() => {
-        prompt('Copy manually:', text);
+        showToast('Failed to copy to clipboard', 'error');
       });
     }
 
-    async function toggleStatus(newStatus) {
-      if (!confirm('Are you sure you want to mark this store as ' + newStatus + '?')) return;
-      try {
-        const res = await fetch('/api/v1/admin/tenants/' + tenantId + '/status', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-        const json = await res.json();
-        if (json.success) {
-          loadDashboard();
-        } else {
-          alert('Error: ' + json.error?.message);
+    function toggleStatus(newStatus) {
+      const isSuspended = newStatus === 'suspended';
+      openConfirmModal(
+        isSuspended ? '⚠️ Suspend Store?' : '✅ Activate Store?',
+        isSuspended
+          ? 'Are you sure you want to suspend this store? POS terminals for this store will not be able to authenticate or sync.'
+          : 'Are you sure you want to activate this store? POS terminals will be able to connect and sync immediately.',
+        isSuspended ? 'Yes, Suspend Store' : 'Yes, Activate Store',
+        isSuspended ? 'btn-danger' : 'btn-success',
+        async () => {
+          try {
+            const res = await fetch('/api/v1/admin/tenants/' + tenantId + '/status', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: newStatus })
+            });
+            const json = await res.json();
+            if (json.success) {
+              showToast('Store status updated to ' + newStatus, 'success');
+              loadDashboard();
+            } else {
+              showToast('Error: ' + (json.error?.message || 'Update failed'), 'error');
+            }
+          } catch (err) {
+            showToast('Action failed: ' + err.message, 'error');
+          }
         }
-      } catch (err) {
-        alert('Action failed: ' + err.message);
-      }
+      );
     }
 
     async function loadDashboard() {
