@@ -961,7 +961,12 @@ export const PaymentsScreen: React.FC = () => {
                     <span>Settled against invoice #{selectedInv?.invoiceNumber} of ₹ {invTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
                   </div>
                   <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                    <span>Full Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> received {payAdj > 0 ? `+ <strong>₹ ${payAdj.toFixed(2)}</strong> Kasar` : ''}</span>
+                    <span>
+                      Full Settlement: <strong>₹ {payAmt.toFixed(2)}</strong> received
+                      {payAdj > 0 && (
+                        <> + <strong>₹ {payAdj.toFixed(2)}</strong> Kasar</>
+                      )}
+                    </span>
                     <span>•</span>
                     <span>Remaining Balance: <strong>₹ 0.00 (Fully Settled)</strong></span>
                   </div>

@@ -2517,7 +2517,12 @@ export const SalesBillingScreen: React.FC = () => {
                   <span>Settled against invoice #{invoiceForPayment.invoiceNumber} of ₹ {invoiceForPayment.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })} amount</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#047857', marginLeft: '26px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
-                  <span>Full Settlement: <strong>₹ {payEnteredPay.toFixed(2)}</strong> received {payEnteredAdj > 0 ? `+ <strong>₹ ${payEnteredAdj.toFixed(2)}</strong> Kasar` : ''}</span>
+                  <span>
+                    Full Settlement: <strong>₹ {payEnteredPay.toFixed(2)}</strong> received
+                    {payEnteredAdj > 0 && (
+                      <> + <strong>₹ {payEnteredAdj.toFixed(2)}</strong> Kasar</>
+                    )}
+                  </span>
                   <span>•</span>
                   <span>Remaining Balance: <strong>₹ 0.00 (Fully Settled)</strong></span>
                 </div>
