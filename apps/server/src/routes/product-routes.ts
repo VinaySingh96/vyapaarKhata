@@ -293,12 +293,77 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
 
     await opts.uow.runInTransaction(async (ctx) => {
       await ctx.products.save(updated);
+
+      // Also update stock_balances if stock quantity is passed
+      const targetStock = (body as any).totalStock !== undefined ? (body as any).totalStock : (body as any).stockOnHand;
+      if (targetStock !== undefined && !isNaN(Number(targetStock)) && ctx.rawQuery) {
+        const stockQty = Number(targetStock);
+        let locationId = '00000000-0000-0000-0000-000000000001';
+        const locRows = await ctx.rawQuery(
+          `SELECT id FROM inventory_locations WHERE tenant_id = $1 ORDER BY is_default DESC LIMIT 1`,
+          [tenant.tenantId]
+        );
+        if (locRows.length > 0) locationId = locRows[0].id;
+
+        const varRows = await ctx.rawQuery(
+          `SELECT id FROM product_variants WHERE product_id = $1 LIMIT 1`,
+          [productId]
+        );
+        const variantId = varRows.length > 0 ? varRows[0].id : productId;
+
+        const existingSb = await ctx.rawQuery(
+          `SELECT id FROM stock_balances WHERE tenant_id = $1 AND inventory_location_id = $2 AND variant_id = $3 LIMIT 1`,
+          [tenant.tenantId, locationId, variantId]
+        );
+
+        if (existingSb.length > 0) {
+          await ctx.rawQuery(
+            `UPDATE stock_balances
+             SET quantity_on_hand = $1, quantity_available = $1, updated_at = NOW()
+             WHERE id = $2`,
+            [String(stockQty), existingSb[0].id]
+          );
+        } else {
+          await ctx.rawQuery(
+            `INSERT INTO stock_balances (
+               id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
+             ) VALUES ($1, $2, $3, $4, $5, $5, NOW())`,
+            [randomUUID(), tenant.tenantId, locationId, variantId, String(stockQty)]
+          );
+        }
+      }
     });
 
     return reply.status(200).send({
       success: true,
       data: updated,
       message: 'Product updated successfully',
+      requestId: req.id,
+    });
+  });
+
+  // DELETE /api/v1/products/:id
+  app.delete<{ Params: { id: string } }>('/:id', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const productId = req.params.id;
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      if (ctx.rawQuery) {
+        // Soft delete product & variants
+        await ctx.rawQuery(
+          `UPDATE products SET is_active = false, updated_at = NOW() WHERE tenant_id = $1 AND id = $2`,
+          [tenant.tenantId, productId]
+        );
+        await ctx.rawQuery(
+          `UPDATE product_variants SET is_active = false, updated_at = NOW() WHERE tenant_id = $1 AND product_id = $2`,
+          [tenant.tenantId, productId]
+        );
+      }
+    });
+
+    return reply.status(200).send({
+      success: true,
+      message: 'Product removed successfully',
       requestId: req.id,
     });
   });

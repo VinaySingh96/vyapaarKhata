@@ -189,6 +189,126 @@ export const ProductsScreen: React.FC = () => {
     }
   };
 
+  // Edit Product State
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editNameHi, setEditNameHi] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState('');
+  const [editUnitId, setEditUnitId] = useState('');
+  const [editSku, setEditSku] = useState('');
+  const [editBarcode, setEditBarcode] = useState('');
+  const [editPurchasePrice, setEditPurchasePrice] = useState('0');
+  const [editSellingPrice, setEditSellingPrice] = useState('0');
+  const [editStock, setEditStock] = useState('0');
+  const [editReorderLevel, setEditReorderLevel] = useState('0');
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
+
+  // Delete Product State
+  const [productToDelete, setProductToDelete] = useState<ProductItem | null>(null);
+  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+
+  const handleOpenEditProduct = (p: ProductItem) => {
+    setEditingProduct(p);
+    setEditName(p.name);
+    setEditNameHi(p.nameHi || '');
+    setEditCategoryId(p.categoryId || (categoriesList[0]?.id || ''));
+    setEditUnitId(p.baseUnitId || (unitsList[0]?.id || ''));
+    setEditSku(p.sku || '');
+    setEditBarcode(p.barcode || '');
+    setEditPurchasePrice(String(p.purchasePrice || 0));
+    setEditSellingPrice(String(p.sellingPrice || 0));
+    setEditStock(String(p.totalStock || 0));
+    setEditReorderLevel(String(p.reorderLevel || 0));
+    setShowEditProductModal(true);
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    if (!editName.trim()) {
+      toast.warning('Product name is required');
+      return;
+    }
+
+    setIsUpdatingProduct(true);
+    try {
+      const res = await apiFetch(`/api/v1/products/${editingProduct.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: editName.trim(),
+          nameHi: editNameHi.trim() || undefined,
+          categoryId: editCategoryId,
+          baseUnitId: editUnitId,
+          sku: editSku.trim(),
+          barcode: editBarcode.trim() || undefined,
+          purchasePrice: parseFloat(editPurchasePrice) || 0,
+          sellingPrice: parseFloat(editSellingPrice) || 0,
+          totalStock: parseFloat(editStock) || 0,
+          reorderLevel: parseFloat(editReorderLevel) || 0,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Failed to update product');
+
+      toast.success('Product updated successfully!');
+      setShowEditProductModal(false);
+      setEditingProduct(null);
+      loadProducts();
+    } catch (err: any) {
+      toast.error(err.message || 'Error updating product');
+    } finally {
+      setIsUpdatingProduct(false);
+    }
+  };
+
+  const handleConfirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setIsDeletingProduct(true);
+    try {
+      const res = await apiFetch(`/api/v1/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Failed to remove product');
+
+      toast.success('Product removed from catalog');
+      setShowDeleteProductModal(false);
+      setProductToDelete(null);
+      loadProducts();
+    } catch (err: any) {
+      toast.error(err.message || 'Error deleting product');
+    } finally {
+      setIsDeletingProduct(false);
+    }
+  };
+
+  const handleExportCatalog = () => {
+    if (products.length === 0) {
+      toast.warning('No products in catalog to export');
+      return;
+    }
+
+    const exportData = products.map((p) => ({
+      Category: p.categoryName || 'General',
+      'Item Name': p.name,
+      'Item Name (Hindi)': p.nameHi || '',
+      'Item Code / SKU': p.sku || '',
+      Unit: p.baseUnitSymbol || 'pcs',
+      'Initial Stock': p.totalStock || 0,
+      'Purchase Rate (Asset Cost)': p.purchasePrice || 0,
+      'Daily Rental Rate (Sell Rate)': p.sellingPrice || 0,
+      'Reorder Warning Level': p.reorderLevel || 0,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Catalog');
+    XLSX.writeFile(wb, `catalog_export_${Date.now().toString().slice(-6)}.xlsx`);
+    toast.success(`Exported ${products.length} products to Excel!`);
+  };
+
   // Load products from backend
   const loadProducts = () => {
     setLoading(true);
@@ -515,6 +635,27 @@ export const ProductsScreen: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
+                id="btn-export-catalog"
+                type="button"
+                onClick={handleExportCatalog}
+                style={{
+                  padding: '9px 14px',
+                  backgroundColor: '#ffffff',
+                  color: '#4b5563',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                📤 Export Catalog (.xlsx)
+              </button>
+              <button
                 id="btn-import-excel"
                 type="button"
                 onClick={() => {
@@ -730,12 +871,13 @@ export const ProductsScreen: React.FC = () => {
                   <th style={{ padding: '12px 16px', textAlign: 'right' }}>{t('products.colSelling')}</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center' }}>{t('products.colStock')}</th>
                   <th style={{ padding: '12px 16px', textAlign: 'center' }}>{t('products.colStatus')}</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                    <td colSpan={9} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
                       No products found matching your search.
                     </td>
                   </tr>
@@ -809,6 +951,45 @@ export const ProductsScreen: React.FC = () => {
                           >
                             {stockStatus}
                           </span>
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditProduct(p)}
+                              style={{
+                                padding: '4px 10px',
+                                backgroundColor: '#eff6ff',
+                                color: '#1d4ed8',
+                                border: '1px solid #bfdbfe',
+                                borderRadius: '5px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProductToDelete(p);
+                                setShowDeleteProductModal(true);
+                              }}
+                              style={{
+                                padding: '4px 8px',
+                                backgroundColor: '#fef2f2',
+                                color: '#dc2626',
+                                border: '1px solid #fecaca',
+                                borderRadius: '5px',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                              }}
+                              title="Delete Product"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1734,6 +1915,268 @@ export const ProductsScreen: React.FC = () => {
             </div>
           )}
         </div>
+      </Modal>
+
+      {/* EDIT PRODUCT MODAL */}
+      <Modal
+        isOpen={showEditProductModal}
+        onClose={() => {
+          if (!isUpdatingProduct) {
+            setShowEditProductModal(false);
+            setEditingProduct(null);
+          }
+        }}
+        title="✏️ Edit Product in Catalog"
+        subtitle={`Update rates, stock count, and details for ${editingProduct?.name}`}
+        size="md"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowEditProductModal(false);
+                setEditingProduct(null);
+              }}
+              disabled={isUpdatingProduct}
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: isUpdatingProduct ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="submit"
+              form="form-edit-product"
+              disabled={isUpdatingProduct}
+              style={{
+                backgroundColor: isUpdatingProduct ? '#93c5fd' : '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 18px',
+                borderRadius: '6px',
+                cursor: isUpdatingProduct ? 'not-allowed' : 'pointer',
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
+            >
+              {isUpdatingProduct ? 'Saving...' : 'Update Product'}
+            </button>
+          </div>
+        }
+      >
+        <form id="form-edit-product" onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Product Name (English) *
+            </label>
+            <input
+              type="text"
+              required
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13.5px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Product Name (हिन्दी / Local Name)
+            </label>
+            <input
+              type="text"
+              value={editNameHi}
+              onChange={(e) => setEditNameHi(e.target.value)}
+              placeholder="e.g. बल्ली, बांस, फर्मा, पात्रा"
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13.5px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Category *
+              </label>
+              <select
+                required
+                value={editCategoryId}
+                onChange={(e) => setEditCategoryId(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+              >
+                {categoriesList.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Base Unit *
+              </label>
+              <select
+                required
+                value={editUnitId}
+                onChange={(e) => setEditUnitId(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+              >
+                {unitsList.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.symbol})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#16a34a', marginBottom: '4px' }}>
+                Daily Rent / Sell Rate (₹) *
+              </label>
+              <input
+                type="number"
+                step="any"
+                min="0"
+                required
+                value={editSellingPrice}
+                onChange={(e) => setEditSellingPrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #86efac', borderRadius: '6px', fontSize: '14px', fontWeight: 600, boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#4b5563', marginBottom: '4px' }}>
+                Purchase Price / Asset Cost (₹)
+              </label>
+              <input
+                type="number"
+                step="any"
+                min="0"
+                value={editPurchasePrice}
+                onChange={(e) => setEditPurchasePrice(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#1e40af', marginBottom: '4px' }}>
+                Total Fleet Stock Quantity *
+              </label>
+              <input
+                type="number"
+                step="any"
+                min="0"
+                required
+                value={editStock}
+                onChange={(e) => setEditStock(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #93c5fd', borderRadius: '6px', fontSize: '14px', fontWeight: 700, boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#4b5563', marginBottom: '4px' }}>
+                Reorder / Low Stock Warning
+              </label>
+              <input
+                type="number"
+                step="any"
+                min="0"
+                value={editReorderLevel}
+                onChange={(e) => setEditReorderLevel(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                SKU / Item Code
+              </label>
+              <input
+                type="text"
+                value={editSku}
+                onChange={(e) => setEditSku(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Barcode
+              </label>
+              <input
+                type="text"
+                value={editBarcode}
+                onChange={(e) => setEditBarcode(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+        </form>
+      </Modal>
+
+      {/* DELETE PRODUCT CONFIRMATION MODAL */}
+      <Modal
+        isOpen={showDeleteProductModal}
+        onClose={() => {
+          if (!isDeletingProduct) {
+            setShowDeleteProductModal(false);
+            setProductToDelete(null);
+          }
+        }}
+        title="🗑️ Remove Product from Catalog"
+        subtitle="Deactivate this item from your active catalog"
+        size="sm"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowDeleteProductModal(false);
+                setProductToDelete(null);
+              }}
+              disabled={isDeletingProduct}
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: isDeletingProduct ? 'not-allowed' : 'pointer',
+                fontWeight: 600,
+                fontSize: '13px',
+              }}
+            >
+              {t('btn.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmDeleteProduct}
+              disabled={isDeletingProduct}
+              style={{
+                backgroundColor: isDeletingProduct ? '#fca5a5' : '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                cursor: isDeletingProduct ? 'not-allowed' : 'pointer',
+                fontWeight: 700,
+                fontSize: '13px',
+              }}
+            >
+              {isDeletingProduct ? 'Removing...' : 'Yes, Remove Item'}
+            </button>
+          </div>
+        }
+      >
+        <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>
+          Are you sure you want to remove <strong>{productToDelete?.name}</strong> from the catalog?
+        </p>
       </Modal>
     </div>
   );
