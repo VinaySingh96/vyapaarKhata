@@ -34,10 +34,33 @@ export const expenseRoutes: FastifyPluginAsync<ExpenseRoutesOptions> = async (ap
   app.post<{ Body: Partial<Expense> }>('/', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    let catId = body.expenseCategoryId;
+    const cats = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.expenses.listCategories(tenant.tenantId);
+    });
+
+    if (cats && cats.length > 0) {
+      const match = cats.find((c) => c.id === catId);
+      catId = match ? match.id : cats[0].id;
+    } else {
+      const defaultCatId = randomUUID();
+      await opts.uow.runInTransaction(async (ctx) => {
+        await ctx.expenses.saveCategory({
+          id: defaultCatId,
+          tenantId: tenant.tenantId,
+          name: 'General Expenses',
+          code: 'GEN-EXP',
+          isActive: true,
+        });
+      });
+      catId = defaultCatId;
+    }
+
     const expense: Expense = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
-      expenseCategoryId: body.expenseCategoryId || '00000000-0000-0000-0000-000000000001',
+      expenseCategoryId: catId,
       expenseNumber: body.expenseNumber || `EXP-${Date.now().toString().slice(-6)}`,
       expenseDate: body.expenseDate || new Date().toISOString().slice(0, 10),
       amount: body.amount || 0,

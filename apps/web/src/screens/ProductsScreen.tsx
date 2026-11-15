@@ -1377,13 +1377,7 @@ export const ProductsScreen: React.FC = () => {
                     </option>
                   ))
                 ) : (
-                  <>
-                    <option value="10000000-0000-0000-0000-000000000001">Pieces (pcs)</option>
-                    <option value="10000000-0000-0000-0000-000000000009">Bags (bag)</option>
-                    <option value="10000000-0000-0000-0000-000000000003">Kilograms (kg)</option>
-                    <option value="10000000-0000-0000-0000-000000000010">Metric Tonnes (t)</option>
-                    <option value="10000000-0000-0000-0000-000000000007">Cubic Feet (cft)</option>
-                  </>
+                  <option value="">Loading units...</option>
                 )}
               </select>
             </div>

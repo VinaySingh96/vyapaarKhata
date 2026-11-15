@@ -661,15 +661,26 @@ export class PgUnitOfWork implements UnitOfWork {
         },
 
         listTaxCategories: async (tenantId: EntityId): Promise<TaxCategory[]> => {
-          const res = await client.query(
+          let res = await client.query(
             `SELECT tc.id, tc.tenant_id, tc.name, tc.code, tc.tax_type, tc.is_exempt,
                     tr.id as rate_id, tr.name as rate_name, tr.rate as rate_percentage
              FROM tax_categories tc
              LEFT JOIN tax_rates tr ON tr.tax_category_id = tc.id AND tr.is_active = true
-             WHERE tc.tenant_id = $1 OR tc.tenant_id = '00000000-0000-0000-0000-000000000001'
+             WHERE tc.tenant_id = $1 OR tc.tenant_id IS NULL
              ORDER BY tc.name ASC`,
             [tenantId]
           );
+
+          if (res.rows.length === 0) {
+            res = await client.query(
+              `SELECT tc.id, tc.tenant_id, tc.name, tc.code, tc.tax_type, tc.is_exempt,
+                      tr.id as rate_id, tr.name as rate_name, tr.rate as rate_percentage
+               FROM tax_categories tc
+               LEFT JOIN tax_rates tr ON tr.tax_category_id = tc.id AND tr.is_active = true
+               WHERE tc.tenant_id = '00000000-0000-0000-0000-000000000001'
+               ORDER BY tc.name ASC`
+            );
+          }
 
           const map = new Map<string, TaxCategory>();
           for (const row of res.rows) {
@@ -1316,6 +1327,17 @@ export class PgUnitOfWork implements UnitOfWork {
           const aggregateId = ensureUuid(rawAggregateId);
           const aggregateType = event.eventType.split('.')[0] || 'system';
 
+          let targetInstallationId = ensureUuid(event.tenantId);
+          try {
+            const instRes = await client.query(
+              `SELECT id FROM installations WHERE tenant_id = $1 LIMIT 1`,
+              [event.tenantId]
+            );
+            if (instRes.rows.length > 0) {
+              targetInstallationId = instRes.rows[0].id;
+            }
+          } catch {}
+
           await client.query(
             `INSERT INTO sync_outbox (
                id, tenant_id, installation_id, event_id, aggregate_type, aggregate_id, sequence_number, event_type, payload, status, created_at
@@ -1327,7 +1349,7 @@ export class PgUnitOfWork implements UnitOfWork {
             [
               randomUUID(),
               event.tenantId,
-              ensureUuid('00000000-0000-0000-0000-000000000001'),
+              targetInstallationId,
               ensureUuid(event.id),
               aggregateType,
               aggregateId,

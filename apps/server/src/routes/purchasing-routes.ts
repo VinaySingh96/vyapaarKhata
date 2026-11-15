@@ -36,11 +36,29 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
   app.post<{ Body: Partial<PurchaseOrder> }>('/orders', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    let finalBusinessLocationId: string =
+      body.businessLocationId || '60000000-0000-0000-0000-000000000001';
+    if (!body.businessLocationId || body.businessLocationId === '60000000-0000-0000-0000-000000000001') {
+      const bLocs = await opts.uow.runInTransaction(async (ctx: any) => {
+        if (ctx.rawQuery) {
+          return ctx.rawQuery(
+            `SELECT id FROM business_locations WHERE tenant_id = $1 LIMIT 1`,
+            [tenant.tenantId]
+          );
+        }
+        return [];
+      });
+      if (bLocs && bLocs.length > 0) {
+        finalBusinessLocationId = bLocs[0].id;
+      }
+    }
+
     const order: PurchaseOrder = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       supplierId: body.supplierId || '',
-      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
+      businessLocationId: finalBusinessLocationId,
       orderNumber: body.orderNumber || `PO-${Date.now().toString().slice(-6)}`,
       status: 'confirmed',
       subtotal: body.subtotal || 0,
@@ -149,11 +167,29 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
   app.post<{ Body: Partial<PurchaseBill> }>('/bills', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    let finalBusinessLocationId: string =
+      body.businessLocationId || '60000000-0000-0000-0000-000000000001';
+    if (!body.businessLocationId || body.businessLocationId === '60000000-0000-0000-0000-000000000001') {
+      const bLocs = await opts.uow.runInTransaction(async (ctx: any) => {
+        if (ctx.rawQuery) {
+          return ctx.rawQuery(
+            `SELECT id FROM business_locations WHERE tenant_id = $1 LIMIT 1`,
+            [tenant.tenantId]
+          );
+        }
+        return [];
+      });
+      if (bLocs && bLocs.length > 0) {
+        finalBusinessLocationId = bLocs[0].id;
+      }
+    }
+
     const bill: PurchaseBill = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       supplierId: body.supplierId || '',
-      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
+      businessLocationId: finalBusinessLocationId,
       billNumber: body.billNumber || `BILL-${Date.now().toString().slice(-6)}`,
       supplierInvoiceNumber: body.supplierInvoiceNumber,
       status: 'draft',

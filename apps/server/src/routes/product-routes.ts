@@ -222,6 +222,18 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
   app.post<{ Body: Partial<Product> }>('/', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    let finalBaseUnitId = body.baseUnitId;
+    if (!finalBaseUnitId || finalBaseUnitId === '10000000-0000-0000-0000-000000000001') {
+      const units = await opts.uow.runInTransaction(async (ctx) => {
+        return ctx.products.listUnits(tenant.tenantId);
+      });
+      const pcs = units.find(
+        (u) => u.symbol?.toLowerCase() === 'pcs' || u.name?.toLowerCase() === 'pieces'
+      );
+      finalBaseUnitId = pcs?.id || units[0]?.id || '10000000-0000-0000-0000-000000000001';
+    }
+
     const product: Product = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
@@ -233,7 +245,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
       sku: body.sku,
       barcode: body.barcode,
       hsnSacCode: body.hsnSacCode,
-      baseUnitId: body.baseUnitId || '10000000-0000-0000-0000-000000000001',
+      baseUnitId: finalBaseUnitId,
       isTaxInclusive: body.isTaxInclusive || false,
       purchasePrice: body.purchasePrice || 0,
       sellingPrice: body.sellingPrice || 0,
@@ -299,12 +311,16 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
       const targetStock = (body as any).totalStock !== undefined ? (body as any).totalStock : (body as any).stockOnHand;
       if (targetStock !== undefined && !isNaN(Number(targetStock)) && ctx.rawQuery) {
         const stockQty = Number(targetStock);
-        let locationId = '00000000-0000-0000-0000-000000000001';
+        let locationId = '';
         const locRows = await ctx.rawQuery(
           `SELECT id FROM inventory_locations WHERE tenant_id = $1 ORDER BY is_default DESC LIMIT 1`,
           [tenant.tenantId]
         );
-        if (locRows.length > 0) locationId = locRows[0].id;
+        if (locRows.length > 0) {
+          locationId = locRows[0].id;
+        } else {
+          locationId = '70000000-0000-0000-0000-000000000001';
+        }
 
         const varRows = await ctx.rawQuery(
           `SELECT id FROM product_variants WHERE product_id = $1 LIMIT 1`,
@@ -410,13 +426,13 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
     try {
       const result = await opts.uow.runInTransaction(async (ctx) => {
         // 1. Get default inventory location for this tenant
-        let locationId = '00000000-0000-0000-0000-000000000001';
+        let locationId = '70000000-0000-0000-0000-000000000001';
         if (ctx.rawQuery) {
           const locRows = await ctx.rawQuery(
             `SELECT id FROM inventory_locations WHERE tenant_id = $1 ORDER BY is_default DESC LIMIT 1`,
             [tenant.tenantId]
           );
-          if (locRows.length > 0) {
+          if (locRows && locRows.length > 0) {
             locationId = locRows[0].id;
           }
         }
@@ -429,6 +445,9 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
             `SELECT id, name, symbol FROM units WHERE tenant_id = $1`,
             [tenant.tenantId]
           );
+          if (uRows && uRows.length > 0) {
+            defaultUnitId = uRows[0].id;
+          }
           for (const u of uRows) {
             unitsMap.set(u.symbol.toLowerCase(), u.id);
             unitsMap.set(u.name.toLowerCase(), u.id);

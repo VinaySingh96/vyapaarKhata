@@ -63,10 +63,28 @@ export const inventoryRoutes: FastifyPluginAsync<InventoryRoutesOptions> = async
   app.post<{ Body: Partial<InventoryLocation> }>('/locations', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    let finalBusinessLocationId: string =
+      body.businessLocationId || '60000000-0000-0000-0000-000000000001';
+    if (!body.businessLocationId || body.businessLocationId === '60000000-0000-0000-0000-000000000001') {
+      const bLocs = await opts.uow.runInTransaction(async (ctx: any) => {
+        if (ctx.rawQuery) {
+          return ctx.rawQuery(
+            `SELECT id FROM business_locations WHERE tenant_id = $1 LIMIT 1`,
+            [tenant.tenantId]
+          );
+        }
+        return [];
+      });
+      if (bLocs && bLocs.length > 0) {
+        finalBusinessLocationId = bLocs[0].id;
+      }
+    }
+
     const location: InventoryLocation = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
-      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
+      businessLocationId: finalBusinessLocationId,
       name: body.name || 'Warehouse',
       code: body.code || `WH-${Date.now().toString().slice(-4)}`,
       locationType: body.locationType || 'warehouse',

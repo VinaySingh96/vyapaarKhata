@@ -195,7 +195,6 @@ export const PurchasingScreen: React.FC = () => {
           body: JSON.stringify({
             id: billId,
             supplierId: selectedSupplierId,
-            businessLocationId: '60000000-0000-0000-0000-000000000001',
             billNumber,
             supplierInvoiceNumber: receiptNumber,
             subtotal: lineTotal,
