@@ -102,6 +102,9 @@ export class PaymentService {
             createdAt: now,
           };
           await ctx.payments.recordAllocation(allocationEntity);
+          if (!payment.allocations) {
+            payment.allocations = [];
+          }
           payment.allocations.push(allocationEntity);
         }
 

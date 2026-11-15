@@ -175,7 +175,56 @@ export const PurchasingScreen: React.FC = () => {
         throw new Error(postJson.error?.message || 'Failed to post GRN to inventory');
       }
 
-      toast.success(`GRN ${receiptNumber} inward posted! +${qty} units added to Godown.`);
+      // 3. Automatically create and post matching Purchase Bill so supplier payable ledger is credited
+      const billId = crypto.randomUUID();
+      const billNumber = `BILL-${receiptNumber.replace('GRN-', '')}`;
+      const lineTotal = qty * cost;
+
+      try {
+        const billRes = await fetch('/api/v1/purchasing/bills', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+          },
+          body: JSON.stringify({
+            id: billId,
+            supplierId: selectedSupplierId,
+            businessLocationId: '60000000-0000-0000-0000-000000000001',
+            billNumber,
+            supplierInvoiceNumber: receiptNumber,
+            subtotal: lineTotal,
+            taxAmount: 0,
+            totalAmount: lineTotal,
+            lines: [
+              {
+                id: crypto.randomUUID(),
+                billId,
+                variantId: prod?.defaultVariantId || prod?.variants?.[0]?.id || prod?.id,
+                quantity: qty,
+                unitPrice: cost,
+                lineTotal,
+              },
+            ],
+          }),
+        });
+
+        const billJson = await billRes.json();
+        if (billJson.success) {
+          await fetch(`/api/v1/purchasing/bills/${billId}/post`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+            },
+            body: JSON.stringify({}),
+          });
+        }
+      } catch (billErr) {
+        console.warn('Failed to auto-create matching purchase bill:', billErr);
+      }
+
+      toast.success(`GRN ${receiptNumber} inward posted! +${qty} units added to Godown & purchase bill recorded.`);
       setShowCreateGRNModal(false);
       loadData();
     } catch (err: any) {

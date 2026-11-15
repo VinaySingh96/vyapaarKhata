@@ -84,6 +84,46 @@ export const partyRoutes: FastifyPluginAsync<PartyRoutesOptions> = async (app, o
     });
   });
 
+  // PUT /api/v1/parties/:id
+  app.put<{ Params: { id: string }; Body: Partial<Party> }>('/:id', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const existing = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.parties.findById(tenant.tenantId, req.params.id);
+    });
+
+    if (!existing) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Party ${req.params.id} not found` },
+        requestId: req.id,
+      });
+    }
+
+    const body = req.body || {};
+    const updated: Party = {
+      ...existing,
+      partyType: body.partyType || existing.partyType,
+      displayName: body.displayName || existing.displayName,
+      legalName: body.legalName !== undefined ? body.legalName : existing.legalName,
+      phone: body.phone !== undefined ? body.phone : existing.phone,
+      email: body.email !== undefined ? body.email : existing.email,
+      pan: body.pan !== undefined ? body.pan : existing.pan,
+      gstin: body.gstin !== undefined ? body.gstin : existing.gstin,
+      billingAddress: body.billingAddress !== undefined ? body.billingAddress : existing.billingAddress,
+      isActive: body.isActive !== undefined ? body.isActive : existing.isActive,
+    };
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.parties.save(updated);
+    });
+
+    return reply.status(200).send({
+      success: true,
+      data: updated,
+      requestId: req.id,
+    });
+  });
+
   // GET /api/v1/parties/:id/ledger
   app.get<{ Params: { id: string } }>('/:id/ledger', async (req, reply) => {
     const tenant = resolveTenant(req);

@@ -609,6 +609,26 @@ export const SalesBillingScreen: React.FC = () => {
         throw new Error(postJson.error?.message || 'Failed to post sales invoice');
       }
 
+      // If payment mode is cash, upi, or cheque (not credit/udhaar), auto-record payment against invoice
+      if (paymentMode && paymentMode !== 'credit' && grandTotal > 0) {
+        try {
+          await fetch(`/api/v1/sales/invoices/${invoiceId}/payments`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+            },
+            body: JSON.stringify({
+              amount: grandTotal,
+              paymentMode: paymentMode,
+              notes: `Immediate payment at counter (${paymentMode.toUpperCase()})`,
+            }),
+          });
+        } catch (payErr) {
+          console.warn('Failed to auto-record POS payment:', payErr);
+        }
+      }
+
       // Build printable invoice object
       const printableInvoice = {
         id: invoiceId,
@@ -1847,6 +1867,7 @@ export const SalesBillingScreen: React.FC = () => {
                             {inv.status === 'posted' && (
                               <button
                                 type="button"
+                                disabled={(inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001}
                                 onClick={() => {
                                   setInvoiceToCancel(inv);
                                   setIsCancelModalOpen(true);
@@ -1854,14 +1875,14 @@ export const SalesBillingScreen: React.FC = () => {
                                 style={{
                                   padding: '4px 8px',
                                   borderRadius: '4px',
-                                  border: '1px solid #fecaca',
-                                  backgroundColor: '#fef2f2',
+                                  border: (inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001 ? '1px solid #e5e7eb' : '1px solid #fecaca',
+                                  backgroundColor: (inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001 ? '#f3f4f6' : '#fef2f2',
                                   fontSize: '12px',
                                   fontWeight: 600,
-                                  cursor: 'pointer',
-                                  color: '#dc2626',
+                                  cursor: (inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001 ? 'not-allowed' : 'pointer',
+                                  color: (inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001 ? '#9ca3af' : '#dc2626',
                                 }}
-                                title="Cancel / Void Invoice"
+                                title={(inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001 ? 'Cannot void invoice with recorded payments or adjustments' : 'Cancel / Void Invoice'}
                               >
                                 🗑️ Void
                               </button>

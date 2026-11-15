@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useI18n, Language } from '../i18n/index.js';
 import { useToast } from '../components/Toast.js';
 import { useStore } from '../context/StoreContext.js';
+import { Modal } from '../components/Modal.js';
+
+interface InventoryLocationItem {
+  id: string;
+  name: string;
+  code: string;
+  locationType?: string;
+  isDefault: boolean;
+  isActive: boolean;
+}
 
 export const SettingsScreen: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
@@ -14,6 +24,77 @@ export const SettingsScreen: React.FC = () => {
   const [address, setAddress] = useState(storeSettings.address || '');
   const [currency, setCurrency] = useState(storeSettings.currency || 'INR');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Godown / Warehouse Locations state
+  const [locations, setLocations] = useState<InventoryLocationItem[]>([]);
+  const [editingLocation, setEditingLocation] = useState<InventoryLocationItem | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locName, setLocName] = useState('');
+  const [locCode, setLocCode] = useState('');
+  const [locIsDefault, setLocIsDefault] = useState(true);
+  const [isSavingLoc, setIsSavingLoc] = useState(false);
+
+  const loadLocations = () => {
+    fetch('/api/v1/inventory/locations', {
+      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setLocations(json.data);
+        }
+      })
+      .catch((err) => console.warn('Failed to load locations:', err));
+  };
+
+  useEffect(() => {
+    loadLocations();
+  }, []);
+
+  const handleOpenEditLocation = (loc: InventoryLocationItem) => {
+    setEditingLocation(loc);
+    setLocName(loc.name);
+    setLocCode(loc.code);
+    setLocIsDefault(loc.isDefault);
+    setShowLocationModal(true);
+  };
+
+  const handleSaveLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!locName.trim()) {
+      toast.error('Godown name cannot be empty');
+      return;
+    }
+    setIsSavingLoc(true);
+    try {
+      const isNew = !editingLocation;
+      const url = isNew ? '/api/v1/inventory/locations' : `/api/v1/inventory/locations/${editingLocation.id}`;
+      const method = isNew ? 'POST' : 'PUT';
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
+        },
+        body: JSON.stringify({
+          name: locName.trim(),
+          code: locCode.trim() || `WH-${Date.now().toString().slice(-4)}`,
+          isDefault: locIsDefault,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to save godown');
+      }
+      toast.success(editingLocation ? 'Godown name updated successfully' : 'New godown added successfully');
+      setShowLocationModal(false);
+      loadLocations();
+    } catch (err: any) {
+      toast.error(err.message || 'Error updating godown');
+    } finally {
+      setIsSavingLoc(false);
+    }
+  };
 
   useEffect(() => {
     setStoreName(storeSettings.storeName);
@@ -180,8 +261,104 @@ export const SettingsScreen: React.FC = () => {
           </form>
         </div>
 
-        {/* Right Column: Master Data (Units & Taxes) */}
+        {/* Right Column: Master Data (Units, Taxes & Godowns) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Godowns & Warehouses */}
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#111827' }}>
+                🏢 Godowns & Warehouses (गोदाम)
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingLocation(null);
+                  setLocName('');
+                  setLocCode(`WH-${Date.now().toString().slice(-4)}`);
+                  setLocIsDefault(locations.length === 0);
+                  setShowLocationModal(true);
+                }}
+                style={{
+                  padding: '4px 10px',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#1d4ed8',
+                  cursor: 'pointer',
+                }}
+              >
+                + Add Godown
+              </button>
+            </div>
+            <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#6b7280' }}>
+              Configure physical storage locations where stock is inwarded, tracked, and dispatched.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {locations.length === 0 ? (
+                <div style={{ fontSize: '12.5px', color: '#9ca3af', fontStyle: 'italic', padding: '8px 0' }}>
+                  No godowns registered yet. Click &quot;+ Add Godown&quot; above.
+                </div>
+              ) : (
+                locations.map((loc) => (
+                  <div
+                    key={loc.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #e5e7eb',
+                      backgroundColor: '#f8fafc',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '13.5px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{loc.name}</span>
+                        {loc.isDefault && (
+                          <span
+                            style={{
+                              fontSize: '10.5px',
+                              fontWeight: 700,
+                              padding: '1px 6px',
+                              borderRadius: '10px',
+                              backgroundColor: '#dcfce7',
+                              color: '#15803d',
+                              border: '1px solid #bbf7d0',
+                            }}
+                          >
+                            Default Godown
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                        Code: <span style={{ fontFamily: 'monospace' }}>{loc.code}</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditLocation(loc)}
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: '#2563eb',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ✏️ Edit Name
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
           {/* GST Slabs */}
           <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
             <h3 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700, color: '#111827' }}>
@@ -236,6 +413,94 @@ export const SettingsScreen: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* EDIT / ADD GODOWN MODAL */}
+      <Modal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        title={editingLocation ? 'Edit Godown / Warehouse' : 'Add New Godown'}
+        subtitle="Update godown name and code for storage tracking"
+        size="sm"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
+            <button
+              type="button"
+              onClick={() => setShowLocationModal(false)}
+              style={{
+                padding: '8px 14px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="form-edit-location"
+              disabled={isSavingLoc}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: isSavingLoc ? '#93c5fd' : '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: isSavingLoc ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {isSavingLoc ? 'Saving...' : 'Save Godown'}
+            </button>
+          </div>
+        }
+      >
+        <form id="form-edit-location" onSubmit={handleSaveLocation} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Godown / Warehouse Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={locName}
+              onChange={(e) => setLocName(e.target.value)}
+              placeholder="e.g. Patel Main Godown, Waghodia Road Godown"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Godown Code *
+            </label>
+            <input
+              type="text"
+              required
+              value={locCode}
+              onChange={(e) => setLocCode(e.target.value)}
+              placeholder="e.g. WH-GODOWN-01"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', boxSizing: 'border-box' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+            <input
+              type="checkbox"
+              id="cb-default-godown"
+              checked={locIsDefault}
+              onChange={(e) => setLocIsDefault(e.target.checked)}
+              style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+            />
+            <label htmlFor="cb-default-godown" style={{ fontSize: '13px', color: '#374151', cursor: 'pointer', fontWeight: 500 }}>
+              Set as default godown for sales & purchasing
+            </label>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

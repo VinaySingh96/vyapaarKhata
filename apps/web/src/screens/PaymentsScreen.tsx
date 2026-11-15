@@ -127,6 +127,25 @@ export const PaymentsScreen: React.FC = () => {
   const totalAdjustments = payments
     .reduce((sum, p) => sum + (p.adjustmentAmount || 0), 0);
 
+  const eligibleParties = useMemo(() => {
+    return parties.filter((p) => {
+      if (direction === 'inbound') {
+        return p.partyType === 'customer' || p.partyType === 'both';
+      } else {
+        return p.partyType === 'supplier' || p.partyType === 'both';
+      }
+    });
+  }, [parties, direction]);
+
+  useEffect(() => {
+    if (eligibleParties.length > 0 && !eligibleParties.some((p) => p.id === selectedPartyId)) {
+      setSelectedPartyId(eligibleParties[0].id);
+      setSelectedInvoiceId('');
+      setAmount('');
+      setAdjustmentAmount('0');
+    }
+  }, [eligibleParties, selectedPartyId]);
+
   // Filter invoices for selected party
   const partyPendingInvoices = useMemo(() => {
     return invoices.filter(
@@ -688,7 +707,7 @@ export const PaymentsScreen: React.FC = () => {
               required
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
             >
-              {parties.map((p) => (
+              {eligibleParties.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.displayName} ({p.partyType})
                 </option>

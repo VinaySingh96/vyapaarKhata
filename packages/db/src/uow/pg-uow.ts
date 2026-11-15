@@ -43,7 +43,8 @@ import {
   EntityId,
 } from '@vyapaarkhata/domain';
 
-function ensureUuid(id: string): string {
+function ensureUuid(id?: string | null): string {
+  if (!id) return randomUUID();
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   return uuidRegex.test(id) ? id : randomUUID();
 }
@@ -64,17 +65,15 @@ export class PgUnitOfWork implements UnitOfWork {
         findById: async (tenantId: EntityId, id: EntityId): Promise<SalesInvoice | null> => {
           const invRes = await client.query(
             `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
-                    p.phone as customer_phone, pa.address_line_1 as customer_address,
+                    p.phone as customer_phone,
+                    (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as customer_address,
                     si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
                     si.posted_at, si.created_at,
-                    COALESCE(SUM(alloc.allocated_amount), 0) as amount_paid,
-                    COALESCE(SUM(alloc.adjustment_amount), 0) as adjustment_amount
+                    COALESCE((SELECT SUM(alloc.allocated_amount) FROM payment_allocations alloc WHERE alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'), 0) as amount_paid,
+                    COALESCE((SELECT SUM(alloc.adjustment_amount) FROM payment_allocations alloc WHERE alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'), 0) as adjustment_amount
              FROM sales_invoices si
              LEFT JOIN parties p ON p.id = si.party_id
-             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
-             LEFT JOIN payment_allocations alloc ON alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'
-             WHERE si.tenant_id = $1 AND si.id = $2
-             GROUP BY si.id, p.display_name, p.phone, pa.address_line_1`,
+             WHERE si.tenant_id = $1 AND si.id = $2`,
             [tenantId, id]
           );
 
@@ -176,17 +175,15 @@ export class PgUnitOfWork implements UnitOfWork {
         list: async (tenantId: EntityId, limit: number = 50): Promise<SalesInvoice[]> => {
           const res = await client.query(
             `SELECT si.id, si.tenant_id, si.invoice_number, si.party_id, p.display_name as customer_name,
-                    p.phone as customer_phone, pa.address_line_1 as customer_address,
+                    p.phone as customer_phone,
+                    (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as customer_address,
                     si.business_location_id, si.status, si.subtotal, si.tax_amount, si.total_amount,
                     si.posted_at, si.created_at,
-                    COALESCE(SUM(alloc.allocated_amount), 0) as amount_paid,
-                    COALESCE(SUM(alloc.adjustment_amount), 0) as adjustment_amount
+                    COALESCE((SELECT SUM(alloc.allocated_amount) FROM payment_allocations alloc WHERE alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'), 0) as amount_paid,
+                    COALESCE((SELECT SUM(alloc.adjustment_amount) FROM payment_allocations alloc WHERE alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'), 0) as adjustment_amount
              FROM sales_invoices si
              LEFT JOIN parties p ON p.id = si.party_id
-             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
-             LEFT JOIN payment_allocations alloc ON alloc.document_id = si.id AND alloc.document_type = 'sales_invoice'
              WHERE si.tenant_id = $1
-             GROUP BY si.id, p.display_name, p.phone, pa.address_line_1
              ORDER BY si.created_at DESC
              LIMIT $2`,
             [tenantId, limit]
@@ -342,10 +339,11 @@ export class PgUnitOfWork implements UnitOfWork {
           const variantsRes = await client.query(
             `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.variant_name_hi,
                     pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
-                    COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
+                    COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END), 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
              WHERE pv.tenant_id = $1
+             GROUP BY pv.id
              ORDER BY pv.variant_name ASC`,
             [tenantId]
           );
@@ -424,10 +422,11 @@ export class PgUnitOfWork implements UnitOfWork {
 
           const variantsRes = await client.query(
             `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name, pv.variant_name_hi, pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
-                    COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
+                    COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END), 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
-             WHERE pv.tenant_id = $1 AND pv.product_id = $2`,
+             WHERE pv.tenant_id = $1 AND pv.product_id = $2
+             GROUP BY pv.id`,
             [tenantId, id]
           );
 
@@ -507,7 +506,19 @@ export class PgUnitOfWork implements UnitOfWork {
           );
 
           // Ensure default variant exists
-          const variantId = product.variants?.[0]?.id ? ensureUuid(product.variants[0].id) : randomUUID();
+          let variantId = product.variants?.[0]?.id ? ensureUuid(product.variants[0].id) : undefined;
+          if (!variantId && product.id) {
+            const existingVar = await client.query(
+              `SELECT id FROM product_variants WHERE product_id = $1 LIMIT 1`,
+              [productId]
+            );
+            if (existingVar.rows.length > 0) {
+              variantId = existingVar.rows[0].id;
+            }
+          }
+          if (!variantId) {
+            variantId = randomUUID();
+          }
           await client.query(
             `INSERT INTO product_variants (
                id, tenant_id, product_id, sku, barcode, variant_name, variant_name_hi, purchase_price, selling_price, mrp, reorder_level, is_active, created_at
@@ -528,7 +539,7 @@ export class PgUnitOfWork implements UnitOfWork {
               productId,
               product.sku || product.variants?.[0]?.sku || `SKU-${product.name.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-4)}`,
               product.barcode || product.variants?.[0]?.barcode || null,
-              product.variants?.[0]?.variantName || 'Standard',
+              product.variants?.[0]?.variantName || product.name || 'Standard',
               product.variants?.[0]?.variantNameHi || product.nameHi || null,
               product.purchasePrice || 0,
               product.sellingPrice || 0,
@@ -757,6 +768,14 @@ export class PgUnitOfWork implements UnitOfWork {
             const available = isNaN(parseFloat(r.quantity_available)) ? (onHand - reserved) : parseFloat(r.quantity_available);
             const reorder = isNaN(parseFloat(r.reorder_level)) ? 0 : parseFloat(r.reorder_level);
 
+            const rawVar = r.variant_name?.trim();
+            const rawProd = r.product_name?.trim();
+            const isStandard = !rawVar || rawVar.toLowerCase() === 'standard' || rawVar.toLowerCase() === 'default';
+            const itemName = isStandard ? (rawProd || rawVar) : rawVar;
+            const rawVarHi = r.variant_name_hi?.trim();
+            const rawProdHi = r.product_name_hi?.trim();
+            const itemNameHi = (isStandard ? rawProdHi : rawVarHi) || rawProdHi || rawVarHi || undefined;
+
             return {
               id: r.id,
               tenantId: r.tenant_id,
@@ -768,8 +787,8 @@ export class PgUnitOfWork implements UnitOfWork {
               quantityReserved: reserved,
               quantityAvailable: available,
               reorderLevel: reorder,
-              itemName: r.variant_name || r.product_name,
-              itemNameHi: r.variant_name_hi || r.product_name_hi || undefined,
+              itemName,
+              itemNameHi,
               sku: r.sku,
               unit: r.unit_symbol,
               locationName: r.location_name,
@@ -930,8 +949,7 @@ export class PgUnitOfWork implements UnitOfWork {
                name = EXCLUDED.name,
                code = EXCLUDED.code,
                is_default = EXCLUDED.is_default,
-               is_active = EXCLUDED.is_active,
-               updated_at = NOW()`,
+               is_active = EXCLUDED.is_active`,
             [
               ensureUuid(location.id),
               location.tenantId,
@@ -977,8 +995,8 @@ export class PgUnitOfWork implements UnitOfWork {
             // Upsert stock balance
             const updateRes = await client.query(
               `UPDATE stock_balances
-               SET quantity_on_hand = (COALESCE(NULLIF(quantity_on_hand, '')::numeric, 0) + $1)::text,
-                   quantity_available = (COALESCE(NULLIF(quantity_available, '')::numeric, 0) + $1)::text,
+               SET quantity_on_hand = GREATEST(0, (COALESCE(NULLIF(quantity_on_hand, '')::numeric, 0) + $1))::text,
+                   quantity_available = GREATEST(0, (COALESCE(NULLIF(quantity_available, '')::numeric, 0) + $1))::text,
                    updated_at = NOW()
                WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4
                RETURNING id`,
@@ -1028,22 +1046,32 @@ export class PgUnitOfWork implements UnitOfWork {
             // Deduct from source
             await client.query(
               `UPDATE stock_balances
-               SET quantity_on_hand = (quantity_on_hand::numeric - $1)::text, quantity_available = (quantity_available::numeric - $1)::text, updated_at = NOW()
+               SET quantity_on_hand = GREATEST(0, (COALESCE(NULLIF(quantity_on_hand, '')::numeric, 0) - $1))::text,
+                   quantity_available = GREATEST(0, (COALESCE(NULLIF(quantity_available, '')::numeric, 0) - $1))::text,
+                   updated_at = NOW()
                WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4`,
               [line.quantity, transfer.tenantId, transfer.sourceLocationId, ensureUuid(variantId)]
             );
 
             // Add to destination
-            await client.query(
-              `INSERT INTO stock_balances (
-                 id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
-               ) VALUES ($1, $2, $3, $4, $5, $5, NOW())
-               ON CONFLICT (id) DO UPDATE SET
-                 quantity_on_hand = (stock_balances.quantity_on_hand::numeric + EXCLUDED.quantity_on_hand::numeric)::text,
-                 quantity_available = (stock_balances.quantity_available::numeric + EXCLUDED.quantity_available::numeric)::text,
-                 updated_at = NOW()`,
-              [randomUUID(), transfer.tenantId, transfer.destinationLocationId, ensureUuid(variantId), line.quantity]
+            const destUpdateRes = await client.query(
+              `UPDATE stock_balances
+               SET quantity_on_hand = (COALESCE(NULLIF(quantity_on_hand, '')::numeric, 0) + $1)::text,
+                   quantity_available = (COALESCE(NULLIF(quantity_available, '')::numeric, 0) + $1)::text,
+                   updated_at = NOW()
+               WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4
+               RETURNING id`,
+              [line.quantity, transfer.tenantId, transfer.destinationLocationId, ensureUuid(variantId)]
             );
+
+            if (destUpdateRes.rows.length === 0) {
+              await client.query(
+                `INSERT INTO stock_balances (
+                   id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, average_unit_cost, updated_at
+                 ) VALUES ($1, $2, $3, $4, $5, $5, 0, NOW())`,
+                [randomUUID(), transfer.tenantId, transfer.destinationLocationId, ensureUuid(variantId), line.quantity]
+              );
+            }
           }
         },
       };
@@ -1055,51 +1083,51 @@ export class PgUnitOfWork implements UnitOfWork {
         list: async (tenantId: EntityId, partyType?: PartyType): Promise<Party[]> => {
           const res = await client.query(
             `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
-                    pa.address_line_1 as billing_address,
-                    COALESCE(SUM(ple.debit_amount - ple.credit_amount), 0) as current_balance
+                    (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as billing_address,
+                    COALESCE((SELECT (ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id AND ple.document_type = 'opening_balance' LIMIT 1), 0) as opening_balance,
+                    COALESCE((SELECT SUM(ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id), 0) as current_balance
              FROM parties p
-             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
-             LEFT JOIN party_ledger_entries ple ON ple.party_id = p.id
              WHERE p.tenant_id = $1 AND ($2::varchar IS NULL OR p.party_type = $2 OR p.party_type = 'both')
-             GROUP BY p.id, pa.address_line_1
              ORDER BY p.display_name ASC`,
             [tenantId, partyType || null]
           );
 
-          return res.rows.map((r) => ({
-            id: r.id,
-            tenantId: r.tenant_id,
-            partyType: r.party_type as PartyType,
-            displayName: r.display_name,
-            legalName: r.legal_name || undefined,
-            gstin: r.gstin || undefined,
-            pan: r.pan || undefined,
-            email: r.email || undefined,
-            phone: r.phone || undefined,
-            billingAddress: r.billing_address || undefined,
-            openingBalance: 0,
-            openingBalanceType: 'debit',
-            currentBalance: parseFloat(r.current_balance || '0'),
-            isActive: r.is_active,
-            createdAt: new Date(r.created_at).toISOString(),
-          }));
+          return res.rows.map((r) => {
+            const obVal = parseFloat(r.opening_balance || '0');
+            return {
+              id: r.id,
+              tenantId: r.tenant_id,
+              partyType: r.party_type as PartyType,
+              displayName: r.display_name,
+              legalName: r.legal_name || undefined,
+              gstin: r.gstin || undefined,
+              pan: r.pan || undefined,
+              email: r.email || undefined,
+              phone: r.phone || undefined,
+              billingAddress: r.billing_address || undefined,
+              openingBalance: Math.abs(obVal),
+              openingBalanceType: obVal < 0 ? 'credit' : 'debit',
+              currentBalance: parseFloat(r.current_balance || '0'),
+              isActive: r.is_active,
+              createdAt: new Date(r.created_at).toISOString(),
+            };
+          });
         },
 
         findById: async (tenantId: EntityId, id: EntityId): Promise<Party | null> => {
           const res = await client.query(
             `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
-                    pa.address_line_1 as billing_address,
-                    COALESCE(SUM(ple.debit_amount - ple.credit_amount), 0) as current_balance
+                    (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as billing_address,
+                    COALESCE((SELECT (ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id AND ple.document_type = 'opening_balance' LIMIT 1), 0) as opening_balance,
+                    COALESCE((SELECT SUM(ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id), 0) as current_balance
              FROM parties p
-             LEFT JOIN party_addresses pa ON pa.party_id = p.id AND pa.is_default = true
-             LEFT JOIN party_ledger_entries ple ON ple.party_id = p.id
-             WHERE p.tenant_id = $1 AND p.id = $2
-             GROUP BY p.id, pa.address_line_1`,
+             WHERE p.tenant_id = $1 AND p.id = $2`,
             [tenantId, id]
           );
 
           if (res.rows.length === 0) return null;
           const r = res.rows[0];
+          const obVal = parseFloat(r.opening_balance || '0');
 
           return {
             id: r.id,
@@ -1112,8 +1140,8 @@ export class PgUnitOfWork implements UnitOfWork {
             email: r.email || undefined,
             phone: r.phone || undefined,
             billingAddress: r.billing_address || undefined,
-            openingBalance: 0,
-            openingBalanceType: 'debit',
+            openingBalance: Math.abs(obVal),
+            openingBalanceType: obVal < 0 ? 'credit' : 'debit',
             currentBalance: parseFloat(r.current_balance || '0'),
             isActive: r.is_active,
             createdAt: new Date(r.created_at).toISOString(),
@@ -1165,6 +1193,23 @@ export class PgUnitOfWork implements UnitOfWork {
                 `INSERT INTO party_addresses (id, party_id, address_type, address_line_1, is_default)
                  VALUES ($1, $2, 'billing', $3, true)`,
                 [randomUUID(), partyId, party.billingAddress]
+              );
+            }
+          }
+
+          if (party.openingBalance && Math.abs(party.openingBalance) > 0) {
+            const existingOpening = await client.query(
+              `SELECT id FROM party_ledger_entries WHERE party_id = $1 AND document_type = 'opening_balance' LIMIT 1`,
+              [partyId]
+            );
+            if (existingOpening.rows.length === 0) {
+              const isDebit = party.openingBalanceType === 'credit' ? false : true;
+              const debitAmount = isDebit ? Math.abs(party.openingBalance) : 0;
+              const creditAmount = !isDebit ? Math.abs(party.openingBalance) : 0;
+              await client.query(
+                `INSERT INTO party_ledger_entries (id, tenant_id, party_id, document_type, document_id, debit_amount, credit_amount, created_at)
+                 VALUES ($1, $2, $3, 'opening_balance', $1, $4, $5, NOW())`,
+                [randomUUID(), party.tenantId, partyId, debitAmount, creditAmount]
               );
             }
           }
@@ -1891,27 +1936,35 @@ export class PgUnitOfWork implements UnitOfWork {
             [tenantId]
           );
 
-          // Receivables & Payables
+          // Receivables & Payables (computed per party so advances don't net against other parties)
           const recRes = await client.query(
             `SELECT 
-               COALESCE(SUM(CASE WHEN p.party_type IN ('customer', 'both') THEN ple.debit_amount - ple.credit_amount ELSE 0 END), 0) as receivables,
-               COALESCE(SUM(CASE WHEN p.party_type IN ('supplier', 'both') THEN ple.credit_amount - ple.debit_amount ELSE 0 END), 0) as payables
-             FROM party_ledger_entries ple
-             JOIN parties p ON p.id = ple.party_id
-             WHERE ple.tenant_id = $1`,
+               COALESCE(SUM(CASE WHEN p.party_type IN ('customer', 'both') AND balances.net_bal > 0 THEN balances.net_bal ELSE 0 END), 0) as receivables,
+               COALESCE(SUM(CASE WHEN p.party_type IN ('supplier', 'both') AND balances.net_bal < 0 THEN -balances.net_bal ELSE 0 END), 0) as payables
+             FROM (
+               SELECT party_id, SUM(debit_amount - credit_amount) as net_bal
+               FROM party_ledger_entries
+               WHERE tenant_id = $1
+               GROUP BY party_id
+             ) balances
+             JOIN parties p ON p.id = balances.party_id
+             WHERE p.tenant_id = $1`,
             [tenantId]
           );
 
-          // Low Stock Count and Total Stock Valuation
+          // Low Stock Count and Total Stock Valuation (aggregated per variant across locations)
           const stockRes = await client.query(
             `SELECT 
-               COUNT(CASE WHEN (CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END) <= COALESCE(NULLIF(pv.reorder_level, '')::numeric, 0) THEN 1 END) as low_stock_count,
-               COALESCE(SUM(
-                 CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric * COALESCE(pv.purchase_price, 0) ELSE 0 END
-               ), 0) as total_valuation
+               COUNT(CASE WHEN COALESCE(sb_agg.total_qty, 0) <= COALESCE(NULLIF(pv.reorder_level, '')::numeric, 0) THEN 1 END) as low_stock_count,
+               COALESCE(SUM(COALESCE(sb_agg.total_qty, 0) * COALESCE(pv.purchase_price, 0)), 0) as total_valuation
              FROM product_variants pv
-             LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
-             WHERE pv.tenant_id = $1`,
+             LEFT JOIN (
+               SELECT variant_id, SUM(CASE WHEN quantity_on_hand ~ '^[0-9]+(\\.[0-9]+)?$' THEN quantity_on_hand::numeric ELSE 0 END) as total_qty
+               FROM stock_balances
+               WHERE tenant_id = $1
+               GROUP BY variant_id
+             ) sb_agg ON sb_agg.variant_id = pv.id
+             WHERE pv.tenant_id = $1 AND pv.is_active = true`,
             [tenantId]
           );
 

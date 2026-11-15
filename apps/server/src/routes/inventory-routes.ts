@@ -86,6 +86,45 @@ export const inventoryRoutes: FastifyPluginAsync<InventoryRoutesOptions> = async
     });
   });
 
+  // PUT /api/v1/inventory/locations/:id
+  app.put<{ Params: { id: string }; Body: Partial<InventoryLocation> }>(
+    '/locations/:id',
+    async (req, reply) => {
+      const tenant = resolveTenant(req);
+      const body = req.body || {};
+      const locations = await opts.uow.runInTransaction(async (ctx) => {
+        return ctx.inventory.listLocations(tenant.tenantId);
+      });
+      const existing = locations.find((l) => l.id === req.params.id);
+      if (!existing) {
+        return reply.status(404).send({
+          success: false,
+          error: { code: 'NOT_FOUND', message: `Location ${req.params.id} not found` },
+          requestId: req.id,
+        });
+      }
+
+      const updated: InventoryLocation = {
+        ...existing,
+        name: body.name !== undefined ? body.name.trim() : existing.name,
+        code: body.code !== undefined ? body.code.trim() : existing.code,
+        locationType: body.locationType || existing.locationType,
+        isDefault: body.isDefault !== undefined ? body.isDefault : existing.isDefault,
+        isActive: body.isActive !== undefined ? body.isActive : existing.isActive,
+      };
+
+      await opts.uow.runInTransaction(async (ctx) => {
+        await ctx.inventory.saveLocation(updated);
+      });
+
+      return reply.status(200).send({
+        success: true,
+        data: updated,
+        requestId: req.id,
+      });
+    }
+  );
+
   // POST /api/v1/inventory/adjustments
   app.post<{ Body: Partial<StockAdjustment> }>('/adjustments', async (req, reply) => {
     const tenant = resolveTenant(req);

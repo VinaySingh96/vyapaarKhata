@@ -208,11 +208,18 @@ export class InvoicePostingService {
         throw new Error(`Cannot cancel invoice in state ${invoice.status}; only posted invoices can be reversed`);
       }
 
+      if ((invoice.amountPaid || 0) > 0.001 || (invoice.adjustmentAmount || 0) > 0.001) {
+        throw new Error(
+          `Cannot void invoice ${invoice.invoiceNumber || invoiceId} because payments or adjustments have already been recorded against it. Revert payments first.`
+        );
+      }
+
       // 1. Revert inventory movements
       for (const line of invoice.lines) {
+        const itemIdentifier = line.variantId || line.productId;
         const balance = await ctx.inventory.getBalance(
           tenantContext.tenantId,
-          line.productId,
+          itemIdentifier,
           line.locationId
         );
 
@@ -234,7 +241,7 @@ export class InvoicePostingService {
         });
 
         await ctx.inventory.updateBalance({
-          id: balance?.id || `${tenantContext.tenantId}-${line.productId}-${line.locationId}`,
+          id: balance?.id || `${tenantContext.tenantId}-${itemIdentifier}-${line.locationId}`,
           tenantId: tenantContext.tenantId,
           productId: line.productId,
           variantId: line.variantId,

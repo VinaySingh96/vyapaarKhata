@@ -125,16 +125,26 @@ export const InventoryScreen: React.FC = () => {
   // Searchable select options for adjustment modal
   const variantSelectOptions: SelectOption[] = useMemo(() => {
     return balances.map((b) => {
+      const prod = products.find(
+        (p) =>
+          p.defaultVariantId === b.variantId ||
+          p.variants?.some((v: any) => v.id === b.variantId) ||
+          p.id === b.variantId ||
+          p.id === b.productId
+      );
+      const isStandard = !b.itemName || b.itemName === 'Standard' || b.itemName === 'Default';
+      const name = !isStandard ? b.itemName : (prod?.name || b.itemName || 'Catalog Item');
+      const nameHi = b.itemNameHi || prod?.nameHi;
       const onHand = b.quantityOnHand ?? b.currentBalance ?? 0;
       return {
         value: b.variantId,
-        label: b.itemName || b.sku || 'Catalog Item',
-        sublabel: b.itemNameHi ? `${b.itemNameHi} • SKU: ${b.sku}` : `SKU: ${b.sku} | Loc: ${b.locationName || 'Main Godown'}`,
+        label: name || b.sku || 'Catalog Item',
+        sublabel: nameHi ? `${nameHi} • SKU: ${b.sku}` : `SKU: ${b.sku} | Loc: ${b.locationName || 'Main Godown'}`,
         badge: `${onHand} ${b.unit || 'units'}`,
         badgeType: onHand === 0 ? 'danger' : onHand <= (b.reorderLevel || 10) ? 'warning' : 'success',
       };
     });
-  }, [balances]);
+  }, [balances, products]);
 
   // Open update modal for a specific row
   const handleOpenUpdateModal = (item: StockBalanceItem) => {
@@ -348,7 +358,7 @@ export const InventoryScreen: React.FC = () => {
 
           {/* Quick-action item pills */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-            {outOfStockItems.slice(0, 10).map((item) => (
+            {outOfStockItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -381,9 +391,15 @@ export const InventoryScreen: React.FC = () => {
                     display: 'inline-block',
                   }}
                 />
-                <span>{item.itemName}</span>
-                {item.itemNameHi && (
-                  <span style={{ fontSize: '11px', opacity: 0.85 }}>({item.itemNameHi})</span>
+                <span>
+                  {item.itemName && item.itemName !== 'Standard' && item.itemName !== 'Default'
+                    ? item.itemName
+                    : (products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.name || item.itemName)}
+                </span>
+                {(item.itemNameHi || products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.nameHi) && (
+                  <span style={{ fontSize: '11px', opacity: 0.85 }}>
+                    ({item.itemNameHi || products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.nameHi})
+                  </span>
                 )}
                 <span
                   style={{
@@ -401,7 +417,7 @@ export const InventoryScreen: React.FC = () => {
               </button>
             ))}
 
-            {lowStockItems.slice(0, 6).map((item) => (
+            {lowStockItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -434,9 +450,15 @@ export const InventoryScreen: React.FC = () => {
                     display: 'inline-block',
                   }}
                 />
-                <span>{item.itemName}</span>
-                {item.itemNameHi && (
-                  <span style={{ fontSize: '11px', opacity: 0.85 }}>({item.itemNameHi})</span>
+                <span>
+                  {item.itemName && item.itemName !== 'Standard' && item.itemName !== 'Default'
+                    ? item.itemName
+                    : (products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.name || item.itemName)}
+                </span>
+                {(item.itemNameHi || products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.nameHi) && (
+                  <span style={{ fontSize: '11px', opacity: 0.85 }}>
+                    ({item.itemNameHi || products.find((p) => p.defaultVariantId === item.variantId || p.id === item.productId)?.nameHi})
+                  </span>
                 )}
                 <span
                   style={{
@@ -453,12 +475,6 @@ export const InventoryScreen: React.FC = () => {
                 <span style={{ color: '#2563eb', marginLeft: '2px', fontSize: '11px' }}>✏️</span>
               </button>
             ))}
-
-            {outOfStockItems.length + lowStockItems.length > 16 && (
-              <span style={{ alignSelf: 'center', fontSize: '12px', color: '#7f1d1d', fontWeight: 600 }}>
-                +{outOfStockItems.length + lowStockItems.length - 16} more items
-              </span>
-            )}
           </div>
         </div>
       )}
@@ -600,7 +616,9 @@ export const InventoryScreen: React.FC = () => {
                       p.id === b.variantId ||
                       p.id === b.productId
                   );
-                  const name = b.itemName || (prod ? prod.name : 'Catalog Item');
+                  const isStandard = !b.itemName || b.itemName === 'Standard' || b.itemName === 'Default';
+                  const name = !isStandard ? b.itemName : (prod?.name || b.itemName || 'Catalog Item');
+                  const nameHi = b.itemNameHi || prod?.nameHi;
                   const sku = b.sku || (prod ? prod.sku : 'SKU');
                   const unit = b.unit || (prod ? prod.baseUnitSymbol : 'units');
                   const locName = b.locationName || 'Main Godown (MG-01)';
@@ -632,9 +650,9 @@ export const InventoryScreen: React.FC = () => {
                           />
                           <div>
                             <div>{name}</div>
-                            {b.itemNameHi && (
+                            {nameHi && (
                               <div style={{ fontSize: '12px', color: '#4f46e5', fontWeight: 500, marginTop: '1px' }}>
-                                {b.itemNameHi}
+                                {nameHi}
                               </div>
                             )}
                             <div
