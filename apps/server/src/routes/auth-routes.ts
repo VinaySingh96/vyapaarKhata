@@ -1,7 +1,10 @@
 import { FastifyPluginAsync } from 'fastify';
+import { UnitOfWork } from '@vyapaarkhata/domain';
+import { ensureLocalTenantProvisioned } from '../services/tenant-provisioner.js';
 
 export interface LocalAuthRoutesOptions {
   centralServerUrl?: string;
+  uow?: UnitOfWork;
 }
 
 export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async (app, opts) => {
@@ -35,6 +38,16 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
           },
         };
       }
+
+      // Auto-provision tenant master data locally if authentication was successful
+      if (data.success && data.data?.tenant && opts.uow) {
+        try {
+          await ensureLocalTenantProvisioned(opts.uow, data.data.tenant);
+        } catch (provErr: any) {
+          app.log.warn({ provErr }, `[Tenant Provisioning] Warning while auto-provisioning tenant ${data.data.tenant.id}: ${provErr.message}`);
+        }
+      }
+
       return reply.status(centralRes.status).send(data);
     } catch (err: any) {
       return reply.status(503).send({
@@ -73,6 +86,16 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
           },
         };
       }
+
+      // Auto-provision tenant master data locally if authentication was successful
+      if (data.success && data.data?.tenant && opts.uow) {
+        try {
+          await ensureLocalTenantProvisioned(opts.uow, data.data.tenant);
+        } catch (provErr: any) {
+          app.log.warn({ provErr }, `[Tenant Provisioning] Warning while auto-provisioning tenant ${data.data.tenant.id}: ${provErr.message}`);
+        }
+      }
+
       return reply.status(centralRes.status).send(data);
     } catch (err: any) {
       return reply.status(503).send({

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
 
 export interface DashboardScreenProps {
   onNavigate?: (nav: string) => void;
@@ -19,14 +21,11 @@ interface LiveMetrics {
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
   const { t } = useI18n();
+  const { tenantId } = useStore();
   const [metrics, setMetrics] = useState<LiveMetrics | null>(null);
 
   useEffect(() => {
-    fetch('/api/v1/reports/dashboard', {
-      headers: {
-        'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-      },
-    })
+    apiFetch('/api/v1/reports/dashboard')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) {
@@ -36,7 +35,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
       .catch((err) => {
         console.warn('Could not fetch live dashboard metrics, using fallback:', err);
       });
-  }, []);
+  }, [tenantId]);
 
   // Keyboard shortcut F2 for New Sales Bill
   useEffect(() => {

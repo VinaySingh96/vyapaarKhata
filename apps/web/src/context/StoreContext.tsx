@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getActiveTenantId, getAuthHeaders, apiFetch } from '../utils/api.js';
 
 export type StoreType = 'jewellery' | 'building_materials';
 
@@ -17,6 +18,7 @@ export interface StoreSettings {
 interface StoreContextType {
   storeSettings: StoreSettings;
   storeType: StoreType;
+  tenantId: string;
   licenseNumber: string | null;
   jwtToken: string | null;
   isLicenseLoggedIn: boolean;
@@ -41,6 +43,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
 const StoreContext = createContext<StoreContextType>({
   storeSettings: DEFAULT_SETTINGS,
   storeType: 'building_materials',
+  tenantId: '00000000-0000-0000-0000-000000000001',
   licenseNumber: null,
   jwtToken: null,
   isLicenseLoggedIn: false,
@@ -87,6 +90,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [licenseNumber, setLicenseNumber] = useState<string | null>(() => {
     return localStorage.getItem('vk_license_number') || null;
+  });
+
+  const [tenantId, setTenantId] = useState<string>(() => {
+    return getActiveTenantId();
   });
 
   const [storeType, setStoreType] = useState<StoreType>(() => {
@@ -139,6 +146,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('vk_refresh_token', refreshToken);
       localStorage.setItem('vk_license_number', tenant.licenseNumber || lic);
       localStorage.setItem('vk_store_type', tenant.storeType || 'building_materials');
+      if (tenant?.id) {
+        localStorage.setItem('vk_tenant_id', tenant.id);
+        setTenantId(tenant.id);
+      }
 
       setJwtToken(accessToken);
       setLicenseNumber(tenant.licenseNumber || lic);
@@ -164,8 +175,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.removeItem('vk_jwt_token');
     localStorage.removeItem('vk_refresh_token');
     localStorage.removeItem('vk_license_number');
+    localStorage.removeItem('vk_tenant_id');
     setJwtToken(null);
     setLicenseNumber(null);
+    setTenantId('00000000-0000-0000-0000-000000000001');
   };
 
   const setExplicitStoreType = (type: StoreType) => {
@@ -176,11 +189,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const refreshStoreSettings = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/v1/settings', {
-        headers: {
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-        },
-      });
+      const res = await apiFetch('/api/v1/settings');
       const raw = await res.text();
       let json: any = null;
       try {
@@ -221,16 +230,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     refreshStoreSettings();
-  }, []);
+  }, [tenantId]);
 
   const updateStoreSettings = async (newSettings: Partial<StoreSettings>) => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/v1/settings', {
+      const res = await apiFetch('/api/v1/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify(newSettings),
       });
@@ -264,6 +272,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       value={{
         storeSettings,
         storeType,
+        tenantId,
         licenseNumber,
         jwtToken,
         isLicenseLoggedIn,

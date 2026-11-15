@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
 
 interface PartyItem {
   id: string;
@@ -23,6 +25,7 @@ interface PartyItem {
 export const PartiesScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [selectedType, setSelectedType] = useState<'all' | 'customer' | 'supplier'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,9 +48,7 @@ export const PartiesScreen: React.FC = () => {
   // Load parties from backend
   const loadParties = () => {
     setLoading(true);
-    fetch('/api/v1/parties', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/parties')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -63,7 +64,7 @@ export const PartiesScreen: React.FC = () => {
 
   useEffect(() => {
     loadParties();
-  }, []);
+  }, [tenantId]);
 
   const filteredParties = parties.filter((p) => {
     const matchesType = selectedType === 'all' || p.partyType === selectedType || p.partyType === 'both';
@@ -92,11 +93,10 @@ export const PartiesScreen: React.FC = () => {
     setIsSubmitting(true);
     try {
       const partyId = crypto.randomUUID();
-      const res = await fetch('/api/v1/parties', {
+      const res = await apiFetch('/api/v1/parties', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: partyId,

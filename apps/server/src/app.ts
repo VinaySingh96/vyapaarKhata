@@ -246,7 +246,11 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
       centralServerUrl: config.CENTRAL_SERVER_URL,
       centralTenantId,
     });
-    app.register(localAuthRoutes, { prefix: '/api/v1/auth', centralServerUrl: config.CENTRAL_SERVER_URL });
+    app.register(localAuthRoutes, {
+      prefix: '/api/v1/auth',
+      centralServerUrl: config.CENTRAL_SERVER_URL,
+      uow,
+    });
 
     // Register Automated Global Audit Logging Hook
     registerAuditHook(app, uow);

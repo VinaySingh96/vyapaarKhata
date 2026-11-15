@@ -70,76 +70,99 @@ export class AutoSyncWorker {
 
     this.isSyncing = true;
     try {
-      // 1. Fetch pending outbox events from local DB
-      const pendingEvents = await this.uow.runInTransaction(async (ctx) => {
-        return ctx.outbox.listPending(this.localTenantId, 100);
+      // 1. Identify distinct tenants that have pending outbox events
+      const pendingTenantIds = await this.uow.runInTransaction(async (ctx) => {
+        if (ctx.outbox.listPendingTenants) {
+          const ids = await ctx.outbox.listPendingTenants();
+          if (ids.length > 0) return ids;
+        }
+        return [this.localTenantId];
       });
 
-      if (pendingEvents.length === 0) {
-        this.log.debug(`[Auto-Sync] Local store ${this.localTenantId} is up to date (0 pending events)`);
-        return { syncedCount: 0, pendingRemaining: 0 };
-      }
+      let totalSynced = 0;
+      let totalRemaining = 0;
 
-      this.log.info(
-        `[Auto-Sync] Preparing to push ${pendingEvents.length} pending event(s) to Central Cloud for tenant ${this.centralTenantId}...`
-      );
-
-      const batchId = `AUTO-${Date.now()}`;
-      const payload = {
-        tenantId: this.centralTenantId,
-        installationId: this.installationId,
-        batchId,
-        events: pendingEvents.map((e) => ({
-          eventId: e.eventId,
-          eventType: e.eventType,
-          aggregateType: e.aggregateType,
-          aggregateId: e.aggregateId,
-          sequenceNumber: e.sequenceNumber,
-          payload: e.payload,
-          createdAt: e.createdAt,
-        })),
-      };
-
-      // 2. Transmit to Central Cloud
-      const res = await fetch(`${this.centralServerUrl}/api/v1/sync/push`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-tenant-id': this.centralTenantId,
-          'x-installation-id': this.installationId,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        this.log.warn(
-          `[Auto-Sync] Central Cloud rejected sync (status ${res.status}): ${text}`
-        );
-        return { syncedCount: 0, pendingRemaining: pendingEvents.length };
-      }
-
-      const json = (await res.json()) as any;
-      if (!json.success) {
-        this.log.warn(`[Auto-Sync] Central Cloud rejected sync: ${json.error?.message}`);
-        return { syncedCount: 0, pendingRemaining: pendingEvents.length };
-      }
-
-      const ackIds: string[] = json.data?.acknowledgedEventIds || [];
-      if (ackIds.length > 0) {
-        // 3. Mark locally as synced
-        await this.uow.runInTransaction(async (ctx) => {
-          await ctx.outbox.markSynced(this.localTenantId, ackIds);
+      for (const tId of pendingTenantIds) {
+        // Fetch pending events for this specific tenant
+        const pendingEvents = await this.uow.runInTransaction(async (ctx) => {
+          return ctx.outbox.listPending(tId, 100);
         });
 
+        if (pendingEvents.length === 0) continue;
+
         this.log.info(
-          `✅ [Auto-Sync] Successfully synchronized ${ackIds.length} event(s) to Central Cloud (Accepted: ${json.data?.acceptedCount || 0}, Duplicates: ${json.data?.duplicateCount || 0})`
+          `[Auto-Sync] Preparing to push ${pendingEvents.length} pending event(s) to Central Cloud for tenant ${tId}...`
         );
+
+        const batchId = `AUTO-${Date.now()}-${tId.slice(0, 8)}`;
+        const payload = {
+          tenantId: tId,
+          installationId: this.installationId,
+          batchId,
+          events: pendingEvents.map((e) => ({
+            eventId: e.eventId,
+            eventType: e.eventType,
+            aggregateType: e.aggregateType,
+            aggregateId: e.aggregateId,
+            sequenceNumber: e.sequenceNumber,
+            payload: e.payload,
+            createdAt: e.createdAt,
+          })),
+        };
+
+        // 2. Transmit to Central Cloud with tenant-specific headers and payload
+        try {
+          const res = await fetch(`${this.centralServerUrl}/api/v1/sync/push`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-tenant-id': tId,
+              'x-installation-id': this.installationId,
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const text = await res.text();
+            this.log.warn(
+              `[Auto-Sync] Central Cloud rejected sync for tenant ${tId} (status ${res.status}): ${text}`
+            );
+            totalRemaining += pendingEvents.length;
+            continue;
+          }
+
+          const json = (await res.json()) as any;
+          if (!json.success) {
+            this.log.warn(`[Auto-Sync] Central Cloud rejected sync for tenant ${tId}: ${json.error?.message}`);
+            totalRemaining += pendingEvents.length;
+            continue;
+          }
+
+          const ackIds: string[] = json.data?.acknowledgedEventIds || [];
+          if (ackIds.length > 0) {
+            // 3. Mark locally as synced for this tenant
+            await this.uow.runInTransaction(async (ctx) => {
+              await ctx.outbox.markSynced(tId, ackIds);
+            });
+
+            this.log.info(
+              `✅ [Auto-Sync] Successfully synchronized ${ackIds.length} event(s) for tenant ${tId} to Central Cloud (Accepted: ${json.data?.acceptedCount || 0}, Duplicates: ${json.data?.duplicateCount || 0})`
+            );
+            totalSynced += ackIds.length;
+          }
+
+          totalRemaining += Math.max(0, pendingEvents.length - ackIds.length);
+        } catch (pushErr: any) {
+          this.log.warn(
+            `[Auto-Sync] Unable to sync batch for tenant ${tId} against Central Cloud: ${pushErr.message}`
+          );
+          totalRemaining += pendingEvents.length;
+        }
       }
 
       return {
-        syncedCount: ackIds.length,
-        pendingRemaining: Math.max(0, pendingEvents.length - ackIds.length),
+        syncedCount: totalSynced,
+        pendingRemaining: totalRemaining,
       };
     } catch (err: any) {
       this.log.warn(

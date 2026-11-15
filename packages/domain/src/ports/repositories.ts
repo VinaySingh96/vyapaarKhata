@@ -73,6 +73,7 @@ export interface PartyRepository {
 export interface OutboxRepository {
   recordEvent(event: OutboxEvent): Promise<void>;
   listPending(tenantId: EntityId, limit?: number): Promise<any[]>;
+  listPendingTenants?(): Promise<EntityId[]>;
   markSynced(tenantId: EntityId, eventIds: EntityId[]): Promise<void>;
 }
 
@@ -157,6 +158,7 @@ export interface UnitOfWorkContext {
   reports: ReportRepository;
   settings: SettingsRepository;
   audit: AuditRepository;
+  rawQuery?: (sql: string, params?: any[]) => Promise<any>;
 }
 
 export interface UnitOfWork {

@@ -5,6 +5,7 @@ import { Modal } from '../components/Modal.js';
 import { useStore } from '../context/StoreContext.js';
 import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch, getActiveTenantId } from '../utils/api.js';
 
 export interface BillingLine {
   id: string;
@@ -70,7 +71,7 @@ interface InvoiceRecord {
 export const SalesBillingScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
-  const { storeSettings } = useStore();
+  const { storeSettings, tenantId } = useStore();
   const isJewelleryShop =
     storeSettings.storeName?.toLowerCase().includes('jewel') ||
     storeSettings.tradeName?.toLowerCase().includes('jewel') ||
@@ -136,9 +137,7 @@ export const SalesBillingScreen: React.FC = () => {
   // Load products, customers and invoices
   const loadData = () => {
     // 1. Fetch products
-    fetch('/api/v1/products', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -208,9 +207,7 @@ export const SalesBillingScreen: React.FC = () => {
       .catch((err) => console.warn('Could not load products:', err));
 
     // 2. Fetch customer parties
-    fetch('/api/v1/parties', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/parties')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -237,9 +234,7 @@ export const SalesBillingScreen: React.FC = () => {
       .catch((err) => console.warn('Could not load parties:', err));
 
     // 3. Fetch past invoices
-    fetch('/api/v1/sales/invoices?limit=50', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/sales/invoices?limit=50')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -251,7 +246,7 @@ export const SalesBillingScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   // Handle switching customer from dropdown
   const handleSelectCustomer = (customerId: string) => {
@@ -289,11 +284,10 @@ export const SalesBillingScreen: React.FC = () => {
 
     try {
       const newCustId = crypto.randomUUID();
-      const res = await fetch('/api/v1/parties', {
+      const res = await apiFetch('/api/v1/parties', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: newCustId,
@@ -522,11 +516,10 @@ export const SalesBillingScreen: React.FC = () => {
         const generatedPartyId = crypto.randomUUID();
         const partyName = customCustomerName.trim() || 'Counter Customer';
 
-        const partyRes = await fetch('/api/v1/parties', {
+        const partyRes = await apiFetch('/api/v1/parties', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
           },
           body: JSON.stringify({
             id: generatedPartyId,
@@ -562,11 +555,10 @@ export const SalesBillingScreen: React.FC = () => {
       const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       // 1. Create draft invoice
-      const createRes = await fetch('/api/v1/sales/invoices', {
+      const createRes = await apiFetch('/api/v1/sales/invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: invoiceId,
@@ -596,11 +588,10 @@ export const SalesBillingScreen: React.FC = () => {
       }
 
       // 2. Post invoice atomically
-      const postRes = await fetch(`/api/v1/sales/invoices/${invoiceId}/post`, {
+      const postRes = await apiFetch(`/api/v1/sales/invoices/${invoiceId}/post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({}),
       });
@@ -613,11 +604,10 @@ export const SalesBillingScreen: React.FC = () => {
       // If payment mode is cash, upi, or cheque (not credit/udhaar), auto-record payment against invoice
       if (paymentMode && paymentMode !== 'credit' && grandTotal > 0) {
         try {
-          await fetch(`/api/v1/sales/invoices/${invoiceId}/payments`, {
+          await apiFetch(`/api/v1/sales/invoices/${invoiceId}/payments`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-tenant-id': '00000000-0000-0000-0000-000000000001',
             },
             body: JSON.stringify({
               amount: grandTotal,
@@ -681,9 +671,7 @@ export const SalesBillingScreen: React.FC = () => {
   // Open existing invoice in Print Modal
   const handleViewInvoiceModal = async (inv: InvoiceRecord) => {
     try {
-      const res = await fetch(`/api/v1/sales/invoices/${inv.id}`, {
-        headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-      });
+      const res = await apiFetch(`/api/v1/sales/invoices/${inv.id}`);
       const json = await res.json();
       if (json.success && json.data) {
         setSelectedInvoiceForModal({
@@ -718,11 +706,10 @@ export const SalesBillingScreen: React.FC = () => {
     setIsCancelling(true);
 
     try {
-      const res = await fetch(`/api/v1/sales/invoices/${invoiceToCancel.id}`, {
+      const res = await apiFetch(`/api/v1/sales/invoices/${invoiceToCancel.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({ reason: cancelReason }),
       });
@@ -810,11 +797,10 @@ export const SalesBillingScreen: React.FC = () => {
 
     setIsSubmittingPayment(true);
     try {
-      const res = await fetch(`/api/v1/sales/invoices/${invoiceForPayment.id}/payments`, {
+      const res = await apiFetch(`/api/v1/sales/invoices/${invoiceForPayment.id}/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           amount: amt,

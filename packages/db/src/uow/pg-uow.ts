@@ -1356,6 +1356,13 @@ export class PgUnitOfWork implements UnitOfWork {
           }));
         },
 
+        listPendingTenants: async (): Promise<EntityId[]> => {
+          const res = await client.query(
+            `SELECT DISTINCT tenant_id FROM sync_outbox WHERE status = 'pending'`
+          );
+          return res.rows.map((r) => r.tenant_id);
+        },
+
         markSynced: async (tenantId: EntityId, eventIds: EntityId[]): Promise<void> => {
           if (!eventIds.length) return;
           await client.query(
@@ -2175,6 +2182,10 @@ export class PgUnitOfWork implements UnitOfWork {
         reports: reportRepo,
         settings: settingsRepo,
         audit: auditRepo,
+        rawQuery: async (sql: string, params?: any[]) => {
+          const r = await client.query(sql, params);
+          return r.rows;
+        },
       });
 
       await client.query('COMMIT');

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
 
 interface ReceiptItem {
   id: string;
@@ -30,6 +32,7 @@ interface BillItem {
 export const PurchasingScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [activeTab, setActiveTab] = useState<'receipts' | 'bills'>('receipts');
   const [showCreateGRNModal, setShowCreateGRNModal] = useState(false);
@@ -50,9 +53,7 @@ export const PurchasingScreen: React.FC = () => {
   const loadData = () => {
     setLoading(true);
     // 1. Fetch receipts
-    fetch('/api/v1/purchasing/receipts', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/purchasing/receipts')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -62,9 +63,7 @@ export const PurchasingScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load receipts:', err));
 
     // 2. Fetch bills
-    fetch('/api/v1/purchasing/bills', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/purchasing/bills')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -74,9 +73,7 @@ export const PurchasingScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load bills:', err));
 
     // 3. Fetch products
-    fetch('/api/v1/products', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -90,9 +87,7 @@ export const PurchasingScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load products:', err));
 
     // 4. Fetch suppliers
-    fetch('/api/v1/parties', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/parties')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -109,7 +104,7 @@ export const PurchasingScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   const handleCreateGRN = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,11 +126,10 @@ export const PurchasingScreen: React.FC = () => {
       const prod = products.find((p) => p.id === selectedProductId);
 
       // 1. Create draft receipt
-      const res = await fetch('/api/v1/purchasing/receipts', {
+      const res = await apiFetch('/api/v1/purchasing/receipts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: receiptId,
@@ -162,11 +156,10 @@ export const PurchasingScreen: React.FC = () => {
       }
 
       // 2. Post receipt to increment stock balances
-      const postRes = await fetch(`/api/v1/purchasing/receipts/${receiptId}/post`, {
+      const postRes = await apiFetch(`/api/v1/purchasing/receipts/${receiptId}/post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({}),
       });
@@ -182,11 +175,10 @@ export const PurchasingScreen: React.FC = () => {
       const lineTotal = qty * cost;
 
       try {
-        const billRes = await fetch('/api/v1/purchasing/bills', {
+        const billRes = await apiFetch('/api/v1/purchasing/bills', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
           },
           body: JSON.stringify({
             id: billId,
@@ -212,11 +204,10 @@ export const PurchasingScreen: React.FC = () => {
 
         const billJson = await billRes.json();
         if (billJson.success) {
-          await fetch(`/api/v1/purchasing/bills/${billId}/post`, {
+          await apiFetch(`/api/v1/purchasing/bills/${billId}/post`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-tenant-id': '00000000-0000-0000-0000-000000000001',
             },
             body: JSON.stringify({}),
           });

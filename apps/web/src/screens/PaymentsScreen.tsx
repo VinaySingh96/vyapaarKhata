@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch, getActiveTenantId } from '../utils/api.js';
 
 interface PaymentItem {
   id: string;
@@ -44,6 +46,7 @@ interface InvoiceOption {
 export const PaymentsScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [directionFilter, setDirectionFilter] = useState<'all' | 'inbound' | 'outbound'>('all');
   const [showRecordModal, setShowRecordModal] = useState(false);
@@ -68,9 +71,7 @@ export const PaymentsScreen: React.FC = () => {
   const loadData = () => {
     setLoading(true);
     // 1. Fetch payments
-    fetch('/api/v1/payments', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/payments')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -80,9 +81,7 @@ export const PaymentsScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load payments:', err));
 
     // 2. Fetch parties
-    fetch('/api/v1/parties', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/parties')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -95,9 +94,7 @@ export const PaymentsScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load parties:', err));
 
     // 3. Fetch sales invoices
-    fetch('/api/v1/sales/invoices', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/sales/invoices')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -110,7 +107,7 @@ export const PaymentsScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   const filteredPayments = payments.filter((p) => {
     if (directionFilter === 'all') return true;
@@ -249,11 +246,10 @@ export const PaymentsScreen: React.FC = () => {
     setIsSubmitting(true);
     try {
       if (selectedInvoiceId && direction === 'inbound') {
-        const res = await fetch(`/api/v1/sales/invoices/${selectedInvoiceId}/payments`, {
+        const res = await apiFetch(`/api/v1/sales/invoices/${selectedInvoiceId}/payments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
           },
           body: JSON.stringify({
             amount: parsedAmount,
@@ -280,11 +276,10 @@ export const PaymentsScreen: React.FC = () => {
         const paymentNumber = `PAY-${direction === 'inbound' ? 'REC' : 'OUT'}-${Date.now().toString().slice(-6)}`;
 
         // 1. Create draft payment
-        const res = await fetch('/api/v1/payments', {
+        const res = await apiFetch('/api/v1/payments', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
           },
           body: JSON.stringify({
             id: paymentId,
@@ -306,11 +301,10 @@ export const PaymentsScreen: React.FC = () => {
         }
 
         // 2. Post payment atomically to party ledger
-        const postRes = await fetch(`/api/v1/payments/${paymentId}/post`, {
+        const postRes = await apiFetch(`/api/v1/payments/${paymentId}/post`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-tenant-id': '00000000-0000-0000-0000-000000000001',
           },
           body: JSON.stringify({}),
         });

@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
+import { apiFetch } from '../utils/api.js';
 
 export interface StockBalanceItem {
   id: string;
@@ -41,6 +43,7 @@ const formatUnitQty = (val: number | string | undefined, unit?: string) => {
 export const InventoryScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [activeTab, setActiveTab] = useState<'balances' | 'movements'>('balances');
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
@@ -60,9 +63,7 @@ export const InventoryScreen: React.FC = () => {
   const loadData = () => {
     setLoading(true);
     // 1. Fetch balances (all variants)
-    fetch('/api/v1/inventory/balances', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/inventory/balances')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -72,9 +73,7 @@ export const InventoryScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load balances:', err));
 
     // 2. Fetch movements audit trail
-    fetch('/api/v1/inventory/movements?limit=30', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/inventory/movements?limit=30')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -84,9 +83,7 @@ export const InventoryScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load movements:', err));
 
     // 3. Fetch products catalog
-    fetch('/api/v1/products', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/products')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -99,7 +96,7 @@ export const InventoryScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   // Compute metrics
   const totalPhysicalUnits = useMemo(
@@ -219,11 +216,10 @@ export const InventoryScreen: React.FC = () => {
       );
       const targetUnitId = prod?.baseUnitId || '10000000-0000-0000-0000-000000000001';
 
-      const res = await fetch('/api/v1/inventory/adjustments', {
+      const res = await apiFetch('/api/v1/inventory/adjustments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: adjId,

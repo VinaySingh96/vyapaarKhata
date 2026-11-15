@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
 
 interface StockValuationItem {
   variantId: string;
@@ -26,6 +28,7 @@ interface AuditLogItem {
 export const ReportsScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [activeReportTab, setActiveReportTab] = useState<'valuation' | 'pnl' | 'gst' | 'audit'>('valuation');
   const [valuationData, setValuationData] = useState<StockValuationItem[]>([]);
@@ -36,9 +39,7 @@ export const ReportsScreen: React.FC = () => {
   const loadData = () => {
     setLoading(true);
     // 1. Fetch stock valuation
-    fetch('/api/v1/reports/stock-valuation', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/reports/stock-valuation')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -48,9 +49,7 @@ export const ReportsScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load valuation report:', err));
 
     // 2. Fetch dashboard metrics
-    fetch('/api/v1/reports/dashboard', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/reports/dashboard')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data) {
@@ -64,9 +63,7 @@ export const ReportsScreen: React.FC = () => {
   };
 
   const fetchAuditLogs = () => {
-    fetch('/api/v1/reports/audit-logs?limit=50', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/reports/audit-logs?limit=50')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -79,7 +76,7 @@ export const ReportsScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     if (activeReportTab === 'audit') {

@@ -3,6 +3,7 @@ import { useI18n, Language } from '../i18n/index.js';
 import { useToast } from '../components/Toast.js';
 import { useStore } from '../context/StoreContext.js';
 import { Modal } from '../components/Modal.js';
+import { apiFetch } from '../utils/api.js';
 
 interface InventoryLocationItem {
   id: string;
@@ -16,7 +17,7 @@ interface InventoryLocationItem {
 export const SettingsScreen: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
   const toast = useToast();
-  const { storeSettings, updateStoreSettings, isLoading } = useStore();
+  const { storeSettings, updateStoreSettings, isLoading, tenantId } = useStore();
 
   const [storeName, setStoreName] = useState(storeSettings.storeName);
   const [gstin, setGstin] = useState(storeSettings.gstin || '');
@@ -35,9 +36,7 @@ export const SettingsScreen: React.FC = () => {
   const [isSavingLoc, setIsSavingLoc] = useState(false);
 
   const loadLocations = () => {
-    fetch('/api/v1/inventory/locations', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/inventory/locations')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -49,7 +48,7 @@ export const SettingsScreen: React.FC = () => {
 
   useEffect(() => {
     loadLocations();
-  }, []);
+  }, [tenantId]);
 
   const handleOpenEditLocation = (loc: InventoryLocationItem) => {
     setEditingLocation(loc);
@@ -70,12 +69,8 @@ export const SettingsScreen: React.FC = () => {
       const isNew = !editingLocation;
       const url = isNew ? '/api/v1/inventory/locations' : `/api/v1/inventory/locations/${editingLocation.id}`;
       const method = isNew ? 'POST' : 'PUT';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
-        },
         body: JSON.stringify({
           name: locName.trim(),
           code: locCode.trim() || `WH-${Date.now().toString().slice(-4)}`,

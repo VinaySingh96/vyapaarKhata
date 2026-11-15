@@ -44,9 +44,10 @@ export const localSyncRoutes: FastifyPluginAsync<LocalSyncRoutesOptions> = async
     const tenant = resolveTenant(req);
     const targetCentralTenantId =
       (req.headers['x-central-tenant-id'] as string) ||
+      tenant.tenantId ||
       opts.centralTenantId ||
       process.env.CENTRAL_TENANT_ID ||
-      tenant.tenantId;
+      '00000000-0000-0000-0000-000000000001';
 
     // 1. Fetch pending outbox events
     const pendingEvents = await opts.uow.runInTransaction(async (ctx) => {

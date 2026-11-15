@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
+import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
+import { apiFetch } from '../utils/api.js';
 
 interface ExpenseItem {
   id: string;
@@ -26,6 +28,7 @@ interface ExpenseCategoryItem {
 export const ExpensesScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const { tenantId } = useStore();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -44,9 +47,7 @@ export const ExpensesScreen: React.FC = () => {
   const loadData = () => {
     setLoading(true);
     // 1. Fetch expenses
-    fetch('/api/v1/expenses', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/expenses')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -56,9 +57,7 @@ export const ExpensesScreen: React.FC = () => {
       .catch((err) => console.warn('Failed to load expenses:', err));
 
     // 2. Fetch categories
-    fetch('/api/v1/expenses/categories', {
-      headers: { 'x-tenant-id': '00000000-0000-0000-0000-000000000001' },
-    })
+    apiFetch('/api/v1/expenses/categories')
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -74,7 +73,7 @@ export const ExpensesScreen: React.FC = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [tenantId]);
 
   const filteredExpenses = expenses.filter((e) => {
     if (selectedCategory === 'all') return true;
@@ -96,11 +95,10 @@ export const ExpensesScreen: React.FC = () => {
       const expId = crypto.randomUUID();
       const expNumber = `EXP-${Date.now().toString().slice(-6)}`;
 
-      const res = await fetch('/api/v1/expenses', {
+      const res = await apiFetch('/api/v1/expenses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': '00000000-0000-0000-0000-000000000001',
         },
         body: JSON.stringify({
           id: expId,
