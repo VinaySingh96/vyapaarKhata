@@ -53,7 +53,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
   const invoicesCount = metrics ? metrics.todayInvoicesCount : 1;
   const lowStockVal = metrics ? `${metrics.lowStockCount} ${t('dashboard.items')}` : `0 ${t('dashboard.items')}`;
   const receivablesVal = metrics ? `₹ ${metrics.totalReceivables.toLocaleString()}` : '₹ 0';
-  const valuationVal = metrics ? `₹ ${metrics.totalStockValuation.toLocaleString()}` : '₹ 4,650';
+  const valuationVal = metrics ? `₹ ${metrics?.totalStockValuation?.toLocaleString()}` : '₹ 4,650';
 
   const kpis = [
     {

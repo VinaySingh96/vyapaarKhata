@@ -1084,6 +1084,40 @@ export class PgUnitOfWork implements UnitOfWork {
             ]
           );
         },
+
+        listPending: async (tenantId: EntityId, limit: number = 50): Promise<any[]> => {
+          const res = await client.query(
+            `SELECT id, tenant_id, installation_id, event_id, sequence_number, aggregate_type, aggregate_id, event_type, payload, status, created_at
+             FROM sync_outbox
+             WHERE tenant_id = $1 AND status = 'pending'
+             ORDER BY sequence_number ASC
+             LIMIT $2`,
+            [tenantId, limit]
+          );
+          return res.rows.map((r) => ({
+            id: r.id,
+            tenantId: r.tenant_id,
+            installationId: r.installation_id,
+            eventId: r.event_id,
+            sequenceNumber: r.sequence_number,
+            aggregateType: r.aggregate_type,
+            aggregateId: r.aggregate_id,
+            eventType: r.event_type,
+            payload: typeof r.payload === 'string' ? JSON.parse(r.payload) : r.payload,
+            status: r.status,
+            createdAt: new Date(r.created_at).toISOString(),
+          }));
+        },
+
+        markSynced: async (tenantId: EntityId, eventIds: EntityId[]): Promise<void> => {
+          if (!eventIds.length) return;
+          await client.query(
+            `UPDATE sync_outbox
+             SET status = 'synced', acknowledged_at = NOW()
+             WHERE tenant_id = $1 AND event_id = ANY($2::uuid[])`,
+            [tenantId, eventIds]
+          );
+        },
       };
 
       // -----------------------------------------------------------------------

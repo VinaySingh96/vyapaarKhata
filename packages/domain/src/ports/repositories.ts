@@ -70,6 +70,8 @@ export interface PartyRepository {
 
 export interface OutboxRepository {
   recordEvent(event: OutboxEvent): Promise<void>;
+  listPending(tenantId: EntityId, limit?: number): Promise<any[]>;
+  markSynced(tenantId: EntityId, eventIds: EntityId[]): Promise<void>;
 }
 
 export interface PurchasingRepository {

@@ -15,6 +15,7 @@ import { paymentRoutes } from './routes/payment-routes.js';
 import { expenseRoutes } from './routes/expense-routes.js';
 import { reportRoutes } from './routes/report-routes.js';
 import { settingsRoutes } from './routes/settings-routes.js';
+import { localSyncRoutes } from './routes/sync-routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -231,6 +232,7 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     app.register(expenseRoutes, { prefix: '/api/v1/expenses', uow });
     app.register(reportRoutes, { prefix: '/api/v1/reports', uow });
     app.register(settingsRoutes, { prefix: '/api/v1/settings', uow });
+    app.register(localSyncRoutes, { prefix: '/api/v1/sync', uow });
   }
 
   return app;
