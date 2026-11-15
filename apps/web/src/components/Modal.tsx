@@ -20,6 +20,7 @@ export const Modal: React.FC<ModalProps> = ({
   footer,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const isMouseDownOnBackdrop = useRef(false);
 
   // Close on Escape key and prevent background scrolling
   useEffect(() => {
@@ -43,14 +44,40 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only register if the mousedown is genuinely on the backdrop overlay,
+    // NOT if it originated from inside the dialog (e.g. text selection or dragging an input)
+    if (dialogRef.current && dialogRef.current.contains(e.target as Node)) {
+      isMouseDownOnBackdrop.current = false;
+    } else if (e.target === e.currentTarget) {
+      isMouseDownOnBackdrop.current = true;
+    } else {
+      isMouseDownOnBackdrop.current = false;
+    }
+  };
+
+  const handleBackdropMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+    // If mouseup occurred on something inside the dialog, cancel backdrop dismiss
+    if (e.target !== e.currentTarget) {
+      isMouseDownOnBackdrop.current = false;
+    }
+  };
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only dismiss if BOTH mousedown and click/mouseup occurred directly on the backdrop!
+    // If the user selected text or dragged from inside the modal to outside, do NOT dismiss.
+    if (isMouseDownOnBackdrop.current && e.target === e.currentTarget) {
+      onClose();
+    }
+    isMouseDownOnBackdrop.current = false;
+  };
+
   return (
     <div
       className="vk-modal-backdrop"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
+      onMouseDown={handleBackdropMouseDown}
+      onMouseUp={handleBackdropMouseUp}
+      onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
