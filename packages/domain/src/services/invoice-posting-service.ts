@@ -119,7 +119,7 @@ export class InvoicePostingService {
           productId: line.productId,
           variantId: line.variantId,
           locationId: line.locationId,
-          unitId: line.unitId,
+          unitId: line.unitId || '10000000-0000-0000-0000-000000000001',
           movementType: 'sale',
           quantity: -line.quantity,
           referenceDocumentType: 'sales_invoice',
@@ -220,7 +220,7 @@ export class InvoicePostingService {
           productId: line.productId,
           variantId: line.variantId,
           locationId: line.locationId,
-          unitId: line.unitId,
+          unitId: line.unitId || '10000000-0000-0000-0000-000000000001',
           movementType: 'cancellation_reversal',
           quantity: line.quantity, // positive restoration
           referenceDocumentType: 'sales_invoice_cancellation',

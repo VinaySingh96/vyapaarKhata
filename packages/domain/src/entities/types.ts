@@ -260,6 +260,7 @@ export interface Product {
   valuationMethod: 'fifo' | 'moving_average' | 'standard';
   isActive: boolean;
   totalStock?: number;
+  defaultVariantId?: EntityId;
   variants?: ProductVariant[];
   createdAt: string;
   updatedAt?: string;
