@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/index.js';
 import { useToast } from '../components/Toast.js';
 import { Modal } from '../components/Modal.js';
 import { useStore } from '../context/StoreContext.js';
+import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
 
 export interface BillingLine {
   id: string;
@@ -21,9 +22,10 @@ export interface BillingLine {
 
 interface ProductItem {
   id: string;
+  productId: string;
+  variantId: string;
   name: string;
   sku: string;
-  variantId?: string;
   sellingPrice: number;
   totalStock: number;
   baseUnitSymbol: string;
@@ -117,34 +119,57 @@ export const SalesBillingScreen: React.FC = () => {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          const mapped: ProductItem[] = json.data.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            sku: p.sku || 'SKU',
-            variantId: p.defaultVariantId || p.variants?.[0]?.id || p.id,
-            sellingPrice: p.sellingPrice || p.variants?.[0]?.sellingPrice || 380,
-            totalStock: p.totalStock !== undefined ? p.totalStock : (p.variants?.[0]?.stockOnHand || 0),
-            baseUnitSymbol: p.baseUnitSymbol || 'pcs',
-            baseUnitId: p.baseUnitId || '10000000-0000-0000-0000-000000000001',
-            reorderLevel: p.reorderLevel || p.variants?.[0]?.reorderLevel || 10,
-            taxRate: p.taxRate || 18,
-          }));
+          const mapped: ProductItem[] = [];
+          json.data.forEach((p: any) => {
+            if (p.variants && p.variants.length > 0) {
+              p.variants.forEach((v: any) => {
+                mapped.push({
+                  id: v.id,
+                  productId: p.id,
+                  variantId: v.id,
+                  name: v.variantName || `${p.name} (${v.sku})`,
+                  sku: v.sku || p.sku || 'SKU',
+                  sellingPrice: v.sellingPrice !== undefined ? v.sellingPrice : (p.sellingPrice || 0),
+                  totalStock: v.stockOnHand !== undefined ? v.stockOnHand : 0,
+                  baseUnitSymbol: p.baseUnitSymbol || 'pcs',
+                  baseUnitId: p.baseUnitId || '10000000-0000-0000-0000-000000000001',
+                  reorderLevel: v.reorderLevel || p.reorderLevel || 10,
+                  taxRate: p.taxRate || 18,
+                });
+              });
+            } else {
+              mapped.push({
+                id: p.defaultVariantId || p.id,
+                productId: p.id,
+                variantId: p.defaultVariantId || p.id,
+                name: p.name,
+                sku: p.sku || 'SKU',
+                sellingPrice: p.sellingPrice || 0,
+                totalStock: p.totalStock !== undefined ? p.totalStock : 0,
+                baseUnitSymbol: p.baseUnitSymbol || 'pcs',
+                baseUnitId: p.baseUnitId || '10000000-0000-0000-0000-000000000001',
+                reorderLevel: p.reorderLevel || 10,
+                taxRate: p.taxRate || 18,
+              });
+            }
+          });
           setProducts(mapped);
 
           // Populate initial lines if empty
           setLines((prev) => {
             if (prev.length > 0) return prev;
-            const first = mapped[0];
+            const first = mapped.find((m) => m.totalStock > 0) || mapped[0];
+            if (!first) return [];
             return [
               {
                 id: `line-${Date.now()}-1`,
-                productId: first.id,
-                variantId: first.variantId || first.id,
+                productId: first.productId,
+                variantId: first.variantId,
                 name: first.name,
                 sku: first.sku,
                 unit: first.baseUnitSymbol,
                 unitId: first.baseUnitId,
-                quantity: 1,
+                quantity: first.totalStock > 0 ? 1 : 0,
                 price: first.sellingPrice,
                 taxRate: first.taxRate || 18,
                 availableStock: first.totalStock,
@@ -285,27 +310,31 @@ export const SalesBillingScreen: React.FC = () => {
   };
 
   // Add Item handler
-  const handleAddItem = (productId?: string) => {
+  const handleAddItem = (itemId?: string) => {
     setInvoiceError(null);
-    const targetProduct = products.find((p) => p.id === productId) || products[0];
+    const targetProduct = products.find((p) => p.id === itemId) || products.find((p) => p.totalStock > 0) || products[0];
     if (!targetProduct) return;
 
-    // Check if product is already in bill
-    const existingIndex = lines.findIndex((l) => l.productId === targetProduct.id);
+    // Check if variant is already in bill
+    const existingIndex = lines.findIndex((l) => l.variantId === targetProduct.variantId);
     if (existingIndex >= 0) {
       const updated = [...lines];
-      updated[existingIndex].quantity += 1;
-      setLines(updated);
+      if (updated[existingIndex].quantity < targetProduct.totalStock) {
+        updated[existingIndex].quantity += 1;
+        setLines(updated);
+      } else {
+        toast.warning(`Cannot add more. Available stock for "${targetProduct.name}" is ${targetProduct.totalStock} ${targetProduct.baseUnitSymbol}`);
+      }
     } else {
       const newLine: BillingLine = {
         id: `line-${Date.now()}-${lines.length + 1}`,
-        productId: targetProduct.id,
-        variantId: targetProduct.variantId || targetProduct.id,
+        productId: targetProduct.productId,
+        variantId: targetProduct.variantId,
         name: targetProduct.name,
         sku: targetProduct.sku,
         unit: targetProduct.baseUnitSymbol,
         unitId: targetProduct.baseUnitId,
-        quantity: 1,
+        quantity: targetProduct.totalStock > 0 ? 1 : 0,
         price: targetProduct.sellingPrice,
         taxRate: targetProduct.taxRate || 18,
         availableStock: targetProduct.totalStock,
@@ -321,8 +350,8 @@ export const SalesBillingScreen: React.FC = () => {
   };
 
   // Change product in an existing line
-  const handleLineProductChange = (lineId: string, newProductId: string) => {
-    const targetProduct = products.find((p) => p.id === newProductId);
+  const handleLineProductChange = (lineId: string, newItemId: string) => {
+    const targetProduct = products.find((p) => p.id === newItemId);
     if (!targetProduct) return;
 
     setLines(
@@ -330,8 +359,8 @@ export const SalesBillingScreen: React.FC = () => {
         l.id === lineId
           ? {
               ...l,
-              productId: targetProduct.id,
-              variantId: targetProduct.variantId || targetProduct.id,
+              productId: targetProduct.productId,
+              variantId: targetProduct.variantId,
               name: targetProduct.name,
               sku: targetProduct.sku,
               unit: targetProduct.baseUnitSymbol,
@@ -340,6 +369,7 @@ export const SalesBillingScreen: React.FC = () => {
               taxRate: targetProduct.taxRate || 18,
               availableStock: targetProduct.totalStock,
               reorderLevel: targetProduct.reorderLevel,
+              quantity: targetProduct.totalStock > 0 ? Math.min(l.quantity || 1, targetProduct.totalStock) : 0,
             }
           : l
       )
@@ -351,6 +381,16 @@ export const SalesBillingScreen: React.FC = () => {
     setLines(
       lines.map((l) => {
         if (l.id !== id) return l;
+        if (field === 'quantity') {
+          const val = Math.max(0, value);
+          if (l.availableStock > 0 && val > l.availableStock) {
+            toast.warning(`Quantity cannot exceed available stock (${l.availableStock} ${l.unit})`);
+          }
+          return {
+            ...l,
+            quantity: val,
+          };
+        }
         return {
           ...l,
           [field]: Math.max(0, value),
@@ -358,6 +398,50 @@ export const SalesBillingScreen: React.FC = () => {
       })
     );
   };
+
+  // Check if any line has stock or quantity errors
+  const hasStockError = useMemo(() => {
+    return lines.some((l) => l.availableStock <= 0 || l.quantity > l.availableStock || l.quantity <= 0);
+  }, [lines]);
+
+  // Options for searchable product select
+  const productOptions = useMemo<SelectOption[]>(() => {
+    return products.map((p) => {
+      const isLow = p.totalStock <= p.reorderLevel;
+      const isOutOfStock = p.totalStock <= 0;
+      return {
+        value: p.id,
+        label: p.name,
+        sublabel: p.sku,
+        price: p.sellingPrice,
+        unit: p.baseUnitSymbol,
+        badge: isOutOfStock ? '0 stock' : `${p.totalStock} ${p.baseUnitSymbol}`,
+        badgeType: isOutOfStock ? 'danger' : isLow ? 'warning' : 'success',
+      };
+    });
+  }, [products]);
+
+  // Options for searchable customer select
+  const customerOptions = useMemo<SelectOption[]>(() => {
+    const list: SelectOption[] = [
+      {
+        value: '__new__',
+        label: `+ ${t('sales.newCustomer')}`,
+        badge: 'New',
+        badgeType: 'neutral',
+      },
+    ];
+    customers.forEach((c) => {
+      list.push({
+        value: c.id,
+        label: c.displayName,
+        sublabel: c.billingAddress || c.phone || undefined,
+        badge: c.currentBalance ? `₹${c.currentBalance.toLocaleString()}` : undefined,
+        badgeType: 'neutral',
+      });
+    });
+    return list;
+  }, [customers, t]);
 
   // Cart financial summary
   const subtotal = useMemo(() => {
@@ -872,26 +956,13 @@ export const SalesBillingScreen: React.FC = () => {
                     <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>
                       {t('sales.customer')}
                     </label>
-                    <select
+                    <SearchableSelect
+                      options={customerOptions}
                       value={selectedCustomerId}
-                      onChange={(e) => handleSelectCustomer(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid #cbd5e1',
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        backgroundColor: '#ffffff',
-                      }}
-                    >
-                      {customers.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.displayName} {c.billingAddress ? `(${c.billingAddress})` : ''}
-                        </option>
-                      ))}
-                      <option value="__new__">{t('sales.newCustomer')}</option>
-                    </select>
+                      onChange={handleSelectCustomer}
+                      placeholder={t('sales.customer')}
+                      searchPlaceholder="Search customer by name, phone..."
+                    />
                   </div>
                   <div>
                     <label style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>
@@ -1062,150 +1133,192 @@ export const SalesBillingScreen: React.FC = () => {
               )}
             </div>
 
-            {/* Cart Items Table */}
-            <div className="vk-table-responsive" style={{ marginBottom: '16px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #e5e7eb', color: '#6b7280' }}>
-                    <th style={{ padding: '8px 12px' }}>{t('sales.itemDesc')}</th>
-                    <th style={{ padding: '8px 12px', width: '90px' }}>{t('sales.available')}</th>
-                    <th style={{ padding: '8px 12px', width: '100px' }}>{t('sales.qty')}</th>
-                    <th style={{ padding: '8px 12px', width: '110px' }}>{t('sales.rate')}</th>
-                    <th style={{ padding: '8px 12px', width: '110px', textAlign: 'right' }}>{t('sales.total')}</th>
-                    <th style={{ padding: '8px 8px', width: '40px' }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lines.map((line) => (
-                    <tr key={line.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ padding: '10px 12px' }}>
-                        <select
-                          value={line.productId}
-                          onChange={(e) => handleLineProductChange(line.id, e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid #d1d5db',
-                            fontWeight: 600,
-                            fontSize: '13px',
-                          }}
-                        >
-                          {products.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.name} ({p.sku})
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td style={{ padding: '10px 12px', color: line.availableStock <= line.reorderLevel ? '#dc2626' : '#16a34a', fontWeight: 600 }}>
-                        {line.availableStock} {line.unit}
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <input
-                          type="number"
-                          min="1"
-                          max={line.availableStock}
-                          value={line.quantity}
-                          onChange={(e) => handleUpdateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
-                          style={{
-                            width: '70px',
-                            padding: '6px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid #d1d5db',
-                            textAlign: 'center',
-                            fontSize: '13px',
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.5"
-                          value={line.price}
-                          onChange={(e) => handleUpdateLine(line.id, 'price', parseFloat(e.target.value) || 0)}
-                          style={{
-                            width: '85px',
-                            padding: '6px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid #d1d5db',
-                            textAlign: 'right',
-                            fontSize: '13px',
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>
-                        ₹ {(line.quantity * line.price).toLocaleString()}
-                      </td>
-                      <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveLine(line.id)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#ef4444',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            padding: '2px 6px',
-                          }}
-                          title="Remove item"
-                        >
-                          ✕
-                        </button>
-                      </td>
+            {/* Cart Items Table - Dedicated Scrollable Box */}
+            <div
+              style={{
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                backgroundColor: '#ffffff',
+                marginBottom: '12px',
+              }}
+            >
+              <div
+                style={{
+                  maxHeight: '340px',
+                  overflowY: 'auto',
+                  overflowX: 'auto',
+                }}
+              >
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+                  <thead
+                    style={{
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 10,
+                      backgroundColor: '#f8fafc',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                    }}
+                  >
+                    <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', fontSize: '12px' }}>
+                      <th style={{ padding: '10px 12px' }}>{t('sales.itemDesc')}</th>
+                      <th style={{ padding: '10px 12px', width: '100px' }}>{t('sales.available')}</th>
+                      <th style={{ padding: '10px 12px', width: '110px', textAlign: 'center' }}>{t('sales.qty')}</th>
+                      <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>{t('sales.rate')}</th>
+                      <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>{t('sales.total')}</th>
+                      <th style={{ padding: '10px 8px', width: '40px', textAlign: 'center' }}></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {lines.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: '36px 16px', textAlign: 'center', color: '#94a3b8' }}>
+                          No materials added to this invoice yet. Select items below to add directly.
+                        </td>
+                      </tr>
+                    ) : (
+                      lines.map((line) => {
+                        const isOutOfStock = line.availableStock <= 0;
+                        const isExceedingStock = line.quantity > line.availableStock;
+                        const hasRowError = isOutOfStock || isExceedingStock || line.quantity <= 0;
+
+                        return (
+                          <tr key={line.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '8px 12px', minWidth: '260px' }}>
+                              <SearchableSelect
+                                options={productOptions}
+                                value={line.variantId || line.productId}
+                                onChange={(val) => handleLineProductChange(line.id, val)}
+                                placeholder="Select item..."
+                                searchPlaceholder="Search product or SKU..."
+                                isInvalid={isOutOfStock}
+                                errorMessage={isOutOfStock ? 'Item is out of stock in godown' : undefined}
+                              />
+                            </td>
+                            <td
+                              style={{
+                                padding: '8px 12px',
+                                color: line.availableStock <= line.reorderLevel ? '#dc2626' : '#16a34a',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {line.availableStock} {line.unit}
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max={line.availableStock}
+                                  value={line.quantity}
+                                  onChange={(e) => handleUpdateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                  style={{
+                                    width: '75px',
+                                    padding: '6px 8px',
+                                    borderRadius: '4px',
+                                    border: hasRowError ? '1.5px solid #dc2626' : '1px solid #d1d5db',
+                                    backgroundColor: hasRowError ? '#fef2f2' : '#ffffff',
+                                    textAlign: 'center',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                  }}
+                                />
+                                {isOutOfStock ? (
+                                  <span style={{ color: '#dc2626', fontSize: '10.5px', fontWeight: 600, marginTop: '3px', whiteSpace: 'nowrap' }}>
+                                    ❌ Out of stock
+                                  </span>
+                                ) : isExceedingStock ? (
+                                  <span style={{ color: '#dc2626', fontSize: '10.5px', fontWeight: 600, marginTop: '3px', whiteSpace: 'nowrap' }}>
+                                    ⚠️ Max: {line.availableStock}
+                                  </span>
+                                ) : line.quantity <= 0 ? (
+                                  <span style={{ color: '#dc2626', fontSize: '10.5px', fontWeight: 600, marginTop: '3px', whiteSpace: 'nowrap' }}>
+                                    ⚠️ Min: 1
+                                  </span>
+                                ) : null}
+                              </div>
+                            </td>
+                            <td style={{ padding: '8px 12px' }}>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                value={line.price}
+                                onChange={(e) => handleUpdateLine(line.id, 'price', parseFloat(e.target.value) || 0)}
+                                style={{
+                                  width: '85px',
+                                  padding: '6px 8px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #d1d5db',
+                                  textAlign: 'right',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              ₹ {(line.quantity * line.price).toLocaleString()}
+                            </td>
+                            <td style={{ padding: '8px 8px', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveLine(line.id)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: '#ef4444',
+                                  cursor: 'pointer',
+                                  fontSize: '16px',
+                                  padding: '2px 6px',
+                                }}
+                                title="Remove item"
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            {/* Quick Add Product Bar */}
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '12px' }}>
-              <select
-                value={selectedProductToAdd}
-                onChange={(e) => setSelectedProductToAdd(e.target.value)}
-                style={{
-                  flex: 1,
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #d1d5db',
-                  fontSize: '13px',
-                }}
-              >
-                <option value="">{t('sales.selectItem')}</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — ₹{p.sellingPrice} (Stock: {p.totalStock} {p.baseUnitSymbol})
-                  </option>
-                ))}
-              </select>
+            {/* Direct Material Search & Add Bar - Direct Selection Without Button Click */}
+            <div
+              style={{
+                padding: '12px 14px',
+                backgroundColor: '#f8fafc',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>⚡</span>
+                  <span>Add Material Directly to Invoice:</span>
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  Selecting an item adds it instantly (no button click needed)
+                </span>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedProductToAdd) {
-                    handleAddItem(selectedProductToAdd);
-                    setSelectedProductToAdd('');
-                  } else {
-                    handleAddItem();
+              <SearchableSelect
+                options={productOptions}
+                value=""
+                onChange={(val) => {
+                  if (val) {
+                    handleAddItem(val);
                   }
                 }}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#2563eb',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontWeight: 600,
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t('sales.addItem')}
-              </button>
+                placeholder="🔍 Click or type to search material (Cement, TMT Steel, Sand, Gitti, Bricks, Wire...)"
+                searchPlaceholder="Search material name, grade, size, or SKU..."
+              />
             </div>
           </div>
 
@@ -1219,6 +1332,9 @@ export const SalesBillingScreen: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
+              position: 'sticky',
+              top: '20px',
+              alignSelf: 'start',
             }}
           >
             <div>
@@ -1286,20 +1402,39 @@ export const SalesBillingScreen: React.FC = () => {
 
             {/* Action Buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {hasStockError && (
+                <div
+                  style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    borderRadius: '6px',
+                    padding: '10px 12px',
+                    color: '#991b1b',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>⚠️ Cannot post invoice: One or more items exceed available godown stock or are out of stock.</span>
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={handleGenerateInvoice}
-                disabled={isSubmitting || lines.length === 0}
+                disabled={isSubmitting || lines.length === 0 || hasStockError}
                 style={{
                   width: '100%',
                   padding: '14px',
-                  backgroundColor: isSubmitting || lines.length === 0 ? '#9ca3af' : '#16a34a',
+                  backgroundColor: isSubmitting || lines.length === 0 || hasStockError ? '#9ca3af' : '#16a34a',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
                   fontWeight: 700,
                   fontSize: '15px',
-                  cursor: isSubmitting || lines.length === 0 ? 'not-allowed' : 'pointer',
+                  cursor: isSubmitting || lines.length === 0 || hasStockError ? 'not-allowed' : 'pointer',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 }}
               >

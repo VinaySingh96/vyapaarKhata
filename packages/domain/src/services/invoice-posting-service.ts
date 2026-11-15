@@ -75,25 +75,30 @@ export class InvoicePostingService {
       const movements: StockMovement[] = [];
 
       for (const line of invoice.lines) {
+        const itemIdentifier = line.variantId || line.productId;
         const balance = await ctx.inventory.getBalance(
           tenantContext.tenantId,
-          line.productId,
+          itemIdentifier,
           line.locationId
         );
 
         const currentQty = balance ? balance.currentBalance : 0;
         const reorderLevel = balance ? balance.reorderLevel : undefined;
+        const locationName = balance?.locationName || 'Main Godown';
 
         const validation = this.inventoryStrategy.validateMovement({
           productId: line.productId,
+          productName: line.productName,
           locationId: line.locationId,
+          locationName,
           currentBalance: currentQty,
           quantityChange: -line.quantity, // deduction
           reorderLevel,
         });
 
         if (!validation.allowed) {
-          throw new Error(validation.reason || `Insufficient stock for product ${line.productId}`);
+          const itemLabel = line.productName ? `"${line.productName}"` : `product ${line.productId}`;
+          throw new Error(validation.reason || `Insufficient stock for ${itemLabel}`);
         }
 
         if (validation.isLowStockWarning) {

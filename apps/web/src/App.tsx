@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { I18nProvider } from './i18n/index.js';
 import { ToastProvider } from './components/Toast.js';
 import { StoreProvider, useStore } from './context/StoreContext.js';
@@ -14,13 +14,69 @@ import { ExpensesScreen } from './screens/ExpensesScreen.js';
 import { ReportsScreen } from './screens/ReportsScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
 
+const VALID_ROUTES = [
+  'dashboard',
+  'sales',
+  'products',
+  'inventory',
+  'purchasing',
+  'parties',
+  'payments',
+  'expenses',
+  'reports',
+  'settings',
+] as const;
+
+type RouteId = (typeof VALID_ROUTES)[number];
+
+function getRouteFromLocation(): RouteId {
+  // Check hash first (e.g. #/sales or #sales)
+  const hash = window.location.hash.replace(/^#\/?/, '').trim().toLowerCase();
+  if (VALID_ROUTES.includes(hash as RouteId)) {
+    return hash as RouteId;
+  }
+
+  // Check pathname (e.g. /sales or /sales/)
+  const path = window.location.pathname.replace(/^\/|\/$/g, '').trim().toLowerCase();
+  if (VALID_ROUTES.includes(path as RouteId)) {
+    return path as RouteId;
+  }
+
+  return 'dashboard';
+}
+
 const AppContent: React.FC = () => {
-  const [activeNav, setActiveNav] = useState('dashboard');
+  const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
   const { storeSettings } = useStore();
 
+  // Listen to popstate (back/forward browser buttons) and hashchange
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const currentRoute = getRouteFromLocation();
+      setActiveNav(currentRoute);
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
+  }, []);
+
+  const handleNavigate = useCallback((nav: string) => {
+    const targetRoute = (VALID_ROUTES.includes(nav as RouteId) ? nav : 'dashboard') as RouteId;
+    setActiveNav(targetRoute);
+
+    const targetPath = targetRoute === 'dashboard' ? '/' : `/${targetRoute}`;
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ route: targetRoute }, '', targetPath);
+    }
+  }, []);
+
   return (
-    <Layout activeNav={activeNav} onNavigate={setActiveNav} storeName={storeSettings.storeName}>
-      {activeNav === 'dashboard' && <DashboardScreen onNavigate={setActiveNav} />}
+    <Layout activeNav={activeNav} onNavigate={handleNavigate} storeName={storeSettings.storeName}>
+      {activeNav === 'dashboard' && <DashboardScreen onNavigate={handleNavigate} />}
       {activeNav === 'sales' && <SalesBillingScreen />}
       {activeNav === 'products' && <ProductsScreen />}
       {activeNav === 'inventory' && <InventoryScreen />}

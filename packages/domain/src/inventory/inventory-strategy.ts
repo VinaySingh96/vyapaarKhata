@@ -5,7 +5,9 @@
 
 export interface StockValidationContext {
   productId: string;
+  productName?: string;
   locationId: string;
+  locationName?: string;
   currentBalance: number;
   quantityChange: number; // Negative for deductions (e.g. sales, transfer-out), positive for receipts
   reorderLevel?: number; // Minimum safe threshold before triggering low-stock warning
@@ -33,11 +35,13 @@ export class StrictRejectInventoryStrategy implements InventoryValidationStrateg
     const projectedBalance = context.currentBalance + context.quantityChange;
 
     if (projectedBalance < 0) {
+      const itemLabel = context.productName ? `"${context.productName}"` : `product ${context.productId}`;
+      const locLabel = context.locationName ? ` at ${context.locationName}` : (context.locationId ? ` at location ${context.locationId}` : '');
       return {
         allowed: false,
         projectedBalance,
         isLowStockWarning: false,
-        reason: `Insufficient stock for product ${context.productId} at location ${context.locationId}. Current balance: ${context.currentBalance}, attempted change: ${context.quantityChange}.`,
+        reason: `Insufficient stock for ${itemLabel}${locLabel}. Current balance: ${context.currentBalance}, attempted change: ${context.quantityChange}.`,
       };
     }
 

@@ -101,26 +101,31 @@ export const Layout: React.FC<LayoutProps> = ({
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, overflowY: 'auto' }}>
           {navItems.map((item) => (
-            <button
+            <a
               key={item.id}
-              onClick={() => handleNavClick(item.id)}
+              href={item.id === 'dashboard' ? '/' : `/${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavClick(item.id);
+              }}
               style={{
                 display: 'block',
                 width: '100%',
                 textAlign: 'left',
                 padding: '10px 12px',
                 borderRadius: '6px',
-                border: 'none',
+                textDecoration: 'none',
                 cursor: 'pointer',
                 fontSize: '13.5px',
                 fontWeight: activeNav === item.id ? 600 : 400,
                 backgroundColor: activeNav === item.id ? '#374151' : 'transparent',
                 color: activeNav === item.id ? '#ffffff' : '#d1d5db',
                 transition: 'background-color 0.15s',
+                boxSizing: 'border-box',
               }}
             >
               {item.label}
-            </button>
+            </a>
           ))}
         </nav>
 

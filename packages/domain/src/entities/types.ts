@@ -78,7 +78,14 @@ export interface StockBalance {
   productId: EntityId;
   variantId?: EntityId;
   currentBalance: number;
+  quantityOnHand?: number;
+  quantityReserved?: number;
+  quantityAvailable?: number;
   reorderLevel?: number;
+  itemName?: string;
+  sku?: string;
+  unit?: string;
+  locationName?: string;
   updatedAt: string;
 }
 

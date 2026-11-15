@@ -26,6 +26,7 @@ import {
   Payment,
   PaymentAllocation,
   Product,
+  ProductVariant,
   ProductCategory,
   UnitOfMeasure,
   TaxCategory,
@@ -86,7 +87,7 @@ export class PgUnitOfWork implements UnitOfWork {
 
           const linesRes = await client.query(
             `SELECT sil.id, sil.invoice_id, sil.variant_id, sil.unit_id, sil.quantity, sil.unit_price, sil.tax_amount, sil.line_total,
-                    COALESCE(p.name, 'Catalog Item') as product_name, pv.sku, u.symbol as unit_symbol
+                    COALESCE(pv.variant_name, p.name, 'Catalog Item') as product_name, pv.sku, u.symbol as unit_symbol
              FROM sales_invoice_lines sil
              LEFT JOIN product_variants pv ON pv.id = sil.variant_id
              LEFT JOIN products p ON p.id = pv.product_id
@@ -268,32 +269,72 @@ export class PgUnitOfWork implements UnitOfWork {
             [tenantId, categoryId || null]
           );
 
-          return res.rows.map((r) => ({
-            id: r.id,
-            tenantId: r.tenant_id,
-            name: r.name,
-            description: r.description || undefined,
-            categoryId: r.category_id || undefined,
-            categoryName: r.category_name || undefined,
-            productType: r.product_type as 'goods' | 'service',
-            sku: r.sku || undefined,
-            barcode: r.barcode || undefined,
-            hsnSacCode: r.hsn_sac_code || undefined,
-            baseUnitId: r.base_unit_id,
-            baseUnitName: r.unit_name || undefined,
-            baseUnitSymbol: r.unit_symbol || undefined,
-            isTaxInclusive: false,
-            purchasePrice: parseFloat(r.purchase_price || '0'),
-            sellingPrice: parseFloat(r.selling_price || '0'),
-            reorderLevel: parseFloat(r.reorder_level || '0'),
-            isStockTracked: r.is_stock_tracked,
-            trackingMethod: r.tracking_method,
-            valuationMethod: r.valuation_method,
-            isActive: r.is_active,
-            totalStock: parseFloat(r.total_stock || '0'),
-            defaultVariantId: r.default_variant_id || r.id,
-            createdAt: new Date(r.created_at).toISOString(),
-          }));
+          // Fetch all variants with their individual stock_on_hand
+          const variantsRes = await client.query(
+            `SELECT pv.id, pv.product_id, pv.sku, pv.barcode, pv.variant_name,
+                    pv.purchase_price, pv.selling_price, pv.mrp, pv.reorder_level, pv.is_active,
+                    COALESCE(sb.quantity_on_hand::numeric, 0) as stock_on_hand
+             FROM product_variants pv
+             LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
+             WHERE pv.tenant_id = $1
+             ORDER BY pv.variant_name ASC`,
+            [tenantId]
+          );
+
+          const variantsByProduct = new Map<string, ProductVariant[]>();
+          for (const vr of variantsRes.rows) {
+            const list = variantsByProduct.get(vr.product_id) || [];
+            list.push({
+              id: vr.id,
+              tenantId,
+              productId: vr.product_id,
+              sku: vr.sku,
+              barcode: vr.barcode || undefined,
+              variantName: vr.variant_name,
+              purchasePrice: parseFloat(vr.purchase_price || '0'),
+              sellingPrice: parseFloat(vr.selling_price || '0'),
+              mrp: vr.mrp ? parseFloat(vr.mrp) : undefined,
+              reorderLevel: parseFloat(vr.reorder_level || '0'),
+              isActive: vr.is_active,
+              stockOnHand: parseFloat(vr.stock_on_hand || '0'),
+              createdAt: new Date().toISOString(),
+            });
+            variantsByProduct.set(vr.product_id, list);
+          }
+
+          return res.rows.map((r) => {
+            const prodVariants = variantsByProduct.get(r.id) || [];
+            const inStockVariant = prodVariants.find((v) => (v.stockOnHand || 0) > 0);
+            const defaultVarId = inStockVariant?.id || r.default_variant_id || r.id;
+
+            return {
+              id: r.id,
+              tenantId: r.tenant_id,
+              name: r.name,
+              description: r.description || undefined,
+              categoryId: r.category_id || undefined,
+              categoryName: r.category_name || undefined,
+              productType: r.product_type as 'goods' | 'service',
+              sku: r.sku || undefined,
+              barcode: r.barcode || undefined,
+              hsnSacCode: r.hsn_sac_code || undefined,
+              baseUnitId: r.base_unit_id,
+              baseUnitName: r.unit_name || undefined,
+              baseUnitSymbol: r.unit_symbol || undefined,
+              isTaxInclusive: false,
+              purchasePrice: parseFloat(r.purchase_price || '0'),
+              sellingPrice: parseFloat(r.selling_price || '0'),
+              reorderLevel: parseFloat(r.reorder_level || '0'),
+              isStockTracked: r.is_stock_tracked,
+              trackingMethod: r.tracking_method,
+              valuationMethod: r.valuation_method,
+              isActive: r.is_active,
+              totalStock: parseFloat(r.total_stock || '0'),
+              defaultVariantId: defaultVarId,
+              variants: prodVariants,
+              createdAt: new Date(r.created_at).toISOString(),
+            };
+          });
         },
 
         findById: async (tenantId: EntityId, id: EntityId): Promise<Product | null> => {
@@ -530,10 +571,12 @@ export class PgUnitOfWork implements UnitOfWork {
         ): Promise<StockBalance | null> => {
           const res = await client.query(
             `SELECT sb.id, sb.tenant_id, sb.variant_id, sb.inventory_location_id,
-                    sb.quantity_on_hand, sb.quantity_available, sb.updated_at,
-                    COALESCE(pv.reorder_level::numeric, 0) as reorder_level
+                    sb.quantity_on_hand, sb.quantity_reserved, sb.quantity_available, sb.updated_at,
+                    COALESCE(pv.reorder_level::numeric, 0) as reorder_level,
+                    pv.variant_name, il.name as location_name
              FROM stock_balances sb
              JOIN product_variants pv ON pv.id = sb.variant_id
+             LEFT JOIN inventory_locations il ON il.id = sb.inventory_location_id
              WHERE sb.tenant_id = $1 
                AND (sb.variant_id = $2 OR pv.product_id = $2)
                AND sb.inventory_location_id = $3
@@ -551,7 +594,12 @@ export class PgUnitOfWork implements UnitOfWork {
             productId: r.variant_id,
             variantId: r.variant_id,
             locationId: r.inventory_location_id,
-            currentBalance: parseFloat(r.quantity_on_hand),
+            locationName: r.location_name,
+            itemName: r.variant_name,
+            currentBalance: parseFloat(r.quantity_on_hand || '0'),
+            quantityOnHand: parseFloat(r.quantity_on_hand || '0'),
+            quantityReserved: parseFloat(r.quantity_reserved || '0'),
+            quantityAvailable: parseFloat(r.quantity_available || '0'),
             reorderLevel: parseFloat(r.reorder_level || '0'),
             updatedAt: new Date(r.updated_at).toISOString(),
           };
@@ -559,26 +607,55 @@ export class PgUnitOfWork implements UnitOfWork {
 
         listBalances: async (tenantId: EntityId, locationId?: EntityId): Promise<StockBalance[]> => {
           const res = await client.query(
-            `SELECT sb.id, sb.tenant_id, sb.variant_id, sb.inventory_location_id,
-                    sb.quantity_on_hand, sb.quantity_available, sb.updated_at,
-                    COALESCE(pv.reorder_level::numeric, 0) as reorder_level
-             FROM stock_balances sb
-             JOIN product_variants pv ON pv.id = sb.variant_id
-             WHERE sb.tenant_id = $1 AND ($2::uuid IS NULL OR sb.inventory_location_id = $2)
-             ORDER BY sb.updated_at DESC`,
+            `SELECT COALESCE(sb.id, gen_random_uuid()) as id,
+                    pv.tenant_id,
+                    pv.id as variant_id,
+                    p.id as product_id,
+                    COALESCE(sb.inventory_location_id, (SELECT id FROM inventory_locations WHERE tenant_id = $1 AND is_default = true LIMIT 1)) as inventory_location_id,
+                    COALESCE(sb.quantity_on_hand::numeric, 0) as quantity_on_hand,
+                    COALESCE(sb.quantity_reserved::numeric, 0) as quantity_reserved,
+                    COALESCE(sb.quantity_available::numeric, 0) as quantity_available,
+                    COALESCE(sb.updated_at, pv.created_at) as updated_at,
+                    COALESCE(pv.reorder_level::numeric, 0) as reorder_level,
+                    pv.variant_name, pv.sku, p.name as product_name,
+                    u.symbol as unit_symbol,
+                    COALESCE(il.name, (SELECT name FROM inventory_locations WHERE tenant_id = $1 AND is_default = true LIMIT 1), 'Main Godown') as location_name
+             FROM product_variants pv
+             JOIN products p ON p.id = pv.product_id
+             LEFT JOIN stock_balances sb ON sb.variant_id = pv.id AND ($2::uuid IS NULL OR sb.inventory_location_id = $2)
+             LEFT JOIN units u ON u.id = p.base_unit_id
+             LEFT JOIN inventory_locations il ON il.id = sb.inventory_location_id
+             WHERE pv.tenant_id = $1 AND pv.is_active = true
+             ORDER BY (COALESCE(sb.quantity_available::numeric, 0) <= COALESCE(pv.reorder_level::numeric, 0)) DESC,
+                      COALESCE(sb.quantity_available::numeric, 0) ASC,
+                      pv.variant_name ASC`,
             [tenantId, locationId || null]
           );
 
-          return res.rows.map((r) => ({
-            id: r.id,
-            tenantId: r.tenant_id,
-            productId: r.variant_id,
-            variantId: r.variant_id,
-            locationId: r.inventory_location_id,
-            currentBalance: parseFloat(r.quantity_on_hand),
-            reorderLevel: parseFloat(r.reorder_level || '0'),
-            updatedAt: new Date(r.updated_at).toISOString(),
-          }));
+          return res.rows.map((r) => {
+            const onHand = isNaN(parseFloat(r.quantity_on_hand)) ? 0 : parseFloat(r.quantity_on_hand);
+            const reserved = isNaN(parseFloat(r.quantity_reserved)) ? 0 : parseFloat(r.quantity_reserved);
+            const available = isNaN(parseFloat(r.quantity_available)) ? (onHand - reserved) : parseFloat(r.quantity_available);
+            const reorder = isNaN(parseFloat(r.reorder_level)) ? 0 : parseFloat(r.reorder_level);
+
+            return {
+              id: r.id,
+              tenantId: r.tenant_id,
+              productId: r.product_id,
+              variantId: r.variant_id,
+              locationId: r.inventory_location_id,
+              currentBalance: onHand,
+              quantityOnHand: onHand,
+              quantityReserved: reserved,
+              quantityAvailable: available,
+              reorderLevel: reorder,
+              itemName: r.variant_name || r.product_name,
+              sku: r.sku,
+              unit: r.unit_symbol,
+              locationName: r.location_name,
+              updatedAt: new Date(r.updated_at).toISOString(),
+            };
+          });
         },
 
         recordMovement: async (movement: StockMovement): Promise<void> => {
@@ -778,22 +855,25 @@ export class PgUnitOfWork implements UnitOfWork {
             );
 
             // Upsert stock balance
-            await client.query(
-              `INSERT INTO stock_balances (
-                 id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, updated_at
-               ) VALUES ($1, $2, $3, $4, $5, $5, NOW())
-               ON CONFLICT (id) DO UPDATE SET
-                 quantity_on_hand = (stock_balances.quantity_on_hand::numeric + EXCLUDED.quantity_on_hand::numeric)::text,
-                 quantity_available = (stock_balances.quantity_available::numeric + EXCLUDED.quantity_available::numeric)::text,
-                 updated_at = NOW()`,
-              [
-                randomUUID(),
-                adjustment.tenantId,
-                adjustment.inventoryLocationId,
-                ensureUuid(variantId),
-                movementQty,
-              ]
+            const updateRes = await client.query(
+              `UPDATE stock_balances
+               SET quantity_on_hand = (COALESCE(NULLIF(quantity_on_hand, '')::numeric, 0) + $1)::text,
+                   quantity_available = (COALESCE(NULLIF(quantity_available, '')::numeric, 0) + $1)::text,
+                   updated_at = NOW()
+               WHERE tenant_id = $2 AND inventory_location_id = $3 AND variant_id = $4
+               RETURNING id`,
+              [movementQty, adjustment.tenantId, adjustment.inventoryLocationId, ensureUuid(variantId)]
             );
+
+            if (updateRes.rows.length === 0) {
+              const newOnHand = Math.max(0, movementQty);
+              await client.query(
+                `INSERT INTO stock_balances (
+                   id, tenant_id, inventory_location_id, variant_id, quantity_on_hand, quantity_available, average_unit_cost, updated_at
+                 ) VALUES ($1, $2, $3, $4, $5, $5, 0, NOW())`,
+                [randomUUID(), adjustment.tenantId, adjustment.inventoryLocationId, ensureUuid(variantId), newOnHand]
+              );
+            }
           }
         },
 
