@@ -129,10 +129,24 @@ export const inventoryRoutes: FastifyPluginAsync<InventoryRoutesOptions> = async
   app.post<{ Body: Partial<StockAdjustment> }>('/adjustments', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    const locations = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.inventory.listLocations(tenant.tenantId);
+    });
+    let finalLocId = body.inventoryLocationId || '70000000-0000-0000-0000-000000000001';
+    if (locations && locations.length > 0) {
+      const defaultLoc = locations.find((l) => l.isDefault) || locations[0];
+      const defaultLocId = defaultLoc.id;
+      const validLocIds = new Set(locations.map((l) => l.id));
+      if (!body.inventoryLocationId || (!validLocIds.has(body.inventoryLocationId) && body.inventoryLocationId === '70000000-0000-0000-0000-000000000001')) {
+        finalLocId = defaultLocId;
+      }
+    }
+
     const adjustment: StockAdjustment = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
-      inventoryLocationId: body.inventoryLocationId || '70000000-0000-0000-0000-000000000001',
+      inventoryLocationId: finalLocId,
       adjustmentNumber: body.adjustmentNumber || `ADJ-${Date.now().toString().slice(-6)}`,
       reason: body.reason || 'physical_count',
       status: 'posted',

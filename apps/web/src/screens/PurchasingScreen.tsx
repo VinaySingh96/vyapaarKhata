@@ -49,9 +49,21 @@ export const PurchasingScreen: React.FC = () => {
   const [selectedProductId, setSelectedProductId] = useState('');
   const [quantity, setQuantity] = useState('20');
   const [unitCost, setUnitCost] = useState('310');
+  const [defaultLocationId, setDefaultLocationId] = useState('70000000-0000-0000-0000-000000000001');
 
   const loadData = () => {
     setLoading(true);
+    // Fetch inventory locations
+    apiFetch('/api/v1/inventory/locations')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const def = json.data.find((l: any) => l.isDefault) || json.data[0];
+          if (def) setDefaultLocationId(def.id);
+        }
+      })
+      .catch((err) => console.warn('Failed to load inventory locations:', err));
+
     // 1. Fetch receipts
     apiFetch('/api/v1/purchasing/receipts')
       .then((res) => res.json())
@@ -134,7 +146,7 @@ export const PurchasingScreen: React.FC = () => {
         body: JSON.stringify({
           id: receiptId,
           supplierId: selectedSupplierId,
-          inventoryLocationId: '70000000-0000-0000-0000-000000000001',
+          inventoryLocationId: defaultLocationId,
           receiptNumber,
           lines: [
             {

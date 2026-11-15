@@ -6,6 +6,7 @@ import {
   UnitOfWork,
   SalesInvoice,
   Payment,
+  Party,
 } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
 
@@ -69,17 +70,75 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     const tenantContext = resolveTenantContext(req);
     const body = req.body || {};
 
+    const locations = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.inventory.listLocations(tenantContext.tenantId);
+    });
+
+    let sanitizedLines = body.lines || [];
+    let finalBusinessLocationId = body.businessLocationId || '60000000-0000-0000-0000-000000000001';
+
+    if (locations && locations.length > 0) {
+      const defaultLocation = locations.find((l) => l.isDefault) || locations[0];
+      const defaultLocationId = defaultLocation.id;
+      const defaultBusinessLocationId = defaultLocation.businessLocationId || '60000000-0000-0000-0000-000000000001';
+      const validLocationIds = new Set(locations.map((l) => l.id));
+
+      if (!body.businessLocationId || body.businessLocationId === '60000000-0000-0000-0000-000000000001') {
+        finalBusinessLocationId = defaultBusinessLocationId;
+      }
+
+      sanitizedLines = (body.lines || []).map((l: any) => ({
+        ...l,
+        locationId:
+          !l.locationId || (!validLocationIds.has(l.locationId) && l.locationId === '70000000-0000-0000-0000-000000000001')
+            ? defaultLocationId
+            : l.locationId,
+      }));
+    }
+
+    // Verify customer exists for this tenant, otherwise resolve or auto-create a Walk-in Customer
+    let finalCustomerId: string = body.customerId || '';
+    const existingCust = finalCustomerId
+      ? await opts.uow.runInTransaction(async (ctx) => {
+          return ctx.parties.findById(tenantContext.tenantId, finalCustomerId);
+        })
+      : null;
+
+    if (!existingCust) {
+      const custs = await opts.uow.runInTransaction(async (ctx) => {
+        return ctx.parties.list(tenantContext.tenantId, 'customer');
+      });
+      if (custs.length > 0) {
+        finalCustomerId = custs[0].id;
+      } else {
+        const walkInCustomer: Party = {
+          id: randomUUID(),
+          tenantId: tenantContext.tenantId,
+          partyType: 'customer',
+          displayName: 'Walk-in Customer (नकदी ग्राहक)',
+          openingBalance: 0,
+          openingBalanceType: 'debit',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        };
+        await opts.uow.runInTransaction(async (ctx) => {
+          await ctx.parties.save(walkInCustomer);
+        });
+        finalCustomerId = walkInCustomer.id;
+      }
+    }
+
     const invoice: SalesInvoice = {
       id: body.id || randomUUID(),
       tenantId: tenantContext.tenantId,
-      businessLocationId: body.businessLocationId || '60000000-0000-0000-0000-000000000001',
+      businessLocationId: finalBusinessLocationId,
       invoiceNumber: body.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
-      customerId: body.customerId || 'c0000000-0000-0000-0000-000000000001',
+      customerId: finalCustomerId,
       status: 'draft',
       subtotal: body.subtotal || 0,
       taxTotal: body.taxTotal || 0,
       grandTotal: body.grandTotal || 0,
-      lines: body.lines || [],
+      lines: sanitizedLines,
     };
 
     await opts.uow.runInTransaction(async (ctx) => {
@@ -98,6 +157,33 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     const tenantContext = resolveTenantContext(req);
     const invoiceId = req.params.id;
     const idempotencyKey = req.headers['idempotency-key'] as string | undefined;
+
+    // Check if the invoice draft lines have a locationId that doesn't belong to this tenant, and sanitize
+    await opts.uow.runInTransaction(async (ctx) => {
+      const inv = await ctx.invoices.findById(tenantContext.tenantId, invoiceId);
+      if (inv && inv.status === 'draft') {
+        const locations = await ctx.inventory.listLocations(tenantContext.tenantId);
+        if (locations && locations.length > 0) {
+          const validLocIds = new Set(locations.map((l) => l.id));
+          const defLoc = locations.find((l) => l.isDefault) || locations[0];
+          const defLocId = defLoc.id;
+
+          let modified = false;
+          for (const line of inv.lines) {
+            if (
+              !line.locationId ||
+              (!validLocIds.has(line.locationId) && line.locationId === '70000000-0000-0000-0000-000000000001')
+            ) {
+              line.locationId = defLocId;
+              modified = true;
+            }
+          }
+          if (modified) {
+            await ctx.invoices.save(inv);
+          }
+        }
+      }
+    });
 
     const result = await service.postInvoice({
       tenantContext,

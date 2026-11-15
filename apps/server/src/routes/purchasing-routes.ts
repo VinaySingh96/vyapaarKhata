@@ -79,12 +79,26 @@ export const purchasingRoutes: FastifyPluginAsync<PurchasingRoutesOptions> = asy
   app.post<{ Body: Partial<PurchaseReceipt> }>('/receipts', async (req, reply) => {
     const tenant = resolveTenant(req);
     const body = req.body || {};
+
+    const locations = await opts.uow.runInTransaction(async (ctx) => {
+      return ctx.inventory.listLocations(tenant.tenantId);
+    });
+    let finalLocId = body.inventoryLocationId || '70000000-0000-0000-0000-000000000001';
+    if (locations && locations.length > 0) {
+      const defaultLoc = locations.find((l) => l.isDefault) || locations[0];
+      const defaultLocId = defaultLoc.id;
+      const validLocIds = new Set(locations.map((l) => l.id));
+      if (!body.inventoryLocationId || (!validLocIds.has(body.inventoryLocationId) && body.inventoryLocationId === '70000000-0000-0000-0000-000000000001')) {
+        finalLocId = defaultLocId;
+      }
+    }
+
     const receipt: PurchaseReceipt = {
       id: body.id || randomUUID(),
       tenantId: tenant.tenantId,
       supplierId: body.supplierId || '',
       purchaseOrderId: body.purchaseOrderId,
-      inventoryLocationId: body.inventoryLocationId || '',
+      inventoryLocationId: finalLocId,
       receiptNumber: body.receiptNumber || `GRN-${Date.now().toString().slice(-6)}`,
       status: 'draft',
       lines: body.lines || [],

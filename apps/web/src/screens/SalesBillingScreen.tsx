@@ -133,9 +133,27 @@ export const SalesBillingScreen: React.FC = () => {
   const [payReference, setPayReference] = useState<string>('');
   const [payNotes, setPayNotes] = useState<string>('');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [defaultLocationId, setDefaultLocationId] = useState<string>('70000000-0000-0000-0000-000000000001');
+  const [defaultBusinessLocationId, setDefaultBusinessLocationId] = useState<string>('60000000-0000-0000-0000-000000000001');
 
   // Load products, customers and invoices
   const loadData = () => {
+    // Fetch inventory locations for current tenant
+    apiFetch('/api/v1/inventory/locations')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const def = json.data.find((l: any) => l.isDefault) || json.data[0];
+          if (def) {
+            setDefaultLocationId(def.id);
+            if (def.businessLocationId) {
+              setDefaultBusinessLocationId(def.businessLocationId);
+            }
+          }
+        }
+      })
+      .catch((err) => console.warn('Could not load inventory locations:', err));
+
     // 1. Fetch products
     apiFetch('/api/v1/products')
       .then((res) => res.json())
@@ -222,12 +240,19 @@ export const SalesBillingScreen: React.FC = () => {
             setVillagesList((prev) => Array.from(new Set([...prev, ...villagesFromCusts])));
           }
 
-          if (custs.length > 0 && selectedCustomerId === '90000000-0000-0000-0000-000000000001') {
-            const initial = custs[0];
-            setSelectedCustomerId(initial.id);
-            setCustomCustomerName(initial.displayName);
-            if (initial.phone) setCustomerPhone(initial.phone);
-            if (initial.billingAddress) setSelectedVillage(initial.billingAddress);
+          if (custs.length > 0) {
+            const exists = custs.some((c: any) => c.id === selectedCustomerId);
+            if (!exists || selectedCustomerId === '90000000-0000-0000-0000-000000000001') {
+              const initial = custs[0];
+              setSelectedCustomerId(initial.id);
+              setCustomCustomerName(initial.displayName);
+              if (initial.phone) setCustomerPhone(initial.phone);
+              if (initial.billingAddress) setSelectedVillage(initial.billingAddress);
+            }
+          } else {
+            setSelectedCustomerId('');
+            setCustomerMode('new');
+            setCustomCustomerName('Walk-in Customer');
           }
         }
       })
@@ -562,7 +587,7 @@ export const SalesBillingScreen: React.FC = () => {
         },
         body: JSON.stringify({
           id: invoiceId,
-          businessLocationId: '60000000-0000-0000-0000-000000000001',
+          businessLocationId: defaultBusinessLocationId,
           invoiceNumber,
           customerId: finalCustomerId,
           subtotal,
@@ -572,7 +597,7 @@ export const SalesBillingScreen: React.FC = () => {
             id: crypto.randomUUID(),
             productId: l.productId,
             variantId: l.variantId,
-            locationId: '70000000-0000-0000-0000-000000000001',
+            locationId: defaultLocationId,
             quantity: l.quantity,
             unitId: l.unitId,
             unitPrice: l.price,

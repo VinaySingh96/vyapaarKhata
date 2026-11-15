@@ -54,6 +54,7 @@ export const InventoryScreen: React.FC = () => {
   const [balances, setBalances] = useState<StockBalanceItem[]>([]);
   const [movements, setMovements] = useState<StockMovementItem[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [defaultLocationId, setDefaultLocationId] = useState('70000000-0000-0000-0000-000000000001');
 
   // Adjustment form state
   const [selectedVariantId, setSelectedVariantId] = useState('');
@@ -62,6 +63,17 @@ export const InventoryScreen: React.FC = () => {
 
   const loadData = () => {
     setLoading(true);
+    // Fetch inventory locations
+    apiFetch('/api/v1/inventory/locations')
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const def = json.data.find((l: any) => l.isDefault) || json.data[0];
+          if (def) setDefaultLocationId(def.id);
+        }
+      })
+      .catch((err) => console.warn('Failed to load inventory locations:', err));
+
     // 1. Fetch balances (all variants)
     apiFetch('/api/v1/inventory/balances')
       .then((res) => res.json())
@@ -224,7 +236,7 @@ export const InventoryScreen: React.FC = () => {
         body: JSON.stringify({
           id: adjId,
           adjustmentNumber: adjNumber,
-          inventoryLocationId: activeModalItem?.locationId || '70000000-0000-0000-0000-000000000001',
+          inventoryLocationId: activeModalItem?.locationId || defaultLocationId,
           reason: reason || 'Physical count verification',
           lines: [
             {
