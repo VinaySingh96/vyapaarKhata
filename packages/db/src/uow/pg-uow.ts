@@ -641,10 +641,16 @@ export class PgUnitOfWork implements UnitOfWork {
           );
         },
 
-        listUnits: async (): Promise<UnitOfMeasure[]> => {
-          const res = await client.query(
-            `SELECT id, name, symbol, dimension, is_active FROM units WHERE is_active = true ORDER BY name ASC`
-          );
+        listUnits: async (tenantId?: EntityId): Promise<UnitOfMeasure[]> => {
+          let sql = `SELECT DISTINCT ON (name) id, name, symbol, dimension, is_active FROM units WHERE is_active = true`;
+          const params: any[] = [];
+          if (tenantId) {
+            sql += ` AND (tenant_id = $1 OR tenant_id IS NULL) ORDER BY name ASC, (tenant_id = $1) DESC`;
+            params.push(tenantId);
+          } else {
+            sql += ` ORDER BY name ASC`;
+          }
+          const res = await client.query(sql, params);
           return res.rows.map((r) => ({
             id: r.id,
             name: r.name,

@@ -170,8 +170,9 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
 
   // GET /api/v1/products/units
   app.get('/units', async (req, reply) => {
+    const tenant = resolveTenant(req);
     const units = await opts.uow.runInTransaction(async (ctx) => {
-      return ctx.products.listUnits();
+      return ctx.products.listUnits(tenant.tenantId);
     });
 
     return reply.status(200).send({

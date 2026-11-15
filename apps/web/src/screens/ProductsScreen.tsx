@@ -373,9 +373,16 @@ export const ProductsScreen: React.FC = () => {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
-          setUnitsList(json.data);
-          if (json.data.length > 0 && !newUnitId) {
-            setNewUnitId(json.data[0].id);
+          const seen = new Set<string>();
+          const deduped = json.data.filter((u: any) => {
+            const key = (u.name || u.symbol || '').toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setUnitsList(deduped);
+          if (deduped.length > 0 && !newUnitId) {
+            setNewUnitId(deduped[0].id);
           }
         }
       })
