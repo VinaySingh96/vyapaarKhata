@@ -937,7 +937,6 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         body.innerHTML = '<div style="color:red; padding: 1rem;">Error: ' + err.message + '</div>';
       }
     }
-    }
 
     // Load Sync Stream
     async function loadSyncLogs() {
