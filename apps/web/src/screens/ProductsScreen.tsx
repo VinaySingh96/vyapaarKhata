@@ -135,7 +135,18 @@ export const ProductsScreen: React.FC = () => {
           };
 
           const category = getVal('Category', 'category', 'CATEGORY', 'Category Name', 'श्रेणी');
-          const name = getVal('Item Name', 'name', 'Product Name', 'Item', 'सामग्री');
+          const name = getVal('Item Name', 'name', 'Product Name', 'Item', 'सामग्री', 'Item Name (English)');
+          const nameHi = getVal(
+            'Item Name (Hindi)',
+            'Hindi Name',
+            'Item Name Hindi',
+            'Name (Hindi)',
+            'Hindi',
+            'nameHi',
+            'name_hi',
+            'सामग्री (हिंदी)',
+            'नाम (हिंदी)'
+          );
           const sku = getVal('Item Code / SKU', 'sku', 'Item Code', 'SKU', 'Code');
           const unit = getVal('Unit', 'unit', 'UOM', 'इकाई') || 'pcs';
           const stock = Number(getVal('Initial Stock', 'Stock', 'Quantity', 'stock', 'qty', 'स्टॉक') || 0);
@@ -146,6 +157,7 @@ export const ProductsScreen: React.FC = () => {
           return {
             category,
             name,
+            nameHi,
             sku,
             unit,
             stock,
@@ -1842,7 +1854,7 @@ export const ProductsScreen: React.FC = () => {
             <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
               {importFile
                 ? `${(importFile.size / 1024).toFixed(1)} KB — Click to choose a different file`
-                : 'Supports columns: Category, Item Name, Initial Stock, Daily Rental Rate, Purchase Rate (Asset Cost), Unit'}
+                : 'Supports columns: Category, Item Name, Item Name (Hindi), Initial Stock, Daily Rental Rate, Purchase Rate (Asset Cost), Unit'}
             </div>
           </div>
 
@@ -1887,6 +1899,7 @@ export const ProductsScreen: React.FC = () => {
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>#</th>
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Category</th>
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Item Name</th>
+                      <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569' }}>Item Name (Hindi / हिन्दी)</th>
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Daily Rent</th>
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Purchase Cost</th>
                       <th style={{ padding: '8px 10px', fontWeight: 600, color: '#475569', textAlign: 'right' }}>Initial Stock</th>
@@ -1908,6 +1921,9 @@ export const ProductsScreen: React.FC = () => {
                         </td>
                         <td style={{ padding: '6px 10px', fontWeight: 600, color: '#0f172a' }}>
                           {item.name}
+                        </td>
+                        <td style={{ padding: '6px 10px', fontWeight: 500, color: '#4f46e5' }}>
+                          {item.nameHi || <span style={{ color: '#9ca3af' }}>—</span>}
                         </td>
                         <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
                           ₹{formatIndianNumber(item.sellingPrice || 0)} / day

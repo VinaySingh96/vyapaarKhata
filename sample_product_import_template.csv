@@ -1,3 +1,3 @@
-Category,Item Name,Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
-Bamboo & Wooden Balli,Bamboo (10-12 ft),BAMBOO-10FT,pcs,50,120,10,Example item description
-Pillar Farma (Iron Frame),Farma 9x9 (4 ft),FARMA-9X9-4FT,pcs,10,800,20,Example item description
+﻿Category,Item Name,Item Name (Hindi),Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
+Bamboo & Wooden Balli,Bamboo (10-12 ft),बांस (10-12 फीट),BAMBOO-10FT,pcs,50,120,10,Example item description
+Pillar Farma (Iron Frame),Farma 9x9 (4 ft),फर्मा 9x9 (4 फीट),FARMA-9X9-4FT,pcs,10,800,20,Example item description

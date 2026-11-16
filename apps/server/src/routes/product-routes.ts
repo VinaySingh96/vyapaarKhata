@@ -477,6 +477,18 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
         for (const item of items) {
           if (!item.name || !item.name.trim()) continue;
           const itemName = item.name.trim();
+          const nameHiRaw = (
+            item.nameHi ||
+            (item as any).name_hi ||
+            (item as any)['Item Name (Hindi)'] ||
+            (item as any)['Hindi Name'] ||
+            (item as any)['Item Name Hindi'] ||
+            (item as any)['Name (Hindi)'] ||
+            (item as any)['सामग्री (हिंदी)'] ||
+            (item as any)['नाम (हिंदी)'] ||
+            ''
+          ).trim();
+          const nameHi = nameHiRaw || undefined;
 
           // 3a. Resolve or create category
           let categoryId: string | undefined = undefined;
@@ -526,6 +538,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
             productId = existingProd.id;
             const updatedProd: Product = {
               ...existingProd,
+              nameHi: nameHi !== undefined ? nameHi : existingProd.nameHi,
               categoryId: categoryId || existingProd.categoryId,
               purchasePrice:
                 item.purchasePrice !== undefined
@@ -539,6 +552,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
                 item.reorderLevel !== undefined
                   ? Number(item.reorderLevel)
                   : existingProd.reorderLevel,
+              description: item.description !== undefined ? item.description : existingProd.description,
             };
             await ctx.products.save(updatedProd);
             prodMap.set(prodKey, updatedProd);
@@ -548,6 +562,7 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
               id: productId,
               tenantId: tenant.tenantId,
               name: itemName,
+              nameHi,
               categoryId,
               productType: 'goods',
               sku,

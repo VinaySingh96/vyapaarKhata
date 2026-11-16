@@ -1,23 +1,23 @@
-Category,Item Name,Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
-Bamboo & Wooden Balli,Bamboo (10-12 ft),BAMBOO-10FT,pcs,50,120,10,Construction bamboo pole (10-12 ft) for scaffolding and support
-Bamboo & Wooden Balli,Balli (8 ft),BALLI-8FT,pcs,150,80,1,Wooden support balli 8 feet
-Bamboo & Wooden Balli,Balli (9 ft),BALLI-9FT,pcs,150,80,1,Wooden support balli 9 feet
-Bamboo & Wooden Balli,Balli (10 ft),BALLI-10FT,pcs,200,120,2,Wooden support balli 10 feet
-Bamboo & Wooden Balli,Balli (11 ft),BALLI-11FT,pcs,200,120,2,Wooden support balli 11 feet
-Bamboo & Wooden Balli,Balli (12 ft),BALLI-12FT,pcs,200,160,13,Wooden support balli 12 feet heavy duty
-Bamboo & Wooden Balli,Balli (15 ft),BALLI-15FT,pcs,50,220,5,Wooden support balli 15 feet extra length
-Pillar Farma (Iron Frame),Farma 9x9 (4 ft),FARMA-9X9-4FT,pcs,10,800,20,"Pillar shuttering iron frame size 9 inch x 9 inch, height 4 ft"
-Pillar Farma (Iron Frame),Farma 9x9 (5 ft),FARMA-9X9-5FT,pcs,5,1000,25,"Pillar shuttering iron frame size 9 inch x 9 inch, height 5 ft"
-Pillar Farma (Iron Frame),Farma 9x9 (6 ft),FARMA-9X9-6FT,pcs,10,1200,30,"Pillar shuttering iron frame size 9 inch x 9 inch, height 6 ft"
-Pillar Farma (Iron Frame),Farma 9x12 (4 ft),FARMA-9X12-4FT,pcs,8,1000,25,"Pillar shuttering iron frame size 9 inch x 12 inch, height 4 ft"
-Pillar Farma (Iron Frame),Farma 9x12 (5 ft),FARMA-9X12-5FT,pcs,10,1250,30,"Pillar shuttering iron frame size 9 inch x 12 inch, height 5 ft"
-Pillar Farma (Iron Frame),Farma 9x12 (6 ft),FARMA-9X12-6FT,pcs,10,1500,40,"Pillar shuttering iron frame size 9 inch x 12 inch, height 6 ft"
-Pillar Farma (Iron Frame),Farma 9x12 (7 ft),FARMA-9X12-7FT,pcs,4,1750,45,"Pillar shuttering iron frame size 9 inch x 12 inch, height 7 ft"
-Pillar Farma (Iron Frame),Farma 9x12 (10 ft),FARMA-9X12-10FT,pcs,8,2500,80,"Pillar shuttering iron frame size 9 inch x 12 inch, height 10 ft"
-Pillar Farma (Iron Frame),Farma 9x15 (7 ft),FARMA-9X15-7FT,pcs,3,2200,50,"Pillar shuttering iron frame size 9 inch x 15 inch, height 7 ft"
-Centring Plates & Plywood,Patra (Wooden Centring Plate),PATRA-WOODEN-PLATE,pcs,500,350,1,Wooden centring / shuttering plate (wooden patra)
-Centring Plates & Plywood,Chali (Wooden Centring Chali),CHALI-WOODEN,pcs,30,1200,10,Wooden scaffolding walkway / centring platform chali
-Centring Plates & Plywood,Ply (Centring Plywood Sheet),PLY-SHUTTERING,pcs,40,850,20,Waterproof film-faced shuttering plywood board
-Centring Machinery & Tools,Concrete Vibrator Machine,VIBRATOR-MACHINE,pcs,1,7500,250,Electric concrete needle vibrator machine with 35mm needle
-Scaffolding & Grating,Chowkardiya (4-Way Support Stool),CHOWKARDIYA-STOOL,pcs,8,600,20,4-legged heavy duty iron centring base stool / connector
-Site Equipment & Storage,Water Storage Drum (200L),DRUM-WATER-200L,pcs,4,800,20,Heavy plastic / HDPE 200 Litre water storage drum for construction curing
+﻿Category,Item Name,Item Name (Hindi),Item Code / SKU,Unit,Initial Stock,Purchase Rate (Asset Cost),Daily Rental Rate (Sell Rate),Description
+Bamboo & Wooden Balli,Bamboo (10-12 ft),बांस (10-12 फीट),BAMBOO-10FT,pcs,50,120,10,Construction bamboo pole (10-12 ft) for scaffolding and support
+Bamboo & Wooden Balli,Balli (8 ft),बल्ली (8 फीट),BALLI-8FT,pcs,150,80,1,Wooden support balli 8 feet
+Bamboo & Wooden Balli,Balli (9 ft),बल्ली (9 फीट),BALLI-9FT,pcs,150,80,1,Wooden support balli 9 feet
+Bamboo & Wooden Balli,Balli (10 ft),बल्ली (10 फीट),BALLI-10FT,pcs,200,120,2,Wooden support balli 10 feet
+Bamboo & Wooden Balli,Balli (11 ft),बल्ली (11 फीट),BALLI-11FT,pcs,200,120,2,Wooden support balli 11 feet
+Bamboo & Wooden Balli,Balli (12 ft),बल्ली (12 फीट),BALLI-12FT,pcs,200,160,13,Wooden support balli 12 feet heavy duty
+Bamboo & Wooden Balli,Balli (15 ft),बल्ली (15 फीट),BALLI-15FT,pcs,50,220,5,Wooden support balli 15 feet extra length
+Pillar Farma (Iron Frame),Farma 9x9 (4 ft),फर्मा 9x9 (4 फीट),FARMA-9X9-4FT,pcs,10,800,20,"Pillar shuttering iron frame size 9 inch x 9 inch, height 4 ft"
+Pillar Farma (Iron Frame),Farma 9x9 (5 ft),फर्मा 9x9 (5 फीट),FARMA-9X9-5FT,pcs,5,1000,25,"Pillar shuttering iron frame size 9 inch x 9 inch, height 5 ft"
+Pillar Farma (Iron Frame),Farma 9x9 (6 ft),फर्मा 9x9 (6 फीट),FARMA-9X9-6FT,pcs,10,1200,30,"Pillar shuttering iron frame size 9 inch x 9 inch, height 6 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (4 ft),फर्मा 9x12 (4 फीट),FARMA-9X12-4FT,pcs,8,1000,25,"Pillar shuttering iron frame size 9 inch x 12 inch, height 4 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (5 ft),फर्मा 9x12 (5 फीट),FARMA-9X12-5FT,pcs,10,1250,30,"Pillar shuttering iron frame size 9 inch x 12 inch, height 5 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (6 ft),फर्मा 9x12 (6 फीट),FARMA-9X12-6FT,pcs,10,1500,40,"Pillar shuttering iron frame size 9 inch x 12 inch, height 6 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (7 ft),फर्मा 9x12 (7 फीट),FARMA-9X12-7FT,pcs,4,1750,45,"Pillar shuttering iron frame size 9 inch x 12 inch, height 7 ft"
+Pillar Farma (Iron Frame),Farma 9x12 (10 ft),फर्मा 9x12 (10 फीट),FARMA-9X12-10FT,pcs,8,2500,80,"Pillar shuttering iron frame size 9 inch x 12 inch, height 10 ft"
+Pillar Farma (Iron Frame),Farma 9x15 (7 ft),फर्मा 9x15 (7 फीट),FARMA-9X15-7FT,pcs,3,2200,50,"Pillar shuttering iron frame size 9 inch x 15 inch, height 7 ft"
+Centring Plates & Plywood,Patra (Wooden Centring Plate),पटरा (लकड़ी का सेंट्रिंग पटरा),PATRA-WOODEN-PLATE,pcs,500,350,1,Wooden centring / shuttering plate (wooden patra)
+Centring Plates & Plywood,Chali (Wooden Centring Chali),चाली (लकड़ी की सेंट्रिंग चाली),CHALI-WOODEN,pcs,30,1200,10,Wooden scaffolding walkway / centring platform chali
+Centring Plates & Plywood,Ply (Centring Plywood Sheet),प्लाई (सेंट्रिंग प्लाईवुड शीट),PLY-SHUTTERING,pcs,40,850,20,Waterproof film-faced shuttering plywood board
+Centring Machinery & Tools,Concrete Vibrator Machine,कंक्रीट वाइब्रेटर मशीन,VIBRATOR-MACHINE,pcs,1,7500,250,Electric concrete needle vibrator machine with 35mm needle
+Scaffolding & Grating,Chowkardiya (4-Way Support Stool),चौकड़िया स्टूल,CHOWKARDIYA-STOOL,pcs,8,600,20,4-legged heavy duty iron centring base stool / connector
+Site Equipment & Storage,Water Storage Drum (200L),पानी का ड्रम (200 लीटर),DRUM-WATER-200L,pcs,4,800,20,Heavy plastic / HDPE 200 Litre water storage drum for construction curing
