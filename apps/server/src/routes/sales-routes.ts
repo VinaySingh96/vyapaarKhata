@@ -85,6 +85,31 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     const tenantContext = resolveTenantContext(req);
     const body = req.body || {};
 
+    if (body.lines && body.lines.length > 0) {
+      for (const line of body.lines) {
+        if (typeof line.quantity === 'number' && line.quantity <= 0) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: 'INVALID_QUANTITY',
+              message: `Quantity for line item must be greater than zero (got ${line.quantity})`,
+            },
+            requestId: req.id,
+          });
+        }
+        if (typeof line.unitPrice === 'number' && line.unitPrice < 0) {
+          return reply.status(400).send({
+            success: false,
+            error: {
+              code: 'INVALID_PRICE',
+              message: `Unit price for line item cannot be negative (got ${line.unitPrice})`,
+            },
+            requestId: req.id,
+          });
+        }
+      }
+    }
+
     const locations = await opts.uow.runInTransaction(async (ctx) => {
       return (await ctx.inventory.listLocations(tenantContext.tenantId)).filter((l) => l.locationType !== 'on_rent');
     });

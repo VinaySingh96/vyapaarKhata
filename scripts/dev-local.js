@@ -287,14 +287,39 @@ function findListeningPid(port) {
   return null;
 }
 
-function checkPortConflict(port, serviceName) {
+function getProcessCommand(pid) {
+  try {
+    const res = spawnSync('ps', ['-p', String(pid), '-o', 'command='], { encoding: 'utf8', stdio: 'pipe' });
+    return (res.stdout || '').trim();
+  } catch {
+    return '';
+  }
+}
+
+async function checkPortConflict(port, serviceName) {
   const pid = findListeningPid(port);
   if (pid) {
-    if (process.argv.includes('--kill-stale') || process.argv.includes('--force')) {
+    const cmd = getProcessCommand(pid);
+    const isOurProcess =
+      cmd.includes('apps/central-server') ||
+      cmd.includes('apps/server') ||
+      cmd.includes('dev-local') ||
+      cmd.includes('dist/index.js');
+
+    const requestedKill =
+      process.argv.includes('--kill-stale') ||
+      process.argv.includes('--force') ||
+      env.npm_config_kill_stale === 'true' ||
+      env.npm_config_force === 'true' ||
+      env.KILL_STALE === 'true' ||
+      env.FORCE === 'true';
+
+    if (isOurProcess || requestedKill) {
       console.log(`[dev-local] Terminating stale ${serviceName} process on port ${port} (PID ${pid})...`);
       try {
         process.kill(Number(pid), 'SIGKILL');
       } catch {}
+      await new Promise((r) => setTimeout(r, 500));
     } else {
       console.error(`[dev-local] ❌ Port ${port} (${serviceName}) is already in use by PID ${pid}.`);
       console.error(`[dev-local] Add --kill-stale to auto-terminate it, or run: kill -9 ${pid}`);
@@ -335,8 +360,8 @@ console.log(`[dev-local] Using PostgreSQL at: ${resolvedPgUrl}`);
 
 await ensureDatabases(pg, resolvedPgUrl, CENTRAL_DB, STORE_DB);
 
-checkPortConflict(CENTRAL_PORT, 'Central Cloud');
-checkPortConflict(STORE_PORT, 'Store Server');
+await checkPortConflict(CENTRAL_PORT, 'Central Cloud');
+await checkPortConflict(STORE_PORT, 'Store Server');
 
 const services = [
   {

@@ -85,6 +85,20 @@ export class InvoicePostingService {
         throw new Error(`Invoice ${invoiceId} has no lines`);
       }
 
+      // Validate quantities, prices, and discounts before processing stock or ledger
+      for (const line of invoice.lines) {
+        if (!line.quantity || line.quantity <= 0) {
+          throw new Error(
+            `Invalid line item quantity (${line.quantity}) for product "${line.productName || line.productId}". Quantity must be greater than zero.`
+          );
+        }
+        if (line.unitPrice < 0) {
+          throw new Error(
+            `Invalid line item unit price (${line.unitPrice}) for product "${line.productName || line.productId}". Unit price cannot be negative.`
+          );
+        }
+      }
+
       // 1. Validate stock availability for all lines atomically
       const balanceUpdates: StockBalance[] = [];
       const movements: StockMovement[] = [];

@@ -41,5 +41,6 @@ coverage/
 # Temporary and cache
 tmp/
 temp/
+scratch/
 .turbo/
 .cache/
