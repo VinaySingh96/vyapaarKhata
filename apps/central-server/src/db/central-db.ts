@@ -59,6 +59,15 @@ export class CentralDatabase {
         ALTER TABLE central_tenants ADD COLUMN IF NOT EXISTS secret_key VARCHAR(255);
       `);
 
+      // 1c. License Sequences Table (Atomic sequence generator per calendar year)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS central_license_sequences (
+          year INT PRIMARY KEY,
+          last_seq INT NOT NULL DEFAULT 0,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+
       // 2. Installations Table
       await client.query(`
         CREATE TABLE IF NOT EXISTS central_installations (

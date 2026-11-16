@@ -159,26 +159,29 @@ export const LicenseLoginScreen: React.FC = () => {
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
-              <label
-                htmlFor="input-license-number"
-                style={{
-                  display: 'block',
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  color: '#334155',
-                  marginBottom: '6px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.025em',
-                }}
-              >
-                Store License Number *
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label
+                  htmlFor="input-license-number"
+                  style={{
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#334155',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.025em',
+                  }}
+                >
+                  Store License Number *
+                </label>
+                <span style={{ fontSize: '11px', color: inputLicense.length === 17 ? '#15803d' : '#64748b', fontWeight: 600 }}>
+                  {inputLicense.length === 17 ? '✓ 17 chars (Standard)' : `${inputLicense.length} chars`}
+                </span>
+              </div>
               <input
                 id="input-license-number"
                 type="text"
                 value={inputLicense}
                 onChange={(e) => setInputLicense(e.target.value.toUpperCase())}
-                placeholder="e.g. LIC-BM-2026-1001 or LIC-JW-2026-2002"
+                placeholder="e.g. LIC-BM-2026-00001"
                 required
                 style={{
                   width: '100%',
@@ -197,6 +200,9 @@ export const LicenseLoginScreen: React.FC = () => {
                 onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
                 onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
               />
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                Format: <code>LIC-[TYPE]-[YEAR]-[00001]</code> (Sequential, 17 chars with embedded year check)
+              </div>
             </div>
 
             <div style={{ marginBottom: '20px' }}>
@@ -211,30 +217,35 @@ export const LicenseLoginScreen: React.FC = () => {
                     letterSpacing: '0.025em',
                   }}
                 >
-                  Store Secret Key *
+                  Store Activation / Secret Key *
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowSecret(!showSecret)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    fontSize: '12px',
-                    color: '#2563eb',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    padding: 0,
-                  }}
-                >
-                  {showSecret ? '🙈 Hide' : '👁️ Show'}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', color: inputSecret.length === 24 ? '#15803d' : '#64748b', fontWeight: 600 }}>
+                    {inputSecret.length === 24 ? '✓ 24 chars (Standard)' : `${inputSecret.length} chars`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSecret(!showSecret)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '12px',
+                      color: '#2563eb',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      padding: 0,
+                    }}
+                  >
+                    {showSecret ? '🙈 Hide' : '👁️ Show'}
+                  </button>
+                </div>
               </div>
               <input
                 id="input-secret-key"
                 type={showSecret ? 'text' : 'password'}
                 value={inputSecret}
                 onChange={(e) => setInputSecret(e.target.value)}
-                placeholder="e.g. sk_patel_bm_live_98374"
+                placeholder="e.g. VK26-BM02-0001-A7B8-9F4D"
                 required
                 style={{
                   width: '100%',
@@ -251,6 +262,9 @@ export const LicenseLoginScreen: React.FC = () => {
                 onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
                 onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
               />
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                Format: <code>VK[YY]-[TYPE][TIER]-[SEQ]-[ENTR]-[CHK4]</code> (24 chars, verified year & checksum)
+              </div>
             </div>
 
             <button

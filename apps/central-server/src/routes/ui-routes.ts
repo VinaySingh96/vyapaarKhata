@@ -509,6 +509,10 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
             <label class="form-label">Store / Warehouse Address</label>
             <input type="text" class="form-control" name="address" placeholder="e.g. Station Road, Satara, Maharashtra">
           </div>
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px 12px; font-size: 0.8rem; color: #166534; line-height: 1.4;">
+            <strong>🔐 Enterprise Automated Licensing:</strong><br>
+            Generates sequential fixed-length 17-char license number (<code>LIC-[TYPE]-[YEAR]-[00001]</code>) and 24-char activation key (<code>VK[YY]-[TYPE][TIER]-[SEQ]-[ENTR]-[CHK4]</code>) with year verification and cryptographic checksum.
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeCreateTenantModal()">Cancel</button>

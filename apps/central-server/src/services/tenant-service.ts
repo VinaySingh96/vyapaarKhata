@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { CentralDatabase } from '../db/central-db.js';
 import {
+  generateLicensePair,
+  validateLicenseNumber,
+  validateLicenseKey,
+  validateLicensePair,
+} from '@vyapaarkhata/domain';
+import {
   CentralTenant,
   CentralInstallation,
   CentralSubscription,
@@ -409,15 +415,39 @@ export class TenantService {
     const plan = data.plan || 'standard';
     const maxInstallations = data.maxInstallations || (plan === 'enterprise' ? 10 : plan === 'standard' ? 3 : 1);
 
-    const prefix = storeType === 'jewellery' ? 'JW' : storeType === 'rental' ? 'RN' : 'BM';
-    const licenseNumber =
-      data.licenseNumber ||
-      `LIC-${prefix}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-    const secretKey = data.secretKey || `sk_live_${randomUUID().replace(/-/g, '')}`;
-
     const client = await this.db.getPool().connect();
     try {
       await client.query('BEGIN');
+
+      let licenseNumber = data.licenseNumber;
+      let secretKey = data.secretKey;
+
+      if (!licenseNumber || !secretKey) {
+        const currentYear = new Date().getFullYear();
+        // Atomically obtain the next sequence number for this calendar year
+        const seqRes = await client.query(
+          `INSERT INTO central_license_sequences (year, last_seq, updated_at)
+           VALUES ($1, 1, NOW())
+           ON CONFLICT (year) DO UPDATE
+           SET last_seq = central_license_sequences.last_seq + 1, updated_at = NOW()
+           RETURNING last_seq`,
+          [currentYear]
+        );
+        const sequence = seqRes.rows[0].last_seq;
+        const generatedPair = generateLicensePair({
+          sequence,
+          year: currentYear,
+          storeType,
+          planTier: plan,
+        });
+
+        if (!licenseNumber) {
+          licenseNumber = generatedPair.licenseNumber;
+        }
+        if (!secretKey) {
+          secretKey = generatedPair.licenseKey;
+        }
+      }
 
       const res = await client.query(
         `INSERT INTO central_tenants (

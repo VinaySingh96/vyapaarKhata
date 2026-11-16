@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { createHmac } from 'node:crypto';
 import { TenantService } from '../services/tenant-service.js';
+import { validateLicensePair } from '@vyapaarkhata/domain';
 
 export interface AuthRoutesOptions {
   tenantService: TenantService;
@@ -51,6 +52,19 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (app, opt
         error: {
           code: 'INVALID_CREDENTIALS',
           message: 'Both licenseNumber and secretKey are required',
+        },
+        requestId: req.id,
+      });
+    }
+
+    // Format, Sequence, Year Check, and Checksum validation
+    const validation = validateLicensePair(licenseNumber.trim(), secretKey.trim(), { allowLegacy: true });
+    if (!validation.valid) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: validation.error || 'INVALID_LICENSE_FORMAT',
+          message: validation.message || 'Invalid license format or expired year check',
         },
         requestId: req.id,
       });

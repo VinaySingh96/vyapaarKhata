@@ -242,12 +242,12 @@ export const LicenseLoginModal: React.FC<LicenseLoginModalProps> = ({ isOpen, on
 
               <div style={{ marginBottom: '14px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                  License Number *
+                  License Number (17 chars) *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. LIC-JW-2026-2002"
+                  placeholder="e.g. LIC-BM-2026-00001"
                   value={inputLicense}
                   onChange={(e) => setInputLicense(e.target.value)}
                   style={{
@@ -264,12 +264,12 @@ export const LicenseLoginModal: React.FC<LicenseLoginModalProps> = ({ isOpen, on
 
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                  Secret Key *
+                  Secret / Activation Key (24 chars) *
                 </label>
                 <input
                   type="password"
                   required
-                  placeholder="e.g. sk_janardan_jw_live_48219"
+                  placeholder="e.g. VK26-BM02-0001-A7B8-9F4D"
                   value={inputSecret}
                   onChange={(e) => setInputSecret(e.target.value)}
                   style={{
