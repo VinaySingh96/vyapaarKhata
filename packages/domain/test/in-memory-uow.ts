@@ -5,7 +5,9 @@ import {
   InventoryRepository,
   PartyLedgerRepository,
   OutboxRepository,
+  RentalRepository,
 } from '../src/ports/repositories.js';
+import { RentalIssue, RentalReturn, RentalSettings, DEFAULT_RENTAL_SETTINGS } from '../src/entities/rental-types.js';
 import {
   SalesInvoice,
   InvoiceStatus,
@@ -14,6 +16,8 @@ import {
   PartyLedgerEntry,
   OutboxEvent,
   EntityId,
+  InventoryLocation,
+  Party,
 } from '../src/entities/types.js';
 
 export class InMemoryUnitOfWork implements UnitOfWork {
@@ -27,6 +31,11 @@ export class InMemoryUnitOfWork implements UnitOfWork {
   public purchaseBills = new Map<string, any>();
   public paymentsList = new Map<string, any>();
   public allocationsList: any[] = [];
+  public locations: InventoryLocation[] = [];
+  public parties = new Map<string, Party>();
+  public rentalIssues = new Map<string, RentalIssue>();
+  public rentalReturns = new Map<string, RentalReturn>();
+  public rentalSettings = new Map<string, RentalSettings>();
 
   async runInTransaction<T>(work: (ctx: UnitOfWorkContext) => Promise<T>): Promise<T> {
     // Snapshot state before running transaction to simulate database rollback
@@ -39,6 +48,13 @@ export class InMemoryUnitOfWork implements UnitOfWork {
     const movementsSnapshot = [...this.movements];
     const partyLedgerSnapshot = [...this.partyLedger];
     const outboxSnapshot = [...this.outboxEvents];
+    const locationsSnapshot = [...this.locations];
+    const rentalIssuesSnapshot = new Map(
+      Array.from(this.rentalIssues.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])
+    );
+    const rentalReturnsSnapshot = new Map(
+      Array.from(this.rentalReturns.entries()).map(([k, v]) => [k, JSON.parse(JSON.stringify(v))])
+    );
 
     const invoiceRepo: InvoiceRepository = {
       findById: async (tenantId: EntityId, id: EntityId) => {
@@ -85,7 +101,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
           (m) => m.tenantId === tenantId && m.referenceDocumentId === documentId
         );
       },
-      listLocations: async () => [],
+      listLocations: async (tenantId: EntityId) => this.locations.filter((l) => l.tenantId === tenantId),
       saveLocation: async () => {},
       saveAdjustment: async () => {},
       saveTransfer: async () => {},
@@ -161,7 +177,10 @@ export class InMemoryUnitOfWork implements UnitOfWork {
 
     const partyRepo = {
       list: async () => [],
-      findById: async () => null,
+      findById: async (tenantId: EntityId, id: EntityId) => {
+        const p = this.parties.get(id);
+        return p && p.tenantId === tenantId ? JSON.parse(JSON.stringify(p)) : null;
+      },
       save: async () => {},
       getBalance: async () => 0,
       listLedgerEntries: async () => [],
@@ -189,6 +208,68 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       getStockValuation: async () => [],
     };
 
+    const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
+    const rentalRepo: RentalRepository = {
+      getSettings: async (tenantId) => ({ ...DEFAULT_RENTAL_SETTINGS, ...(this.rentalSettings.get(tenantId) || {}) }),
+      saveSettings: async (tenantId, settings) => {
+        this.rentalSettings.set(tenantId, { ...settings });
+      },
+      ensureOnRentLocation: async (tenantId) => {
+        let loc = this.locations.find((l) => l.tenantId === tenantId && l.locationType === 'on_rent');
+        if (!loc) {
+          loc = {
+            id: `${tenantId}-on-rent`,
+            tenantId,
+            name: 'On Rent',
+            code: 'ON-RENT',
+            locationType: 'on_rent',
+            isDefault: false,
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          };
+          this.locations.push(loc);
+        }
+        return clone(loc);
+      },
+      nextNumber: async (tenantId, kind) => {
+        const count =
+          kind === 'issue'
+            ? Array.from(this.rentalIssues.values()).filter((i) => i.tenantId === tenantId).length
+            : Array.from(this.rentalReturns.values()).filter((r) => r.tenantId === tenantId).length;
+        return `${kind === 'issue' ? 'RI' : 'RR'}-${String(count + 1).padStart(4, '0')}`;
+      },
+      saveIssue: async (issue) => {
+        this.rentalIssues.set(issue.id, clone(issue));
+      },
+      findIssueById: async (tenantId, id) => {
+        const i = this.rentalIssues.get(id);
+        return i && i.tenantId === tenantId ? clone(i) : null;
+      },
+      listIssues: async (tenantId, filter) =>
+        Array.from(this.rentalIssues.values())
+          .filter((i) => i.tenantId === tenantId)
+          .filter((i) => !filter?.partyId || i.partyId === filter.partyId)
+          .filter((i) => !filter?.statuses || filter.statuses.includes(i.status))
+          .map(clone),
+      saveReturn: async (ret) => {
+        this.rentalReturns.set(ret.id, clone(ret));
+      },
+      findReturnById: async (tenantId, id) => {
+        const r = this.rentalReturns.get(id);
+        return r && r.tenantId === tenantId ? clone(r) : null;
+      },
+      listReturns: async (tenantId, issueId) =>
+        Array.from(this.rentalReturns.values())
+          .filter((r) => r.tenantId === tenantId && r.issueId === issueId)
+          .map(clone),
+      findReturnByInvoiceId: async (tenantId, invoiceId) => {
+        const r = Array.from(this.rentalReturns.values()).find(
+          (x) => x.tenantId === tenantId && x.salesInvoiceId === invoiceId
+        );
+        return r ? clone(r) : null;
+      },
+    };
+
     try {
       return await work({
         invoices: invoiceRepo,
@@ -201,6 +282,7 @@ export class InMemoryUnitOfWork implements UnitOfWork {
         payments: paymentRepo,
         expenses: expenseRepo,
         reports: reportRepo,
+        rentals: rentalRepo,
       });
     } catch (error) {
       // Rollback: restore snapshots
@@ -209,6 +291,9 @@ export class InMemoryUnitOfWork implements UnitOfWork {
       this.movements = movementsSnapshot;
       this.partyLedger = partyLedgerSnapshot;
       this.outboxEvents = outboxSnapshot;
+      this.locations = locationsSnapshot;
+      this.rentalIssues = rentalIssuesSnapshot;
+      this.rentalReturns = rentalReturnsSnapshot;
       throw error;
     }
   }

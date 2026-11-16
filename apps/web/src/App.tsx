@@ -13,12 +13,14 @@ import { PaymentsScreen } from './screens/PaymentsScreen.js';
 import { ExpensesScreen } from './screens/ExpensesScreen.js';
 import { ReportsScreen } from './screens/ReportsScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
+import { RentalsScreen } from './screens/RentalsScreen.js';
 import { LicenseLoginScreen } from './screens/LicenseLoginScreen.js';
 import { LicenseStatusScreen } from './screens/LicenseStatusScreen.js';
 
 const VALID_ROUTES = [
   'dashboard',
   'sales',
+  'rentals',
   'products',
   'inventory',
   'purchasing',
@@ -49,7 +51,7 @@ function getRouteFromLocation(): RouteId {
 
 const AppContent: React.FC = () => {
   const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
-  const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus } = useStore();
+  const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus, rentalEnabled } = useStore();
 
   // Listen to popstate (back/forward browser buttons) and hashchange
   useEffect(() => {
@@ -90,6 +92,7 @@ const AppContent: React.FC = () => {
     <Layout activeNav={activeNav} onNavigate={handleNavigate} storeName={storeSettings.storeName}>
       {activeNav === 'dashboard' && <DashboardScreen onNavigate={handleNavigate} />}
       {activeNav === 'sales' && <SalesBillingScreen />}
+      {activeNav === 'rentals' && (rentalEnabled ? <RentalsScreen /> : <SettingsScreen />)}
       {activeNav === 'products' && <ProductsScreen />}
       {activeNav === 'inventory' && <InventoryScreen />}
       {activeNav === 'purchasing' && <PurchasingScreen />}

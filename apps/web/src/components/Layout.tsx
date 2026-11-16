@@ -19,7 +19,13 @@ export const Layout: React.FC<LayoutProps> = ({
   storeName,
 }) => {
   const { t, language, setLanguage } = useI18n();
-  const { storeType, licenseNumber, logoutLicense } = useStore();
+  const { storeType, licenseNumber, logoutLicense, rentalEnabled } = useStore();
+  const badge =
+    storeType === 'jewellery'
+      ? { icon: '💍', bg: '#fef3c7', fg: '#92400e', border: '#fde68a' }
+      : storeType === 'rental'
+      ? { icon: '🔁', bg: '#dcfce7', fg: '#166534', border: '#bbf7d0' }
+      : { icon: '🏗️', bg: '#e0e7ff', fg: '#3730a3', border: '#c7d2fe' };
   const toast = useToast();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
@@ -27,6 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const navItems = [
     { id: 'dashboard', label: t('nav.dashboard') },
     { id: 'sales', label: t('nav.sales') },
+    ...(rentalEnabled ? [{ id: 'rentals', label: t('nav.rentals') }] : []),
     { id: 'products', label: t('nav.products') },
     { id: 'inventory', label: t('nav.inventory') },
     { id: 'purchasing', label: t('nav.purchasing') },
@@ -196,9 +203,9 @@ export const Layout: React.FC<LayoutProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  backgroundColor: storeType === 'jewellery' ? '#fef3c7' : '#e0e7ff',
-                  color: storeType === 'jewellery' ? '#92400e' : '#3730a3',
-                  border: `1px solid ${storeType === 'jewellery' ? '#fde68a' : '#c7d2fe'}`,
+                  backgroundColor: badge.bg,
+                  color: badge.fg,
+                  border: `1px solid ${badge.border}`,
                   padding: '4px 10px',
                   borderRadius: '16px',
                   fontSize: '11.5px',
@@ -206,7 +213,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   whiteSpace: 'nowrap',
                 }}
               >
-                <span>{storeType === 'jewellery' ? '💍' : '🏗️'}</span>
+                <span>{badge.icon}</span>
                 <span>{licenseNumber}</span>
               </div>
 

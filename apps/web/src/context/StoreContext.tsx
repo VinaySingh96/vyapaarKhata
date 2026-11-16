@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getActiveTenantId, getAuthHeaders, apiFetch } from '../utils/api.js';
 
-export type StoreType = 'jewellery' | 'building_materials';
+export type StoreType = 'jewellery' | 'building_materials' | 'rental';
 
 export interface StoreSettings {
   storeName: string;
@@ -31,6 +31,9 @@ interface StoreContextType {
   setExplicitStoreType: (type: StoreType) => void;
   checkLicenseStatus: () => Promise<{ status: string; message?: string }>;
   setSimulatedTenantStatus: (status: string) => void;
+  /** Rental module switch (tenant setting, off by default). */
+  rentalEnabled: boolean;
+  setRentalEnabled: (enabled: boolean) => Promise<void>;
 }
 
 const DEFAULT_SETTINGS: StoreSettings = {
@@ -59,6 +62,8 @@ const StoreContext = createContext<StoreContextType>({
   setExplicitStoreType: () => {},
   checkLicenseStatus: async () => ({ status: 'active' }),
   setSimulatedTenantStatus: () => {},
+  rentalEnabled: false,
+  setRentalEnabled: async () => {},
 });
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -104,7 +109,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [storeType, setStoreType] = useState<StoreType>(() => {
     const cached = localStorage.getItem('vk_store_type');
-    if (cached === 'jewellery' || cached === 'building_materials') {
+    if (cached === 'jewellery' || cached === 'building_materials' || cached === 'rental') {
       return cached;
     }
     if (typeof window !== 'undefined') {
@@ -122,6 +127,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [rentalEnabled, setRentalEnabledState] = useState<boolean>(false);
 
   const isLicenseLoggedIn = Boolean(jwtToken && licenseNumber);
 
@@ -308,6 +314,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     refreshStoreSettings();
   }, [tenantId]);
 
+  useEffect(() => {
+    if (!isLicenseLoggedIn) {
+      setRentalEnabledState(false);
+      return;
+    }
+    apiFetch('/api/v1/rentals/settings')
+      .then((res) => res.json())
+      .then((json) => setRentalEnabledState(Boolean(json?.success && json.data?.enabled)))
+      .catch(() => setRentalEnabledState(false));
+  }, [tenantId, isLicenseLoggedIn]);
+
+  const setRentalEnabled = async (enabled: boolean) => {
+    const res = await apiFetch('/api/v1/rentals/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ enabled }),
+    });
+    const json = await res.json();
+    if (!json?.success) {
+      throw new Error(json?.error?.message || 'Could not update rental setting');
+    }
+    setRentalEnabledState(Boolean(json.data?.enabled));
+  };
+
   const updateStoreSettings = async (newSettings: Partial<StoreSettings>) => {
     setIsLoading(true);
     try {
@@ -361,6 +390,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setExplicitStoreType,
         checkLicenseStatus,
         setSimulatedTenantStatus,
+        rentalEnabled,
+        setRentalEnabled,
       }}
     >
       {children}

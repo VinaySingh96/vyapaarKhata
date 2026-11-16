@@ -17,7 +17,22 @@ interface InventoryLocationItem {
 export const SettingsScreen: React.FC = () => {
   const { t, language, setLanguage } = useI18n();
   const toast = useToast();
-  const { storeSettings, updateStoreSettings, isLoading, tenantId } = useStore();
+  const { storeSettings, updateStoreSettings, isLoading, tenantId, rentalEnabled, setRentalEnabled, storeType } =
+    useStore();
+  const isRentalStore = storeType === 'rental';
+  const [isTogglingRental, setIsTogglingRental] = useState(false);
+
+  const handleToggleRental = async () => {
+    setIsTogglingRental(true);
+    try {
+      await setRentalEnabled(!rentalEnabled);
+      toast.success(!rentalEnabled ? t('rentals.enabledToast') : t('rentals.disabledToast'));
+    } catch (err: any) {
+      toast.error(err.message || 'Could not update rental setting');
+    } finally {
+      setIsTogglingRental(false);
+    }
+  };
 
   const [storeName, setStoreName] = useState(storeSettings.storeName);
   const [gstin, setGstin] = useState(storeSettings.gstin || '');
@@ -40,7 +55,8 @@ export const SettingsScreen: React.FC = () => {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
-          setLocations(json.data);
+          // The rental module's virtual "On Rent" location is managed automatically
+          setLocations(json.data.filter((l: InventoryLocationItem) => l.locationType !== 'on_rent'));
         }
       })
       .catch((err) => console.warn('Failed to load locations:', err));
@@ -352,6 +368,56 @@ export const SettingsScreen: React.FC = () => {
                 ))
               )}
             </div>
+          </div>
+
+          {/* Rental Business Module */}
+          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#111827' }}>
+                {t('rentals.settingsTitle')}
+              </h3>
+              {isRentalStore ? (
+                <span
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '14px',
+                    border: '1px solid #bbf7d0',
+                    backgroundColor: '#dcfce7',
+                    color: '#15803d',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t('rentals.alwaysOn')}
+                </span>
+              ) : (
+              <button
+                type="button"
+                id="btn-toggle-rental"
+                role="switch"
+                aria-checked={rentalEnabled}
+                disabled={isTogglingRental}
+                onClick={handleToggleRental}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '14px',
+                  border: `1px solid ${rentalEnabled ? '#bbf7d0' : '#cbd5e1'}`,
+                  backgroundColor: rentalEnabled ? '#dcfce7' : '#f1f5f9',
+                  color: rentalEnabled ? '#15803d' : '#475569',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: isTogglingRental ? 'wait' : 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {rentalEnabled ? t('rentals.on') : t('rentals.off')}
+              </button>
+              )}
+            </div>
+            <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#6b7280', lineHeight: 1.5 }}>
+              {isRentalStore ? t('rentals.settingsHelpRentalStore') : t('rentals.settingsHelp')}
+            </p>
           </div>
 
           {/* GST Slabs */}

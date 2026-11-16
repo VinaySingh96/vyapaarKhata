@@ -1,6 +1,6 @@
 export type TenantStatus = 'active' | 'suspended' | 'trial' | 'cancelled';
 export type PlanTier = 'starter' | 'standard' | 'enterprise';
-export type StoreType = 'jewellery' | 'building_materials' | 'general';
+export type StoreType = 'jewellery' | 'building_materials' | 'rental' | 'general';
 export type InstallationType = 'primary_laptop' | 'secondary_laptop' | 'android';
 export type InstallationStatus = 'active' | 'pending_approval' | 'revoked';
 

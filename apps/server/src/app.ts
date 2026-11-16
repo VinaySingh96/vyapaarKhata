@@ -14,6 +14,7 @@ import { purchasingRoutes } from './routes/purchasing-routes.js';
 import { paymentRoutes } from './routes/payment-routes.js';
 import { expenseRoutes } from './routes/expense-routes.js';
 import { reportRoutes } from './routes/report-routes.js';
+import { rentalRoutes } from './routes/rental-routes.js';
 import { settingsRoutes } from './routes/settings-routes.js';
 import { localSyncRoutes } from './routes/sync-routes.js';
 import { localAuthRoutes } from './routes/auth-routes.js';
@@ -243,6 +244,7 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     app.register(paymentRoutes, { prefix: '/api/v1/payments', uow });
     app.register(expenseRoutes, { prefix: '/api/v1/expenses', uow });
     app.register(reportRoutes, { prefix: '/api/v1/reports', uow });
+    app.register(rentalRoutes, { prefix: '/api/v1/rentals', uow });
     const centralTenantId =
       config.CENTRAL_TENANT_ID ||
       (config.DATABASE_URL.includes('jewellery')

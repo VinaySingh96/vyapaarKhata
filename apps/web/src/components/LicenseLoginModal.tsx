@@ -146,6 +146,8 @@ export const LicenseLoginModal: React.FC<LicenseLoginModalProps> = ({ isOpen, on
                 <strong>
                   {storeType === 'jewellery'
                     ? '💍 Jewellery & Bullion Showroom'
+                    : storeType === 'rental'
+                    ? '🔁 Rental Store'
                     : '🏗️ Building Materials & Hardware'}
                 </strong>
               </div>

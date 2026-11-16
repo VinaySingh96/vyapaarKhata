@@ -467,6 +467,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
               <select class="form-control" name="storeType" required>
                 <option value="building_materials">🏗️ Building Materials & Hardware</option>
                 <option value="jewellery">💍 Jewellery & Bullion Showroom</option>
+                <option value="rental">🔁 Rental Store (Centring, Scaffolding, Equipment)</option>
               </select>
             </div>
           </div>
@@ -642,12 +643,12 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         }
 
         tbody.innerHTML = json.data.map(t => {
-          const isJewel = t.storeType === 'jewellery';
+          const profile = storeProfile(t.storeType);
           return \`
           <tr>
             <td>
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.1rem;">\${isJewel ? '💍' : '🏗️'}</span>
+                <span style="font-size: 1.1rem;">\${profile.icon}</span>
                 <div>
                   <div style="font-weight: 700; color: #1e293b;">\${t.name}</div>
                   <div style="font-size: 0.775rem; color: #64748b;">
@@ -656,8 +657,8 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
                 </div>
               </div>
               <div style="margin-top: 4px;">
-                <span class="badge" style="background: \${isJewel ? '#fef3c7' : '#e0e7ff'}; color: \${isJewel ? '#92400e' : '#3730a3'}; font-size: 0.7rem;">
-                  \${isJewel ? '💍 Jewellery & Bullion' : '🏗️ Building Materials & Hardware'}
+                <span class="badge" style="background: \${profile.bg}; color: \${profile.fg}; font-size: 0.7rem;">
+                  \${profile.icon} \${profile.label}
                 </span>
               </div>
             </td>
@@ -763,11 +764,18 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
 
     // Modal Helpers
     function openCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'flex'; }
+    function storeProfile(type) {
+      if (type === 'jewellery') return { icon: '💍', label: 'Jewellery & Bullion', bg: '#fef3c7', fg: '#92400e' };
+      if (type === 'rental') return { icon: '🔁', label: 'Rental Store', bg: '#dcfce7', fg: '#166534' };
+      return { icon: '🏗️', label: 'Building Materials & Hardware', bg: '#e0e7ff', fg: '#3730a3' };
+    }
+
     function closeCreateTenantModal() { document.getElementById('createTenantModal').style.display = 'none'; }
 
     function openTenantCreatedModal(tenant) {
       document.getElementById('createdTenantName').textContent = tenant.name + (tenant.legalName ? \` (\${tenant.legalName})\` : '');
-      document.getElementById('createdTenantType').textContent = tenant.storeType === 'jewellery' ? '💍 Jewellery & Bullion POS Profile' : '🏗️ Building Materials & Hardware POS Profile';
+      const createdProfile = storeProfile(tenant.storeType);
+      document.getElementById('createdTenantType').textContent = createdProfile.icon + ' ' + createdProfile.label + ' POS Profile';
       document.getElementById('createdTenantLicense').textContent = tenant.licenseNumber;
       document.getElementById('createdTenantSecret').textContent = tenant.secretKey;
       document.getElementById('createdTenantDashLink').href = '/admin/tenants/' + tenant.id;

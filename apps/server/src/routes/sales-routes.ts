@@ -9,6 +9,7 @@ import {
   Party,
 } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
+import { AppError } from '../errors/app-error.js';
 
 export interface SalesRoutesOptions {
   uow: UnitOfWork;
@@ -25,6 +26,20 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
         (req.headers['x-installation-id'] as string) || '00000000-0000-0000-0000-000000000001',
       userId: req.headers['x-user-id'] as string | undefined,
     };
+  }
+
+  // Rent bills (RNT-) must be cancelled from Rentals so stock and on-rent quantities stay in sync
+  async function assertNotRentalBill(tenantId: string, invoiceId: string): Promise<void> {
+    const rentalReturn = await opts.uow.runInTransaction(async (ctx) =>
+      ctx.rentals ? ctx.rentals.findReturnByInvoiceId(tenantId, invoiceId) : null
+    );
+    if (rentalReturn) {
+      throw new AppError(
+        `This is a rental bill for return ${rentalReturn.returnNumber}. Cancel it from Rentals instead.`,
+        409,
+        'CONFLICT'
+      );
+    }
   }
 
   // GET /api/v1/sales/invoices
@@ -71,7 +86,7 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     const body = req.body || {};
 
     const locations = await opts.uow.runInTransaction(async (ctx) => {
-      return ctx.inventory.listLocations(tenantContext.tenantId);
+      return (await ctx.inventory.listLocations(tenantContext.tenantId)).filter((l) => l.locationType !== 'on_rent');
     });
 
     let sanitizedLines = body.lines || [];
@@ -162,7 +177,9 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     await opts.uow.runInTransaction(async (ctx) => {
       const inv = await ctx.invoices.findById(tenantContext.tenantId, invoiceId);
       if (inv && inv.status === 'draft') {
-        const locations = await ctx.inventory.listLocations(tenantContext.tenantId);
+        const locations = (await ctx.inventory.listLocations(tenantContext.tenantId)).filter(
+          (l) => l.locationType !== 'on_rent'
+        );
         if (locations && locations.length > 0) {
           const validLocIds = new Set(locations.map((l) => l.id));
           const defLoc = locations.find((l) => l.isDefault) || locations[0];
@@ -339,6 +356,7 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
       const tenantContext = resolveTenantContext(req);
       const invoiceId = req.params.id;
       const reason = req.body?.reason || 'Invoice cancelled by user';
+      await assertNotRentalBill(tenantContext.tenantId, invoiceId);
 
       const invoice = await service.cancelInvoice({
         tenantContext,
@@ -362,6 +380,7 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
       const tenantContext = resolveTenantContext(req);
       const invoiceId = req.params.id;
       const reason = req.body?.reason || 'Invoice cancelled by user';
+      await assertNotRentalBill(tenantContext.tenantId, invoiceId);
 
       const invoice = await service.cancelInvoice({
         tenantContext,

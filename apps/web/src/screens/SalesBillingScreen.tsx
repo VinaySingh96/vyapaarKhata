@@ -1876,7 +1876,8 @@ export const SalesBillingScreen: React.FC = () => {
                               </button>
                             )}
 
-                            {inv.status === 'posted' && (
+                            {/* Rent bills (RNT-) are voided from Rentals so on-rent quantities stay in sync */}
+                            {inv.status === 'posted' && !inv.invoiceNumber?.startsWith('RNT-') && (
                               <button
                                 type="button"
                                 disabled={(inv.amountPaid || 0) > 0.001 || (inv.adjustmentAmount || 0) > 0.001}

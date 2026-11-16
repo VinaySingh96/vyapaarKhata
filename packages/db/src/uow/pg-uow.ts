@@ -1,5 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 import { randomUUID } from 'node:crypto';
+import { createPgRentalRepository } from './pg-rental-repo.js';
 import {
   UnitOfWork,
   UnitOfWorkContext,
@@ -92,7 +93,7 @@ export class PgUnitOfWork implements UnitOfWork {
 
           const linesRes = await client.query(
             `SELECT sil.id, sil.invoice_id, sil.variant_id, sil.unit_id, sil.quantity, sil.unit_price, sil.tax_amount, sil.line_total,
-                    COALESCE(pv.variant_name, p.name, 'Catalog Item') as product_name, pv.sku, u.symbol as unit_symbol
+                    COALESCE(sil.description_snapshot, pv.variant_name, p.name, 'Catalog Item') as product_name, pv.sku, u.symbol as unit_symbol
              FROM sales_invoice_lines sil
              LEFT JOIN product_variants pv ON pv.id = sil.variant_id
              LEFT JOIN products p ON p.id = pv.product_id
@@ -237,7 +238,7 @@ export class PgUnitOfWork implements UnitOfWork {
           await client.query(
             `INSERT INTO sales_invoices (
                id, tenant_id, party_id, business_location_id, invoice_number, invoice_date, status, subtotal, tax_amount, total_amount, posted_at, created_at
-             ) VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6, $7, $8, $9, $10, NOW())
+             ) VALUES ($1, $2, $3, $4, $5, COALESCE($11::date, CURRENT_DATE), $6, $7, $8, $9, $10, NOW())
              ON CONFLICT (id) DO UPDATE SET
                status = EXCLUDED.status,
                posted_at = EXCLUDED.posted_at`,
@@ -252,6 +253,7 @@ export class PgUnitOfWork implements UnitOfWork {
               invoice.taxTotal,
               invoice.grandTotal,
               invoice.postedAt || null,
+              invoice.invoiceDate || null,
             ]
           );
 
@@ -279,8 +281,8 @@ export class PgUnitOfWork implements UnitOfWork {
 
             await client.query(
               `INSERT INTO sales_invoice_lines (
-                 id, invoice_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total
-               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                 id, invoice_id, variant_id, unit_id, quantity, unit_price, tax_amount, line_total, description_snapshot
+               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                ON CONFLICT (id) DO NOTHING`,
               [
                 ensureUuid(line.id),
@@ -291,6 +293,7 @@ export class PgUnitOfWork implements UnitOfWork {
                 line.unitPrice,
                 line.taxAmount,
                 line.lineTotal,
+                line.description || null,
               ]
             );
           }
@@ -331,6 +334,7 @@ export class PgUnitOfWork implements UnitOfWork {
              LEFT JOIN units u ON u.id = p.base_unit_id
              LEFT JOIN product_variants pv ON pv.product_id = p.id
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
+               AND sb.inventory_location_id NOT IN (SELECT id FROM inventory_locations WHERE location_type = 'on_rent')
              WHERE p.tenant_id = $1 AND ($2::uuid IS NULL OR p.category_id = $2)
              GROUP BY p.id, p.name_hi, c.name, u.name, u.symbol
              ORDER BY p.name ASC`,
@@ -344,6 +348,7 @@ export class PgUnitOfWork implements UnitOfWork {
                     COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END), 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
+               AND sb.inventory_location_id NOT IN (SELECT id FROM inventory_locations WHERE location_type = 'on_rent')
              WHERE pv.tenant_id = $1
              GROUP BY pv.id
              ORDER BY pv.variant_name ASC`,
@@ -427,6 +432,7 @@ export class PgUnitOfWork implements UnitOfWork {
                     COALESCE(SUM(CASE WHEN sb.quantity_on_hand ~ '^[0-9]+(\.[0-9]+)?$' THEN sb.quantity_on_hand::numeric ELSE 0 END), 0) as stock_on_hand
              FROM product_variants pv
              LEFT JOIN stock_balances sb ON sb.variant_id = pv.id
+               AND sb.inventory_location_id NOT IN (SELECT id FROM inventory_locations WHERE location_type = 'on_rent')
              WHERE pv.tenant_id = $1 AND pv.product_id = $2
              GROUP BY pv.id`,
             [tenantId, id]
@@ -940,7 +946,7 @@ export class PgUnitOfWork implements UnitOfWork {
 
         listLocations: async (tenantId: EntityId): Promise<InventoryLocation[]> => {
           const res = await client.query(
-            `SELECT id, tenant_id, business_location_id, name, code, is_default, is_active, created_at
+            `SELECT id, tenant_id, business_location_id, name, code, location_type, is_default, is_active, created_at
              FROM inventory_locations
              WHERE tenant_id = $1 AND is_active = true
              ORDER BY is_default DESC, name ASC`,
@@ -953,6 +959,7 @@ export class PgUnitOfWork implements UnitOfWork {
             businessLocationId: r.business_location_id,
             name: r.name,
             code: r.code,
+            locationType: r.location_type || undefined,
             isDefault: r.is_default,
             isActive: r.is_active,
             createdAt: new Date(r.created_at).toISOString(),
@@ -2210,6 +2217,7 @@ export class PgUnitOfWork implements UnitOfWork {
         reports: reportRepo,
         settings: settingsRepo,
         audit: auditRepo,
+        rentals: createPgRentalRepository(client),
         rawQuery: async (sql: string, params?: any[]) => {
           const r = await client.query(sql, params);
           return r.rows;

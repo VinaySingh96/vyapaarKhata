@@ -383,6 +383,10 @@ export function renderTenantDashboardPage(tenantId: string): string {
         };
 
         const isJewel = t.storeType === 'jewellery';
+        const isRental = t.storeType === 'rental';
+        const profileIcon = isJewel ? '💍' : isRental ? '🔁' : '🏗️';
+        const profileColor = isJewel ? '#d97706' : isRental ? '#16a34a' : '#2563eb';
+        const profileLabel = isJewel ? '💍 Jewellery & Bullion Specialized POS' : isRental ? '🔁 Rental Store POS (Issue / Return / Rent Billing)' : '🏗️ Building Materials & Hardware POS';
         document.title = t.name + ' - Store Dashboard - vyapaarKhata';
 
         // Daily rows
@@ -441,9 +445,9 @@ export function renderTenantDashboardPage(tenantId: string): string {
           </div>
 
           <!-- Hero Store Header Card -->
-          <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: #ffffff; border-left: 5px solid \${isJewel ? '#d97706' : '#2563eb'};">
+          <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; background: #ffffff; border-left: 5px solid \${profileColor};">
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span style="font-size: 2.25rem;">\${isJewel ? '💍' : '🏗️'}</span>
+              <span style="font-size: 2.25rem;">\${profileIcon}</span>
               <div>
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                   <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a;">\${t.name}</h1>
@@ -488,7 +492,7 @@ export function renderTenantDashboardPage(tenantId: string): string {
             </div>
             <div style="margin-top: 1.25rem; font-size: 0.825rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
               <span>🔑 Token Validity: <strong style="color: #e2e8f0;">7 Days (HMAC-SHA256 JWT with Refresh)</strong></span>
-              <span>🎨 Target POS UI Profile: <strong style="color: #38bdf8;">\${isJewel ? '💍 Jewellery & Bullion Specialized POS' : '🏗️ Building Materials & Hardware POS'}</strong></span>
+              <span>🎨 Target POS UI Profile: <strong style="color: #38bdf8;">\${profileLabel}</strong></span>
               <span>⚡ Central Cloud Sync: <strong style="color: #4ade80;">Active (10-minute automated worker)</strong></span>
             </div>
           </div>

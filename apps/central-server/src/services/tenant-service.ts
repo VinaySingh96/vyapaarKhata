@@ -409,7 +409,7 @@ export class TenantService {
     const plan = data.plan || 'standard';
     const maxInstallations = data.maxInstallations || (plan === 'enterprise' ? 10 : plan === 'standard' ? 3 : 1);
 
-    const prefix = storeType === 'jewellery' ? 'JW' : 'BM';
+    const prefix = storeType === 'jewellery' ? 'JW' : storeType === 'rental' ? 'RN' : 'BM';
     const licenseNumber =
       data.licenseNumber ||
       `LIC-${prefix}-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;

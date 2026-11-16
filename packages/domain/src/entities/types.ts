@@ -27,6 +27,8 @@ export interface SalesInvoiceLine {
   productName?: string;
   sku?: string;
   unitSymbol?: string;
+  /** Free-text line description persisted as description_snapshot (e.g. rental "50 pcs × 10 days"). */
+  description?: string;
 }
 
 export type InvoicePaymentStatus = 'paid' | 'partial' | 'unpaid' | 'cancelled';
@@ -36,6 +38,8 @@ export interface SalesInvoice {
   tenantId: EntityId;
   businessLocationId?: EntityId;
   invoiceNumber: string;
+  /** YYYY-MM-DD; defaults to the current date when omitted. */
+  invoiceDate?: string;
   customerId: EntityId;
   customerName?: string;
   customerAddress?: string;
@@ -354,6 +358,7 @@ export interface InventoryLocation {
   businessLocationId?: EntityId;
   name: string;
   code: string;
+  /** e.g. 'warehouse', 'store', or 'on_rent' for the rental module's virtual location. */
   locationType?: string;
   isDefault: boolean;
   isActive: boolean;

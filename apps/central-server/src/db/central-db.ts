@@ -52,6 +52,13 @@ export class CentralDatabase {
         );
       `);
 
+      // 1b. Store profile & license columns (read/written by TenantService)
+      await client.query(`
+        ALTER TABLE central_tenants ADD COLUMN IF NOT EXISTS store_type VARCHAR(50) NOT NULL DEFAULT 'building_materials';
+        ALTER TABLE central_tenants ADD COLUMN IF NOT EXISTS license_number VARCHAR(100) UNIQUE;
+        ALTER TABLE central_tenants ADD COLUMN IF NOT EXISTS secret_key VARCHAR(255);
+      `);
+
       // 2. Installations Table
       await client.query(`
         CREATE TABLE IF NOT EXISTS central_installations (

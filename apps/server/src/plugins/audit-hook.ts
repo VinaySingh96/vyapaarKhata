@@ -27,6 +27,17 @@ export function parseAuditAction(
     else if (cleanUrl.includes('/payments')) action = 'PAYMENT_RECEIVED';
     else if (method === 'POST') action = 'INVOICE_CREATED';
     else if (method === 'DELETE') action = 'INVOICE_VOIDED';
+  } else if (cleanUrl.includes('/rentals/')) {
+    if (cleanUrl.includes('/returns')) {
+      entityType = 'rental_return';
+      action = cleanUrl.endsWith('/cancel') ? 'RENTAL_RETURN_CANCELLED' : 'RENTAL_RETURN_POSTED';
+    } else if (cleanUrl.includes('/settings')) {
+      entityType = 'rental_settings';
+      action = 'RENTAL_SETTINGS_UPDATED';
+    } else {
+      entityType = 'rental_issue';
+      action = cleanUrl.endsWith('/cancel') ? 'RENTAL_ISSUE_CANCELLED' : 'RENTAL_ISSUED';
+    }
   } else if (cleanUrl.includes('/purchasing/receipts')) {
     entityType = 'purchase_receipt';
     if (cleanUrl.endsWith('/post')) action = 'RECEIPT_POSTED';

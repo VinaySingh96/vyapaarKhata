@@ -24,6 +24,14 @@ export async function ensureLocalTenantProvisioned(
     const legalName = tenant.legalName || name;
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${tenantId.slice(0, 8)}`;
 
+    // 0. Brand row (tenants.brand_id references brands; each tenant uses its own id as brand)
+    await ctx.rawQuery(
+      `INSERT INTO brands (id, name, code, default_currency, is_active, created_at)
+       VALUES ($1, $2, $3, 'INR', TRUE, NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [tenantId, name, `BR-${tenantId.slice(0, 8).toUpperCase()}`]
+    );
+
     // 1. Tenants table
     await ctx.rawQuery(
       `INSERT INTO tenants (id, brand_id, name, slug, status, country_code, currency, locale, created_at)
@@ -174,5 +182,14 @@ export async function ensureLocalTenantProvisioned(
        ON CONFLICT (tenant_id) DO NOTHING`,
       [randomUUID(), tenantId, name, legalName]
     );
+
+    // 10. Rental stores always have the rental module on (ADR-007)
+    if (tenant.storeType === 'rental' && ctx.rentals) {
+      const settings = await ctx.rentals.getSettings(tenantId);
+      if (!settings.enabled) {
+        await ctx.rentals.saveSettings(tenantId, { ...settings, enabled: true });
+      }
+      await ctx.rentals.ensureOnRentLocation(tenantId);
+    }
   });
 }

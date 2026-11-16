@@ -8,6 +8,7 @@
     "dev:server": "pnpm --filter @vyapaarkhata/server dev",
     "dev:central": "pnpm --filter @vyapaarkhata/central-server dev",
     "dev:web": "pnpm --filter @vyapaarkhata/web dev",
+    "dev:local": "node scripts/dev-local.js",
     "dev:patel:server": "PORT=4002 CENTRAL_TENANT_ID=00000000-0000-0000-0000-000000000001 DATABASE_URL=postgresql://localhost:5432/vyapaarkhata_patel node apps/server/dist/index.js",
     "dev:patel:web": "vite apps/web --config apps/web/vite.patel.config.js",
     "dev:jewellery:server": "PORT=4003 CENTRAL_TENANT_ID=00000000-0000-0000-0000-000000000002 DATABASE_URL=postgresql://localhost:5432/vyapaarkhata_jewellery node apps/server/dist/index.js",

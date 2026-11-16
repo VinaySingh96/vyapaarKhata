@@ -6,7 +6,7 @@ import {
   PartyLedgerEntry,
   OutboxEvent,
 } from '../entities/types.js';
-import { UnitOfWork } from '../ports/repositories.js';
+import { UnitOfWork, UnitOfWorkContext } from '../ports/repositories.js';
 import { InventoryValidationStrategy, StrictRejectInventoryStrategy } from '../inventory/inventory-strategy.js';
 
 export interface PostInvoiceCommand {
@@ -14,6 +14,11 @@ export interface PostInvoiceCommand {
   invoiceId: string;
   idempotencyKey?: string;
   timestamp?: string;
+  /**
+   * Skip stock validation/deduction. Used by rental bills, whose stock already moved
+   * through the rental issue/return flow. Defaults to false (normal sales behaviour).
+   */
+  skipInventory?: boolean;
 }
 
 export interface PostInvoiceResult {
@@ -27,6 +32,8 @@ export interface CancelInvoiceCommand {
   invoiceId: string;
   reason: string;
   timestamp?: string;
+  /** Skip stock restoration. Used by rental bills. Defaults to false. */
+  skipInventory?: boolean;
 }
 
 export class InvoicePostingService {
@@ -40,11 +47,19 @@ export class InvoicePostingService {
    * Decreases inventory, updates projected balances, writes party ledger, and logs outbox event.
    */
   async postInvoice(command: PostInvoiceCommand): Promise<PostInvoiceResult> {
+    return this.uow.runInTransaction((ctx) => this.postInvoiceInContext(ctx, command));
+  }
+
+  /**
+   * Same as postInvoice, but joins a transaction already opened by the caller
+   * (e.g. RentalService posting a rent bill atomically with the stock return).
+   */
+  async postInvoiceInContext(ctx: UnitOfWorkContext, command: PostInvoiceCommand): Promise<PostInvoiceResult> {
     const { tenantContext, invoiceId, idempotencyKey } = command;
     const now = command.timestamp || new Date().toISOString();
     const warnings: string[] = [];
 
-    return this.uow.runInTransaction(async (ctx) => {
+    {
       const invoice = await ctx.invoices.findById(tenantContext.tenantId, invoiceId);
 
       if (!invoice) {
@@ -74,7 +89,7 @@ export class InvoicePostingService {
       const balanceUpdates: StockBalance[] = [];
       const movements: StockMovement[] = [];
 
-      for (const line of invoice.lines) {
+      for (const line of command.skipInventory ? [] : invoice.lines) {
         const itemIdentifier = line.variantId || line.productId;
         const balance = await ctx.inventory.getBalance(
           tenantContext.tenantId,
@@ -181,7 +196,7 @@ export class InvoicePostingService {
       await ctx.outbox.recordEvent(outboxEvent);
 
       return { invoice, isDuplicate: false, warnings };
-    });
+    }
   }
 
   /**
@@ -190,10 +205,15 @@ export class InvoicePostingService {
    * Never deletes original posted records.
    */
   async cancelInvoice(command: CancelInvoiceCommand): Promise<SalesInvoice> {
+    return this.uow.runInTransaction((ctx) => this.cancelInvoiceInContext(ctx, command));
+  }
+
+  /** Same as cancelInvoice, but joins a transaction already opened by the caller. */
+  async cancelInvoiceInContext(ctx: UnitOfWorkContext, command: CancelInvoiceCommand): Promise<SalesInvoice> {
     const { tenantContext, invoiceId, reason } = command;
     const now = command.timestamp || new Date().toISOString();
 
-    return this.uow.runInTransaction(async (ctx) => {
+    {
       const invoice = await ctx.invoices.findById(tenantContext.tenantId, invoiceId);
 
       if (!invoice) {
@@ -215,7 +235,7 @@ export class InvoicePostingService {
       }
 
       // 1. Revert inventory movements
-      for (const line of invoice.lines) {
+      for (const line of command.skipInventory ? [] : invoice.lines) {
         const itemIdentifier = line.variantId || line.productId;
         const balance = await ctx.inventory.getBalance(
           tenantContext.tenantId,
@@ -287,6 +307,6 @@ export class InvoicePostingService {
       });
 
       return invoice;
-    });
+    }
   }
 }

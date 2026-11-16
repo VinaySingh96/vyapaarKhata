@@ -24,6 +24,12 @@ import {
   DashboardMetrics,
   EntityId,
 } from '../entities/types.js';
+import {
+  RentalIssue,
+  RentalIssueStatus,
+  RentalReturn,
+  RentalSettings,
+} from '../entities/rental-types.js';
 
 export interface InvoiceRepository {
   findById(tenantId: EntityId, id: EntityId): Promise<SalesInvoice | null>;
@@ -145,6 +151,24 @@ export interface AuditRepository {
   list(tenantId: EntityId, limit?: number): Promise<AuditLogEntry[]>;
 }
 
+export interface RentalRepository {
+  getSettings(tenantId: EntityId): Promise<RentalSettings>;
+  saveSettings(tenantId: EntityId, settings: RentalSettings): Promise<void>;
+  /** Returns the tenant's "On Rent" inventory location, creating it on first use. */
+  ensureOnRentLocation(tenantId: EntityId): Promise<InventoryLocation>;
+  nextNumber(tenantId: EntityId, kind: 'issue' | 'return'): Promise<string>;
+  saveIssue(issue: RentalIssue): Promise<void>;
+  findIssueById(tenantId: EntityId, id: EntityId): Promise<RentalIssue | null>;
+  listIssues(
+    tenantId: EntityId,
+    filter?: { partyId?: EntityId; statuses?: RentalIssueStatus[]; limit?: number }
+  ): Promise<RentalIssue[]>;
+  saveReturn(ret: RentalReturn): Promise<void>;
+  findReturnById(tenantId: EntityId, id: EntityId): Promise<RentalReturn | null>;
+  listReturns(tenantId: EntityId, issueId: EntityId): Promise<RentalReturn[]>;
+  findReturnByInvoiceId(tenantId: EntityId, invoiceId: EntityId): Promise<RentalReturn | null>;
+}
+
 export interface UnitOfWorkContext {
   invoices: InvoiceRepository;
   products: ProductRepository;
@@ -158,6 +182,8 @@ export interface UnitOfWorkContext {
   reports: ReportRepository;
   settings: SettingsRepository;
   audit: AuditRepository;
+  /** Optional: only persistence adapters that ship the rental module provide it. */
+  rentals?: RentalRepository;
   rawQuery?: (sql: string, params?: any[]) => Promise<any>;
 }
 

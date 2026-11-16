@@ -51,7 +51,8 @@ export const InventoryScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [balances, setBalances] = useState<StockBalanceItem[]>([]);
+  const [allBalances, setBalances] = useState<StockBalanceItem[]>([]);
+  const [onRentLocationIds, setOnRentLocationIds] = useState<string[]>([]);
   const [movements, setMovements] = useState<StockMovementItem[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [defaultLocationId, setDefaultLocationId] = useState('70000000-0000-0000-0000-000000000001');
@@ -70,6 +71,7 @@ export const InventoryScreen: React.FC = () => {
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
           const def = json.data.find((l: any) => l.isDefault) || json.data[0];
           if (def) setDefaultLocationId(def.id);
+          setOnRentLocationIds(json.data.filter((l: any) => l.locationType === 'on_rent').map((l: any) => l.id));
         }
       })
       .catch((err) => console.warn('Failed to load inventory locations:', err));
@@ -109,6 +111,23 @@ export const InventoryScreen: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [tenantId]);
+
+  // Rental module: stock out with customers sits in the virtual "On Rent" location.
+  // Show it as a column next to the godown row instead of as separate (mostly empty) rows.
+  const balances = useMemo(
+    () => allBalances.filter((b) => !b.locationId || !onRentLocationIds.includes(b.locationId)),
+    [allBalances, onRentLocationIds]
+  );
+  const onRentByVariant = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const b of allBalances) {
+      if (b.locationId && onRentLocationIds.includes(b.locationId)) {
+        map.set(b.variantId, (map.get(b.variantId) || 0) + (b.quantityOnHand ?? b.currentBalance ?? 0));
+      }
+    }
+    return map;
+  }, [allBalances, onRentLocationIds]);
+  const showOnRent = onRentLocationIds.length > 0;
 
   // Compute metrics
   const totalPhysicalUnits = useMemo(
@@ -602,6 +621,7 @@ export const InventoryScreen: React.FC = () => {
                 <th style={{ padding: '12px 16px', textAlign: 'left' }}>Item / SKU</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left' }}>Location</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>On-Hand Physical</th>
+                {showOnRent && <th style={{ padding: '12px 16px', textAlign: 'right' }}>On Rent (किराये पर)</th>}
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>Reserved (Orders)</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>Available for Sale</th>
                 <th style={{ padding: '12px 16px', textAlign: 'center' }}>Stock Status</th>
@@ -611,7 +631,7 @@ export const InventoryScreen: React.FC = () => {
             <tbody>
               {balances.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
+                  <td colSpan={showOnRent ? 8 : 7} style={{ padding: '32px 16px', textAlign: 'center', color: '#9ca3af' }}>
                     No stock balances recorded. Inward stock from Purchasing or record initial stock.
                   </td>
                 </tr>
@@ -687,6 +707,13 @@ export const InventoryScreen: React.FC = () => {
                       >
                         {formatUnitQty(onHand, unit)} {unit}
                       </td>
+                      {showOnRent && (
+                        <td style={{ padding: '12px 16px', textAlign: 'right', color: '#7c3aed', fontWeight: 600 }}>
+                          {(onRentByVariant.get(b.variantId) || 0) > 0
+                            ? `${formatUnitQty(onRentByVariant.get(b.variantId), unit)} ${unit}`
+                            : '—'}
+                        </td>
+                      )}
                       <td style={{ padding: '12px 16px', textAlign: 'right', color: '#6b7280' }}>
                         {formatUnitQty(reserved, unit)} {unit}
                       </td>

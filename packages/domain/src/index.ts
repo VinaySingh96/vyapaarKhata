@@ -5,3 +5,5 @@ export * from './services/invoice-posting-service.js';
 export * from './services/purchasing-service.js';
 export * from './services/payment-service.js';
 export * from './api-client.js';
+export * from './entities/rental-types.js';
+export * from './services/rental-service.js';
