@@ -624,6 +624,42 @@ export class TenantService {
     return true;
   }
 
+  /**
+   * Permanently delete a tenant. Installations, subscriptions, synced events and tenant audit logs
+   * are removed by ON DELETE CASCADE; a platform-level audit entry (tenant_id NULL) records the deletion.
+   */
+  public async deleteTenant(id: string): Promise<{ name: string; licenseNumber?: string; syncEvents: number } | null> {
+    const client = await this.db.getPool().connect();
+    try {
+      await client.query('BEGIN');
+      const counts = await client.query('SELECT COUNT(*)::int AS n FROM central_sync_inbox WHERE tenant_id = $1', [id]);
+      const res = await client.query(
+        'DELETE FROM central_tenants WHERE id = $1 RETURNING name, license_number',
+        [id]
+      );
+      if (res.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      const deleted = {
+        name: res.rows[0].name as string,
+        licenseNumber: (res.rows[0].license_number as string) || undefined,
+        syncEvents: counts.rows[0].n as number,
+      };
+      await client.query(
+        `INSERT INTO central_audit_logs (tenant_id, action, actor, details) VALUES (NULL, 'tenant.deleted', 'admin', $1)`,
+        [JSON.stringify({ tenantId: id, ...deleted })]
+      );
+      await client.query('COMMIT');
+      return deleted;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
   public async registerInstallation(
     tenantId: string,
     data: {
