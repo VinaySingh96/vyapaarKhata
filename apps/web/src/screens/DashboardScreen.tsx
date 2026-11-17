@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/index.js';
 import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
 import { apiFetch } from '../utils/api.js';
+import { OPEN_NEW_BILL_FLAG } from './SalesBillingScreen.js';
 
 export interface DashboardScreenProps {
   onNavigate?: (nav: string) => void;
@@ -69,12 +70,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
       });
   }, [tenantId]);
 
+  const openNewBill = () => {
+    try {
+      sessionStorage.setItem(OPEN_NEW_BILL_FLAG, '1');
+    } catch {
+      // storage unavailable: POS opens on the invoice list instead
+    }
+    onNavigate?.('sales');
+  };
+
   // Keyboard shortcut F2 for New Sales Bill
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F2') {
         e.preventDefault();
-        onNavigate?.('sales');
+        openNewBill();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -187,7 +197,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
           <button
             id="btn-quick-new-sale"
-            onClick={() => onNavigate?.('sales')}
+            onClick={openNewBill}
             style={{
               padding: '12px 20px',
               backgroundColor: '#2563eb',

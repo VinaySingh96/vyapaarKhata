@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
+import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
 import { useToast } from '../components/Toast.js';
 import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
@@ -50,6 +51,13 @@ export const PurchasingScreen: React.FC = () => {
   const [quantity, setQuantity] = useState('20');
   const [unitCost, setUnitCost] = useState('310');
   const [defaultLocationId, setDefaultLocationId] = useState('70000000-0000-0000-0000-000000000001');
+
+  // Inline "add supplier" form inside the GRN modal
+  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [newSupplierPhone, setNewSupplierPhone] = useState('');
+  const [newSupplierGstin, setNewSupplierGstin] = useState('');
+  const [isSavingSupplier, setIsSavingSupplier] = useState(false);
 
   const loadData = () => {
     setLoading(true);
@@ -117,6 +125,97 @@ export const PurchasingScreen: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [tenantId]);
+
+  // Options for searchable supplier select (same dropdown as the sales customer picker)
+  const supplierOptions = useMemo<SelectOption[]>(() => {
+    const list: SelectOption[] = [
+      { value: '__new__', label: '+ Add New Supplier', badge: 'New', badgeType: 'neutral' },
+    ];
+    suppliers.forEach((s) => {
+      list.push({
+        value: s.id,
+        label: s.displayName,
+        sublabel: [s.phone, s.gstin].filter(Boolean).join(' • ') || s.billingAddress || undefined,
+        badge: s.currentBalance ? `₹${formatIndianNumber(Math.abs(s.currentBalance), { decimals: 2 })}` : undefined,
+        badgeType: 'neutral',
+      });
+    });
+    return list;
+  }, [suppliers]);
+
+  // Options for searchable product select, showing current stock and purchase rate
+  const productOptions = useMemo<SelectOption[]>(() => {
+    return products.map((p) => {
+      const stock = Number(p.totalStock ?? 0);
+      const unit = p.baseUnitSymbol || 'pcs';
+      const isOutOfStock = stock <= 0;
+      const isLow = stock <= Number(p.reorderLevel ?? 0);
+      return {
+        value: p.id,
+        label: p.name,
+        sublabel: p.nameHi ? `${p.nameHi} • ${p.sku}` : p.sku,
+        price: p.purchasePrice || undefined,
+        unit,
+        badge: isOutOfStock ? '0 stock' : `${stock} ${unit}`,
+        badgeType: isOutOfStock ? 'danger' : isLow ? 'warning' : 'success',
+      };
+    });
+  }, [products]);
+
+  const handleSelectSupplier = (supplierId: string) => {
+    if (supplierId === '__new__') {
+      setIsAddingSupplier(true);
+      return;
+    }
+    setIsAddingSupplier(false);
+    setSelectedSupplierId(supplierId);
+  };
+
+  const handleSelectProduct = (productId: string) => {
+    setSelectedProductId(productId);
+    const p = products.find((prod) => prod.id === productId);
+    if (p) setUnitCost(String(p.purchasePrice || 310));
+  };
+
+  const handleAddSupplier = async () => {
+    const name = newSupplierName.trim();
+    if (!name) {
+      toast.warning('Please enter supplier name');
+      return;
+    }
+    setIsSavingSupplier(true);
+    try {
+      const newId = crypto.randomUUID();
+      const payload = {
+        id: newId,
+        displayName: name,
+        partyType: 'supplier',
+        phone: newSupplierPhone.trim() || undefined,
+        gstin: newSupplierGstin.trim().toUpperCase() || undefined,
+      };
+      const res = await apiFetch('/api/v1/parties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error?.message || 'Failed to add supplier');
+      }
+      const created = json.data && json.data.id ? json.data : payload;
+      setSuppliers((prev) => [created, ...prev]);
+      setSelectedSupplierId(created.id);
+      setIsAddingSupplier(false);
+      setNewSupplierName('');
+      setNewSupplierPhone('');
+      setNewSupplierGstin('');
+      toast.success(`Supplier "${name}" added`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add supplier');
+    } finally {
+      setIsSavingSupplier(false);
+    }
+  };
 
   const handleCreateGRN = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -527,40 +626,96 @@ export const PurchasingScreen: React.FC = () => {
             <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
               Supplier / Distributor *
             </label>
-            <select
-              value={selectedSupplierId}
-              onChange={(e) => setSelectedSupplierId(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
-            >
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.displayName}
-                </option>
-              ))}
-            </select>
+            <SearchableSelect
+              options={supplierOptions}
+              value={isAddingSupplier ? '__new__' : selectedSupplierId}
+              onChange={handleSelectSupplier}
+              placeholder="Select supplier"
+              searchPlaceholder="Search supplier by name, phone, GSTIN..."
+            />
+            {isAddingSupplier && (
+              <div
+                style={{
+                  marginTop: '8px',
+                  padding: '10px',
+                  border: '1px dashed #93c5fd',
+                  borderRadius: '6px',
+                  backgroundColor: '#f8fafc',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Supplier name * (e.g. UltraTech Distributors)"
+                  value={newSupplierName}
+                  onChange={(e) => setNewSupplierName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddSupplier();
+                    }
+                  }}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Phone"
+                    value={newSupplierPhone}
+                    onChange={(e) => setNewSupplierPhone(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', boxSizing: 'border-box' }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="GSTIN (optional)"
+                    value={newSupplierGstin}
+                    onChange={(e) => setNewSupplierGstin(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '13px', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingSupplier(false)}
+                    style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', cursor: 'pointer', backgroundColor: '#ffffff' }}
+                  >
+                    ✕ Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddSupplier}
+                    disabled={isSavingSupplier || !newSupplierName.trim()}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: '#ffffff',
+                      backgroundColor: isSavingSupplier || !newSupplierName.trim() ? '#94a3b8' : '#059669',
+                      cursor: isSavingSupplier || !newSupplierName.trim() ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {isSavingSupplier ? 'Saving...' : 'Save Supplier'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
             <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
               Received Product / Item *
             </label>
-            <select
+            <SearchableSelect
+              options={productOptions}
               value={selectedProductId}
-              onChange={(e) => {
-                setSelectedProductId(e.target.value);
-                const p = products.find((prod) => prod.id === e.target.value);
-                if (p) setUnitCost(String(p.purchasePrice || 310));
-              }}
-              required
-              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px', backgroundColor: '#ffffff' }}
-            >
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.sku})
-                </option>
-              ))}
-            </select>
+              onChange={handleSelectProduct}
+              placeholder="Select item"
+              searchPlaceholder="Search item by name, SKU..."
+            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

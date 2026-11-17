@@ -68,6 +68,9 @@ interface InvoiceRecord {
   payments?: any[];
 }
 
+/** sessionStorage key: open POS directly on the new-bill form (set by quick actions). */
+export const OPEN_NEW_BILL_FLAG = 'vk_pos_open_new_bill';
+
 export const SalesBillingScreen: React.FC = () => {
   const { t } = useI18n();
   const toast = useToast();
@@ -77,7 +80,19 @@ export const SalesBillingScreen: React.FC = () => {
     storeSettings.tradeName?.toLowerCase().includes('jewel') ||
     (typeof window !== 'undefined' && (window.location.port === '3003' || window.location.port === '4003'));
 
-  const [activeTab, setActiveTab] = useState<'billing' | 'history'>('billing');
+  // Invoice list is the landing view (it has "+ Create New Bill"); quick actions such as
+  // Dashboard "New Sales Bill (F2)" request the bill form via a one-time session flag.
+  const [activeTab, setActiveTab] = useState<'billing' | 'history'>(() => {
+    try {
+      if (sessionStorage.getItem(OPEN_NEW_BILL_FLAG)) {
+        sessionStorage.removeItem(OPEN_NEW_BILL_FLAG);
+        return 'billing';
+      }
+    } catch {
+      // storage unavailable: fall back to the list
+    }
+    return 'history';
+  });
 
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [customers, setCustomers] = useState<CustomerParty[]>([]);
