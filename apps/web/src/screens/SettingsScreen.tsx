@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.js';
 import { useStore } from '../context/StoreContext.js';
 import { Modal } from '../components/Modal.js';
 import { apiFetch } from '../utils/api.js';
+import { useProductTour } from '../utils/useProductTour.js';
 
 interface InventoryLocationItem {
   id: string;
@@ -20,6 +21,8 @@ export const SettingsScreen: React.FC = () => {
   const { storeSettings, updateStoreSettings, isLoading, tenantId, rentalEnabled, setRentalEnabled, storeType } =
     useStore();
   const isRentalStore = storeType === 'rental';
+  const isHi = language === 'hi';
+  const { replayTour } = useProductTour({ tenantId, rentalEnabled });
   const [isTogglingRental, setIsTogglingRental] = useState(false);
 
   const handleToggleRental = async () => {
@@ -470,6 +473,52 @@ export const SettingsScreen: React.FC = () => {
               <div>• Installation Mode: Primary Master Counter</div>
               <div>• Negative Stock Invariant: Strict Reject Active</div>
               <div>• Supported Languages: English (en), हिन्दी (hi)</div>
+            </div>
+          </div>
+
+          {/* Interactive Guided Product Tour Card */}
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              padding: '20px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: 600, color: '#111827' }}>
+                  🎯 {isHi ? 'इंटरैक्टिव प्लेटफ़ॉर्म टूर (Interactive Tour)' : 'Interactive Platform Walkthrough'}
+                </h3>
+                <p style={{ margin: 0, fontSize: '13px', color: '#6b7280', maxWidth: '580px', lineHeight: '1.4' }}>
+                  {isHi
+                    ? 'सिस्टम के मुख्य फीचर्स (POS बिलिंग, सामग्री स्टॉक, सेंट्रिंग किराया, उधारी खाता, क्लाउड सिंक) का चरण-दर-चरण टूर दोबारा शुरू करें।'
+                    : 'Replay the step-by-step guided walkthrough highlighting key features across POS billing, catalog, rentals, and offline sync.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                id="btn-restart-tour"
+                onClick={() => replayTour()}
+                style={{
+                  padding: '9px 18px',
+                  backgroundColor: '#f3f4f6',
+                  color: '#1f2937',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <span>🔄</span>
+                <span>{isHi ? 'टूर दोबारा शुरू करें' : 'Restart Product Tour'}</span>
+              </button>
             </div>
           </div>
         </div>

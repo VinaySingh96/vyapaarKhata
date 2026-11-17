@@ -89,7 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-          <div>
+          <div id="header-brand">
             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#60a5fa' }}>
               {t('header.brand')}
             </h2>
@@ -116,6 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({
           {navItems.map((item) => (
             <a
               key={item.id}
+              id={`nav-${item.id}`}
               href={item.id === 'dashboard' ? '/' : `/${item.id}`}
               onClick={(e) => {
                 e.preventDefault();
@@ -142,7 +143,7 @@ export const Layout: React.FC<LayoutProps> = ({
           ))}
         </nav>
 
-        <div style={{ paddingTop: '16px', borderTop: '1px solid #374151' }}>
+        <div id="sync-status-badge" style={{ paddingTop: '16px', borderTop: '1px solid #374151' }}>
           <SyncStatusBadge isPrimary={true} isOnline={true} pendingOutboxCount={0} />
         </div>
       </aside>
@@ -243,6 +244,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
             {/* Language Switcher */}
             <div
+              id="header-language-container"
               style={{
                 display: 'flex',
                 alignItems: 'center',

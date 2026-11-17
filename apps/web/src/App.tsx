@@ -16,6 +16,7 @@ import { SettingsScreen } from './screens/SettingsScreen.js';
 import { RentalsScreen } from './screens/RentalsScreen.js';
 import { LicenseLoginScreen } from './screens/LicenseLoginScreen.js';
 import { LicenseStatusScreen } from './screens/LicenseStatusScreen.js';
+import { useProductTour } from './utils/useProductTour.js';
 
 const VALID_ROUTES = [
   'dashboard',
@@ -51,7 +52,13 @@ function getRouteFromLocation(): RouteId {
 
 const AppContent: React.FC = () => {
   const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
-  const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus, rentalEnabled } = useStore();
+  const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus, rentalEnabled, tenantId } = useStore();
+
+  // Initialize one-time guided product tour for the authenticated tenant
+  useProductTour({
+    tenantId: isLicenseLoggedIn ? tenantId : '',
+    rentalEnabled,
+  });
 
   // Listen to popstate (back/forward browser buttons) and hashchange
   useEffect(() => {
