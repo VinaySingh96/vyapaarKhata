@@ -277,12 +277,17 @@ export class CentralDatabase {
           [tenantId, name]
         );
 
-        await this.pool.query(
-          `INSERT INTO inventory_locations (id, tenant_id, business_location_id, name, code, location_type, is_default, is_active, created_at)
-           SELECT gen_random_uuid(), $1, $1, 'Main Godown / Store', 'WH-MAIN', 'warehouse', TRUE, TRUE, NOW()
-           WHERE NOT EXISTS (SELECT 1 FROM inventory_locations WHERE tenant_id = $1)`,
+        const invCheck = await this.pool.query(
+          "SELECT id FROM inventory_locations WHERE tenant_id = $1 LIMIT 1",
           [tenantId]
         );
+        if (!invCheck.rows.length) {
+          await this.pool.query(
+            `INSERT INTO inventory_locations (id, tenant_id, business_location_id, name, code, location_type, is_default, is_active, created_at)
+             VALUES (gen_random_uuid(), $1, $1, 'Main Godown / Store', 'WH-MAIN', 'warehouse', TRUE, TRUE, NOW())`,
+            [tenantId]
+          );
+        }
 
         const units = [
           { name: 'Pieces', symbol: 'pcs', dim: 'count', dec: 0 },
@@ -294,12 +299,17 @@ export class CentralDatabase {
           { name: 'Days', symbol: 'day', dim: 'time', dec: 0 },
         ];
         for (const u of units) {
-          await this.pool.query(
-            `INSERT INTO units (id, tenant_id, name, symbol, dimension, decimal_places, is_system, is_active)
-             SELECT gen_random_uuid(), $1, $2, $3, $4, $5, TRUE, TRUE
-             WHERE NOT EXISTS (SELECT 1 FROM units WHERE tenant_id = $1 AND symbol = $3)`,
-            [tenantId, u.name, u.symbol, u.dim, u.dec]
+          const uCheck = await this.pool.query(
+            "SELECT id FROM units WHERE tenant_id = $1 AND symbol = $2 LIMIT 1",
+            [tenantId, u.symbol]
           );
+          if (!uCheck.rows.length) {
+            await this.pool.query(
+              `INSERT INTO units (id, tenant_id, name, symbol, dimension, decimal_places, is_system, is_active)
+               VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, TRUE, TRUE)`,
+              [tenantId, u.name, u.symbol, u.dim, u.dec]
+            );
+          }
         }
 
         const pms = [
@@ -308,12 +318,17 @@ export class CentralDatabase {
           { name: 'Bank Transfer', code: 'BANK_TRANSFER' },
         ];
         for (const pm of pms) {
-          await this.pool.query(
-            `INSERT INTO payment_methods (id, tenant_id, name, code, is_active)
-             SELECT gen_random_uuid(), $1, $2, $3, TRUE
-             WHERE NOT EXISTS (SELECT 1 FROM payment_methods WHERE tenant_id = $1 AND code = $3)`,
-            [tenantId, pm.name, pm.code]
+          const pmCheck = await this.pool.query(
+            "SELECT id FROM payment_methods WHERE tenant_id = $1 AND code = $2 LIMIT 1",
+            [tenantId, pm.code]
           );
+          if (!pmCheck.rows.length) {
+            await this.pool.query(
+              `INSERT INTO payment_methods (id, tenant_id, name, code, is_active)
+               VALUES (gen_random_uuid(), $1, $2, $3, TRUE)`,
+              [tenantId, pm.name, pm.code]
+            );
+          }
         }
 
         await this.pool.query(
@@ -332,12 +347,17 @@ export class CentralDatabase {
                ON CONFLICT (tenant_id) DO UPDATE SET enabled = TRUE`,
               [tenantId]
             );
-            await this.pool.query(
-              `INSERT INTO inventory_locations (id, tenant_id, name, code, location_type, is_default, is_active, created_at)
-               SELECT gen_random_uuid(), $1, 'On Rent / Customer Sites', 'ON-RENT', 'virtual', FALSE, TRUE, NOW()
-               WHERE NOT EXISTS (SELECT 1 FROM inventory_locations WHERE tenant_id = $1 AND code = 'ON-RENT')`,
+            const onRentCheck = await this.pool.query(
+              "SELECT id FROM inventory_locations WHERE tenant_id = $1 AND code = 'ON-RENT' LIMIT 1",
               [tenantId]
             );
+            if (!onRentCheck.rows.length) {
+              await this.pool.query(
+                `INSERT INTO inventory_locations (id, tenant_id, name, code, location_type, is_default, is_active, created_at)
+                 VALUES (gen_random_uuid(), $1, 'On Rent / Customer Sites', 'ON-RENT', 'virtual', FALSE, TRUE, NOW())`,
+                [tenantId]
+              );
+            }
           }
         }
       }
