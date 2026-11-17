@@ -5,7 +5,7 @@ services:
     env: node
     plan: free
     region: oregon
-    buildCommand: pnpm install --prod=false && pnpm run build:server && node scripts/migrate-pg.js
+    buildCommand: pnpm install --prod=false --no-frozen-lockfile && pnpm run build:server && node scripts/migrate-pg.js
     startCommand: node apps/server/dist/index.js
     healthCheckPath: /health
     autoDeploy: true
@@ -33,7 +33,7 @@ services:
     env: node
     plan: free
     region: oregon
-    buildCommand: pnpm install --prod=false && pnpm run build:central
+    buildCommand: pnpm install --prod=false --no-frozen-lockfile && pnpm run build:central
     startCommand: node apps/central-server/dist/index.js
     healthCheckPath: /health
     autoDeploy: true
