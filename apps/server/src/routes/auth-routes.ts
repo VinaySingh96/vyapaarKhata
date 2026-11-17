@@ -132,6 +132,18 @@ export const localAuthRoutes: FastifyPluginAsync<LocalAuthRoutesOptions> = async
           const sig = createHmac('sha256', jwtSecret).update(`${h}.${p}`).digest('base64url');
           const accessToken = `${h}.${p}.${sig}`;
 
+          // Automatically ensure tenant master data is provisioned locally
+          try {
+            await ensureLocalTenantProvisioned(opts.uow, {
+              id: tenantData.id,
+              name: tenantData.name,
+              legalName: tenantData.legal_name || tenantData.name,
+              storeType: tenantData.store_type || 'building_materials',
+            });
+          } catch (provErr: any) {
+            app.log.warn({ provErr }, `[Tenant Provisioning] Warning while auto-provisioning tenant ${tenantData.id}: ${provErr.message}`);
+          }
+
           return reply.status(200).send({
             success: true,
             data: {

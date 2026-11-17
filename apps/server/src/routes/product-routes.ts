@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { UnitOfWork, TenantContext, Product, ProductCategory } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
+import { ensureLocalTenantProvisioned } from '../services/tenant-provisioner.js';
 
 export interface ProductRoutesOptions {
   uow: UnitOfWork;
@@ -425,6 +426,36 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
 
     try {
       const result = await opts.uow.runInTransaction(async (ctx) => {
+        // 0. Ensure tenant is provisioned in local database if missing
+        if (ctx.rawQuery) {
+          const tRows = await ctx.rawQuery(
+            `SELECT id FROM tenants WHERE id = $1 LIMIT 1`,
+            [tenant.tenantId]
+          );
+          if (!tRows || tRows.length === 0) {
+            let tName = 'My Store';
+            let tLegal = tName;
+            let tType = 'rental';
+            try {
+              const cRows = await ctx.rawQuery(
+                `SELECT name, legal_name, store_type FROM central_tenants WHERE id = $1 LIMIT 1`,
+                [tenant.tenantId]
+              );
+              if (cRows && cRows.length > 0) {
+                tName = cRows[0].name;
+                tLegal = cRows[0].legal_name || tName;
+                tType = cRows[0].store_type || 'rental';
+              }
+            } catch {}
+            await ensureLocalTenantProvisioned(opts.uow, {
+              id: tenant.tenantId,
+              name: tName,
+              legalName: tLegal,
+              storeType: tType,
+            });
+          }
+        }
+
         // 1. Get default inventory location for this tenant
         let locationId = '70000000-0000-0000-0000-000000000001';
         if (ctx.rawQuery) {

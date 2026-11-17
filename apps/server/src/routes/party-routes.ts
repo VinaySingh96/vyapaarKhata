@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { UnitOfWork, TenantContext, Party, PartyType } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
+import { ensureLocalTenantProvisioned } from '../services/tenant-provisioner.js';
 
 export interface PartyRoutesOptions {
   uow: UnitOfWork;
@@ -166,6 +167,33 @@ export const partyRoutes: FastifyPluginAsync<PartyRoutesOptions> = async (app, o
 
     try {
       const result = await opts.uow.runInTransaction(async (ctx) => {
+        // Ensure tenant is provisioned in local database if missing
+        if (ctx.rawQuery) {
+          const tRows = await ctx.rawQuery(
+            `SELECT id FROM tenants WHERE id = $1 LIMIT 1`,
+            [tenant.tenantId]
+          );
+          if (!tRows || tRows.length === 0) {
+            let tName = 'My Store';
+            let tLegal = tName;
+            try {
+              const cRows = await ctx.rawQuery(
+                `SELECT name, legal_name FROM central_tenants WHERE id = $1 LIMIT 1`,
+                [tenant.tenantId]
+              );
+              if (cRows && cRows.length > 0) {
+                tName = cRows[0].name;
+                tLegal = cRows[0].legal_name || tName;
+              }
+            } catch {}
+            await ensureLocalTenantProvisioned(opts.uow, {
+              id: tenant.tenantId,
+              name: tName,
+              legalName: tLegal,
+            });
+          }
+        }
+
         // Cache existing parties for this tenant
         const existingList = await ctx.parties.list(tenant.tenantId);
         const partyByPhone = new Map<string, Party>();
