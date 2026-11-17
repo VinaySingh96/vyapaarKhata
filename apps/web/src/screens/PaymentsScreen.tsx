@@ -379,7 +379,7 @@ export const PaymentsScreen: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="vk-grid-4" style={{ marginBottom: '20px' }}>
+      <div id="payments-summary-cards" className="vk-grid-4" style={{ marginBottom: '20px' }}>
         <div style={{ backgroundColor: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 500 }}>Customer Collections (Inward)</div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: '#059669', marginTop: '4px' }}>

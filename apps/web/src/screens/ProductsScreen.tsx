@@ -816,6 +816,7 @@ export const ProductsScreen: React.FC = () => {
 
           {/* Filter and Search Bar */}
           <div
+            id="products-search-filter-bar"
             style={{
               display: 'flex',
               flexWrap: 'wrap',

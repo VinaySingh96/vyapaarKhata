@@ -15,14 +15,18 @@ interface InventoryLocationItem {
   isActive: boolean;
 }
 
-export const SettingsScreen: React.FC = () => {
+export interface SettingsScreenProps {
+  onNavigate?: (nav: string) => void;
+}
+
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate }) => {
   const { t, language, setLanguage } = useI18n();
   const toast = useToast();
   const { storeSettings, updateStoreSettings, isLoading, tenantId, rentalEnabled, setRentalEnabled, storeType } =
     useStore();
   const isRentalStore = storeType === 'rental';
   const isHi = language === 'hi';
-  const { replayTour } = useProductTour({ tenantId, rentalEnabled });
+  const { replayTour } = useProductTour({ tenantId, rentalEnabled, onNavigate });
   const [isTogglingRental, setIsTogglingRental] = useState(false);
 
   const handleToggleRental = async () => {

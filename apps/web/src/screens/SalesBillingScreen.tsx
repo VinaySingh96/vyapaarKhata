@@ -94,6 +94,26 @@ export const SalesBillingScreen: React.FC = () => {
     return 'history';
   });
 
+  // Listen for programmatic tab switch requests (e.g. Product Tour or Dashboard actions)
+  useEffect(() => {
+    const handleSwitchBilling = () => {
+      setActiveTab('billing');
+    };
+    window.addEventListener('vk-open-pos-billing', handleSwitchBilling);
+
+    // Also check if session flag was set while already mounted
+    try {
+      if (sessionStorage.getItem(OPEN_NEW_BILL_FLAG)) {
+        sessionStorage.removeItem(OPEN_NEW_BILL_FLAG);
+        setActiveTab('billing');
+      }
+    } catch {
+      // ignore
+    }
+
+    return () => window.removeEventListener('vk-open-pos-billing', handleSwitchBilling);
+  }, []);
+
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [customers, setCustomers] = useState<CustomerParty[]>([]);
   const [invoices, setInvoices] = useState<InvoiceRecord[]>([]);
@@ -965,6 +985,8 @@ export const SalesBillingScreen: React.FC = () => {
         {/* Tab switcher */}
         <div style={{ display: 'flex', backgroundColor: '#e5e7eb', padding: '3px', borderRadius: '8px' }}>
           <button
+            id="tab-sales-billing"
+            type="button"
             onClick={() => setActiveTab('billing')}
             style={{
               padding: '8px 16px',
@@ -981,6 +1003,8 @@ export const SalesBillingScreen: React.FC = () => {
             {t('sales.tabNewBill')}
           </button>
           <button
+            id="tab-sales-history"
+            type="button"
             onClick={() => setActiveTab('history')}
             style={{
               padding: '8px 16px',
@@ -1067,6 +1091,7 @@ export const SalesBillingScreen: React.FC = () => {
           >
             {/* Customer Details Box */}
             <div
+              id="billing-customer-section"
               style={{
                 padding: '16px',
                 backgroundColor: '#f8fafc',
@@ -1311,6 +1336,7 @@ export const SalesBillingScreen: React.FC = () => {
 
             {/* Cart Items Table - Dedicated Scrollable Box */}
             <div
+              id="billing-cart-table"
               style={{
                 border: '1px solid #e2e8f0',
                 borderRadius: '8px',
@@ -1470,6 +1496,7 @@ export const SalesBillingScreen: React.FC = () => {
 
             {/* Direct Material Search & Add Bar - Direct Selection Without Button Click */}
             <div
+              id="billing-product-search"
               style={{
                 padding: '12px 14px',
                 backgroundColor: '#f8fafc',
@@ -1506,6 +1533,7 @@ export const SalesBillingScreen: React.FC = () => {
 
           {/* Right Column: Checkout & Bill Summary */}
           <div
+            id="billing-checkout-summary"
             style={{
               backgroundColor: '#ffffff',
               borderRadius: '8px',
@@ -1550,7 +1578,7 @@ export const SalesBillingScreen: React.FC = () => {
               </div>
 
               {/* Payment Mode Selector */}
-              <div style={{ marginBottom: '24px' }}>
+              <div id="billing-payment-mode-selector" style={{ marginBottom: '24px' }}>
                 <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563', display: 'block', marginBottom: '8px' }}>
                   {t('sales.paymentMode')}
                 </label>
@@ -1604,6 +1632,7 @@ export const SalesBillingScreen: React.FC = () => {
               )}
 
               <button
+                id="btn-post-bill"
                 type="button"
                 onClick={handleGenerateInvoice}
                 disabled={isSubmitting || lines.length === 0 || hasStockError}

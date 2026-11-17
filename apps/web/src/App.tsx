@@ -54,12 +54,6 @@ const AppContent: React.FC = () => {
   const [activeNav, setActiveNav] = useState<RouteId>(() => getRouteFromLocation());
   const { storeSettings, isLicenseLoggedIn, tenantStatus, checkLicenseStatus, rentalEnabled, tenantId } = useStore();
 
-  // Initialize one-time guided product tour for the authenticated tenant
-  useProductTour({
-    tenantId: isLicenseLoggedIn ? tenantId : '',
-    rentalEnabled,
-  });
-
   // Listen to popstate (back/forward browser buttons) and hashchange
   useEffect(() => {
     const handleLocationChange = () => {
@@ -85,6 +79,13 @@ const AppContent: React.FC = () => {
     }
   }, []);
 
+  // Initialize one-time guided product tour for the authenticated tenant
+  useProductTour({
+    tenantId: isLicenseLoggedIn ? tenantId : '',
+    rentalEnabled,
+    onNavigate: handleNavigate,
+  });
+
   // Restrict any UI before valid store license login
   if (!isLicenseLoggedIn) {
     return <LicenseLoginScreen />;
@@ -99,7 +100,7 @@ const AppContent: React.FC = () => {
     <Layout activeNav={activeNav} onNavigate={handleNavigate} storeName={storeSettings.storeName}>
       {activeNav === 'dashboard' && <DashboardScreen onNavigate={handleNavigate} />}
       {activeNav === 'sales' && <SalesBillingScreen />}
-      {activeNav === 'rentals' && (rentalEnabled ? <RentalsScreen /> : <SettingsScreen />)}
+      {activeNav === 'rentals' && (rentalEnabled ? <RentalsScreen /> : <SettingsScreen onNavigate={handleNavigate} />)}
       {activeNav === 'products' && <ProductsScreen />}
       {activeNav === 'inventory' && <InventoryScreen />}
       {activeNav === 'purchasing' && <PurchasingScreen />}
@@ -107,7 +108,7 @@ const AppContent: React.FC = () => {
       {activeNav === 'payments' && <PaymentsScreen />}
       {activeNav === 'expenses' && <ExpensesScreen />}
       {activeNav === 'reports' && <ReportsScreen />}
-      {activeNav === 'settings' && <SettingsScreen />}
+      {activeNav === 'settings' && <SettingsScreen onNavigate={handleNavigate} />}
     </Layout>
   );
 };
