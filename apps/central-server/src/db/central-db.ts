@@ -10,6 +10,8 @@ export class CentralDatabase {
   constructor(private config: CentralConfig) {
     this.pool = new Pool({
       connectionString: config.DATABASE_URL,
+      // Business timezone for CURRENT_DATE and month grouping (stores are in India by default)
+      options: `-c TimeZone=${process.env.APP_TIMEZONE || 'Asia/Kolkata'}`,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,

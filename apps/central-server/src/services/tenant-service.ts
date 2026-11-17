@@ -17,6 +17,11 @@ import {
   TenantDashboardMetrics,
 } from '../types/index.js';
 
+/** YYYY-MM-DD of a timestamp in the business timezone (default IST), so "today"/months match the stores. */
+function businessDate(d: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: process.env.APP_TIMEZONE || 'Asia/Kolkata' }).format(d);
+}
+
 export class TenantService {
   constructor(private db: CentralDatabase) {}
 
@@ -170,8 +175,8 @@ export class TenantService {
     );
 
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const thisMonthStr = now.toISOString().slice(0, 7);
+    const todayStr = businessDate(now);
+    const thisMonthStr = todayStr.slice(0, 7);
 
     let todaySales = 0;
     let todayEarnings = 0;
@@ -239,7 +244,7 @@ export class TenantService {
       try {
         const parsed = new Date(rawDate);
         if (!isNaN(parsed.getTime())) {
-          evDate = parsed.toISOString().slice(0, 10);
+          evDate = businessDate(parsed);
         }
       } catch {
         evDate = todayStr;
@@ -671,7 +676,9 @@ export class TenantService {
     return res.rows.length > 0;
   }
 
-  public async getPlatformMetrics(): Promise<PlatformMetrics> {
+  public async getPlatformMetrics(month?: string): Promise<PlatformMetrics> {
+    const selectedMonth = month && /^\d{4}-\d{2}$/.test(month) ? month : businessDate(new Date()).slice(0, 7);
+
     const tRes = await this.db.query(`
       SELECT 
         COUNT(*) as total_tenants,
@@ -694,6 +701,39 @@ export class TenantService {
       FROM central_sync_inbox
     `);
 
+    // Sales across all stores: latest posted event per invoice, excluding cancelled invoices
+    const salesRes = await this.db.query(`
+      WITH posted AS (
+        SELECT DISTINCT ON (tenant_id, COALESCE(payload->>'invoiceId', event_id::text))
+               tenant_id,
+               COALESCE(payload->>'invoiceId', event_id::text) AS invoice_id,
+               COALESCE(NULLIF(payload->>'grandTotal', ''), NULLIF(payload->>'totalAmount', ''), '0')::numeric AS total,
+               to_char(COALESCE((payload->>'postedAt')::timestamptz, received_at), 'YYYY-MM') AS month
+        FROM central_sync_inbox
+        WHERE event_type = 'sales.invoice.posted'
+        ORDER BY tenant_id, COALESCE(payload->>'invoiceId', event_id::text), received_at DESC
+      ),
+      cancelled AS (
+        SELECT DISTINCT tenant_id, payload->>'invoiceId' AS invoice_id
+        FROM central_sync_inbox
+        WHERE event_type = 'sales.invoice.cancelled'
+      )
+      SELECT p.month, COALESCE(SUM(p.total), 0) AS sales, COUNT(*) AS invoices_count
+      FROM posted p
+      LEFT JOIN cancelled c ON c.tenant_id = p.tenant_id AND c.invoice_id = p.invoice_id
+      WHERE c.invoice_id IS NULL
+      GROUP BY p.month
+      ORDER BY p.month DESC
+    `);
+    const salesByMonth = salesRes.rows.map((r) => ({
+      month: r.month as string,
+      sales: parseFloat(r.sales || '0'),
+      invoicesCount: parseInt(r.invoices_count || '0', 10),
+    }));
+    const selected = salesByMonth.find((m) => m.month === selectedMonth);
+    const totalSales = salesByMonth.reduce((s, m) => s + m.sales, 0);
+    const totalInvoicesCount = salesByMonth.reduce((s, m) => s + m.invoicesCount, 0);
+
     return {
       totalTenants: parseInt(tRes.rows[0]?.total_tenants || '0', 10),
       activeTenants: parseInt(tRes.rows[0]?.active_tenants || '0', 10),
@@ -704,6 +744,12 @@ export class TenantService {
       lastSyncTimestamp: sRes.rows[0]?.last_sync_timestamp
         ? new Date(sRes.rows[0].last_sync_timestamp).toISOString()
         : undefined,
+      totalSales,
+      totalInvoicesCount,
+      selectedMonth,
+      monthSales: selected?.sales || 0,
+      monthInvoicesCount: selected?.invoicesCount || 0,
+      salesByMonth,
     };
   }
 }

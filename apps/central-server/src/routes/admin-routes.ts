@@ -12,8 +12,8 @@ export const adminRoutes: FastifyPluginAsync<AdminRoutesOptions> = async (app, o
   const { tenantService, syncService } = opts;
 
   // GET /api/v1/admin/metrics
-  app.get('/metrics', async (req, reply) => {
-    const metrics = await tenantService.getPlatformMetrics();
+  app.get<{ Querystring: { month?: string } }>('/metrics', async (req, reply) => {
+    const metrics = await tenantService.getPlatformMetrics(req.query.month);
     return reply.status(200).send({
       success: true,
       data: metrics,

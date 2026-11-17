@@ -344,6 +344,17 @@ export function renderTenantDashboardPage(tenantId: string): string {
       );
     }
 
+    let selectedMonth = new Date().toLocaleDateString('en-CA').slice(0, 7);
+
+    function onMonthChange(value) {
+      selectedMonth = value;
+      loadDashboard();
+    }
+
+    function formatMonth(ym) {
+      return new Date(ym + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    }
+
     async function loadDashboard() {
       const container = document.getElementById('pageContainer');
       try {
@@ -389,8 +400,21 @@ export function renderTenantDashboardPage(tenantId: string): string {
         const profileLabel = isJewel ? '💍 Jewellery & Bullion Specialized POS' : isRental ? '🔁 Rental Store POS (Issue / Return / Rent Billing)' : '🏗️ Building Materials & Hardware POS';
         document.title = t.name + ' - Store Dashboard - vyapaarKhata';
 
+        // Selected month (dropdown) figures
+        const monthRec = (d.monthlyBreakdown || []).find(m => m.month === selectedMonth) ||
+          { month: selectedMonth, sales: 0, earnings: 0, invoicesCount: 0, paymentsCount: 0 };
+        const monthOptions = Array.from(new Set([
+          new Date().toLocaleDateString('en-CA').slice(0, 7),
+          selectedMonth,
+          ...(d.monthlyBreakdown || []).map(m => m.month)
+        ])).sort((a, b) => b.localeCompare(a));
+        const monthOptionsHtml = monthOptions.map(m =>
+          '<option value="' + m + '"' + (m === selectedMonth ? ' selected' : '') + '>' + formatMonth(m) + '</option>'
+        ).join('');
+        const monthDaily = (d.dailyBreakdown || []).filter(row => row.date.slice(0, 7) === selectedMonth);
+
         // Daily rows
-        let dailyRowsHtml = (d.dailyBreakdown && d.dailyBreakdown.length > 0) ? d.dailyBreakdown.map(row => \`
+        let dailyRowsHtml = monthDaily.length > 0 ? monthDaily.map(row => \`
           <tr>
             <td style="font-weight: 600; font-family: monospace;">\${row.date}</td>
             <td><span class="badge" style="background:#f1f5f9; color:#475569;">\${row.invoicesCount} invoices</span></td>
@@ -398,7 +422,7 @@ export function renderTenantDashboardPage(tenantId: string): string {
             <td><span class="badge" style="background:#faf5ff; color:#7e22ce;">\${row.paymentsCount} receipts</span></td>
             <td style="color: #7e22ce; font-weight: 700; text-align: right;">₹ \${Number(row.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
           </tr>
-        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: #94a3b8;">No daily transactions recorded yet</td></tr>';
+        \`).join('') : '<tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: #94a3b8;">No transactions in this month</td></tr>';
 
         // Monthly rows
         let monthlyRowsHtml = (d.monthlyBreakdown && d.monthlyBreakdown.length > 0) ? d.monthlyBreakdown.map(row => \`
@@ -501,11 +525,16 @@ export function renderTenantDashboardPage(tenantId: string): string {
           <div style="margin-bottom: 1.5rem;">
             <div style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
               <span>📈 Store Financial Performance (Daily & Monthly Telemetry)</span>
-              <span style="font-size: 0.8rem; color: #64748b; font-weight: 400;">Computed directly from Central Sync Inbox</span>
+              <span style="font-size: 0.8rem; color: #64748b; font-weight: 400; display: flex; align-items: center; gap: 0.5rem;">
+                <label for="monthPicker">Month:</label>
+                <select id="monthPicker" onchange="onMonthChange(this.value)" style="padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.8rem; background: #ffffff;">
+                  \${monthOptionsHtml}
+                </select>
+              </span>
             </div>
 
-            <!-- 4 Grid Cards -->
-            <div class="grid-4" style="margin-bottom: 1rem;">
+            <!-- KPI Cards: today, selected month, all-time total -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
               <!-- Today Sales -->
               <div style="background: #ffffff; border: 1px solid #a7f3d0; border-top: 4px solid #10b981; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                 <div style="font-size: 0.75rem; color: #065f46; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">📅 Today\\'s Sales</div>
@@ -526,20 +555,29 @@ export function renderTenantDashboardPage(tenantId: string): string {
 
               <!-- This Month Sales -->
               <div style="background: #ffffff; border: 1px solid #bfdbfe; border-top: 4px solid #3b82f6; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="font-size: 0.75rem; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">📆 This Month\\'s Sales</div>
+                <div style="font-size: 0.75rem; color: #1e40af; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">📆 Sales • \${formatMonth(selectedMonth)}</div>
                 <div style="font-size: 1.85rem; font-weight: 800; color: #1d4ed8; margin-top: 6px;">
-                  ₹ \${Number(d.thisMonthSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹ \${Number(monthRec.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.775rem; color: #2563eb; margin-top: 4px;">\${d.thisMonthInvoicesCount !== undefined ? d.thisMonthInvoicesCount + ' Invoices posted • ' : ''}Monthly billing volume</div>
+                <div style="font-size: 0.775rem; color: #2563eb; margin-top: 4px;">\${monthRec.invoicesCount} Invoices posted • Monthly billing volume</div>
               </div>
 
               <!-- This Month Earnings -->
               <div style="background: #ffffff; border: 1px solid #fed7aa; border-top: 4px solid #f97316; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="font-size: 0.75rem; color: #9a3412; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">💳 This Month\\'s Earnings</div>
+                <div style="font-size: 0.75rem; color: #9a3412; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">💳 Earnings • \${formatMonth(selectedMonth)}</div>
                 <div style="font-size: 1.85rem; font-weight: 800; color: #c2410c; margin-top: 6px;">
-                  ₹ \${Number(d.thisMonthEarnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹ \${Number(monthRec.earnings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
-                <div style="font-size: 0.775rem; color: #ea580c; margin-top: 4px;">Monthly net collections</div>
+                <div style="font-size: 0.775rem; color: #ea580c; margin-top: 4px;">\${monthRec.paymentsCount} receipts • Monthly net collections</div>
+              </div>
+
+              <!-- Total Sales (all time) -->
+              <div style="background: #ffffff; border: 1px solid #c7d2fe; border-top: 4px solid #6366f1; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="font-size: 0.75rem; color: #3730a3; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">🧾 Total Sales</div>
+                <div style="font-size: 1.85rem; font-weight: 800; color: #4338ca; margin-top: 6px;">
+                  ₹ \${Number(d.totalSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </div>
+                <div style="font-size: 0.775rem; color: #4f46e5; margin-top: 4px;">\${d.totalInvoicesCount || 0} Invoices • All time</div>
               </div>
             </div>
 
@@ -571,7 +609,7 @@ export function renderTenantDashboardPage(tenantId: string): string {
             <div class="card" style="margin-bottom: 0;">
               <div class="card-title">
                 <span>📅 Daily Performance Ledger</span>
-                <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;">Recent Days</span>
+                <span style="font-size: 0.75rem; font-weight: 400; color: #64748b;">\${formatMonth(selectedMonth)}</span>
               </div>
               <div style="overflow-x: auto;">
                 <table>

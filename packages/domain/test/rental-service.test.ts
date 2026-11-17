@@ -5,6 +5,7 @@ import {
   RentalService,
   suggestRentalDays,
   calculateRentalReturn,
+  todayIsoDate,
 } from '../src/services/rental-service.js';
 import { DEFAULT_RENTAL_SETTINGS, RentalIssue } from '../src/entities/rental-types.js';
 import { TenantContext } from '../src/entities/types.js';
@@ -52,7 +53,7 @@ describe('RentalService: issue → partial return → complete', () => {
       locationType: 'warehouse',
       isDefault: true,
       isActive: true,
-      createdAt: '2026-11-01T00:00:00Z',
+      createdAt: '2026-10-01T00:00:00Z',
     });
     uow.parties.set('cust-1', {
       id: 'cust-1',
@@ -62,7 +63,7 @@ describe('RentalService: issue → partial return → complete', () => {
       openingBalance: 0,
       openingBalanceType: 'debit',
       isActive: true,
-      createdAt: '2026-11-01T00:00:00Z',
+      createdAt: '2026-10-01T00:00:00Z',
     });
     for (const [variantId, qty] of [
       [BALLI, 200],
@@ -75,7 +76,7 @@ describe('RentalService: issue → partial return → complete', () => {
         variantId,
         locationId: GODOWN,
         currentBalance: qty,
-        updatedAt: '2026-11-01T00:00:00Z',
+        updatedAt: '2026-10-01T00:00:00Z',
       });
     }
   });
@@ -84,7 +85,7 @@ describe('RentalService: issue → partial return → complete', () => {
     return service.issue({
       tenantContext,
       partyId: 'cust-1',
-      issueDate: '2026-11-01',
+      issueDate: '2026-10-01',
       siteAddress: 'Plot 7, Sector 12',
       lines: [
         { variantId: BALLI, unitId: 'u-pcs', quantity: 150, dailyRate: 1, replacementRate: 80, description: 'Balli 8 ft' },
@@ -111,7 +112,7 @@ describe('RentalService: issue → partial return → complete', () => {
       service.issue({
         tenantContext,
         partyId: 'cust-1',
-        issueDate: '2026-11-01',
+        issueDate: '2026-10-01',
         lines: [{ variantId: BAMBOO, unitId: 'u-pcs', quantity: 51, dailyRate: 10 }],
       })
     ).rejects.toThrow(/Insufficient stock/);
@@ -128,7 +129,7 @@ describe('RentalService: issue → partial return → complete', () => {
     const r1 = await service.completeReturn({
       tenantContext,
       issueId: issue.id,
-      returnDate: '2026-11-10',
+      returnDate: '2026-10-10',
       gstRate: 0,
       lines: [{ issueLineId: balliLine.id, qtyReturned: 50 }],
     });
@@ -142,6 +143,8 @@ describe('RentalService: issue → partial return → complete', () => {
 
     const inv1 = uow.invoices.get(r1.salesInvoiceId!)!;
     expect(inv1.invoiceNumber).toBe('RNT-0001');
+    // Billed on the day it is generated, not the (past) return date
+    expect(inv1.invoiceDate).toBe(todayIsoDate());
     expect(inv1.status).toBe('posted');
     expect(inv1.grandTotal).toBe(500);
     expect(inv1.customerId).toBe('cust-1');
@@ -153,7 +156,7 @@ describe('RentalService: issue → partial return → complete', () => {
     const r2 = await service.completeReturn({
       tenantContext,
       issueId: issue.id,
-      returnDate: '2026-11-25',
+      returnDate: '2026-10-25',
       lines: [
         { issueLineId: balliLine.id, qtyReturned: 100 },
         { issueLineId: bambooLine.id, qtyReturned: 48, qtyLost: 2 },
@@ -187,7 +190,7 @@ describe('RentalService: issue → partial return → complete', () => {
     const r = await service.completeReturn({
       tenantContext,
       issueId: issue.id,
-      returnDate: '2026-11-10',
+      returnDate: '2026-10-10',
       gstRate: 0,
       lines: [{ issueLineId: line.id, qtyReturned: 10, days: 7 }],
     });
@@ -202,7 +205,7 @@ describe('RentalService: issue → partial return → complete', () => {
       service.completeReturn({
         tenantContext,
         issueId: issue.id,
-        returnDate: '2026-11-05',
+        returnDate: '2026-10-05',
         lines: [{ issueLineId: line.id, qtyReturned: 45, qtyLost: 6 }],
       })
     ).rejects.toThrow(/only 50 still on rent/);
@@ -216,7 +219,7 @@ describe('RentalService: issue → partial return → complete', () => {
     const r = await service.completeReturn({
       tenantContext,
       issueId: issue.id,
-      returnDate: '2026-11-10',
+      returnDate: '2026-10-10',
       lines: [{ issueLineId: line.id, qtyReturned: 50 }],
     });
 
@@ -247,7 +250,7 @@ describe('RentalService: issue → partial return → complete', () => {
     await service.completeReturn({
       tenantContext,
       issueId: issue.id,
-      returnDate: '2026-11-03',
+      returnDate: '2026-10-03',
       lines: [{ issueLineId: issue.lines[0].id, qtyReturned: 1 }],
     });
     await expect(service.cancelIssue({ tenantContext, id: issue.id })).rejects.toThrow(/already been returned/);
@@ -256,12 +259,25 @@ describe('RentalService: issue → partial return → complete', () => {
   it('preview matches the posted bill', async () => {
     const issue = await issueSample();
     const input = {
-      returnDate: '2026-11-20',
+      returnDate: '2026-10-20',
       lines: [{ issueLineId: issue.lines[1].id, qtyReturned: 20, qtyLost: 1 }],
     };
     const preview = calculateRentalReturn(issue, input, DEFAULT_RENTAL_SETTINGS);
     const posted = await service.completeReturn({ tenantContext, issueId: issue.id, ...input });
     expect(posted.totalAmount).toBe(preview.totalAmount);
     expect(preview.suggestedDays).toBe(20);
+  });
+});
+
+describe('Rental dates', () => {
+  it('rejects a return date in the future', () => {
+    const issue = {
+      id: 'i1', tenantId: T, partyId: 'p', sourceLocationId: 'a', onRentLocationId: 'b',
+      issueNumber: 'RI-1', issueDate: '2020-01-01', status: 'open', depositAmount: 0, createdAt: '',
+      lines: [{ id: 'l1', variantId: 'v', unitId: 'u', qtyIssued: 5, qtyReturned: 0, qtyLost: 0, dailyRate: 1, replacementRate: 0 }],
+    } as RentalIssue;
+    expect(() =>
+      calculateRentalReturn(issue, { returnDate: '2999-01-01', lines: [{ issueLineId: 'l1', qtyReturned: 1 }] }, DEFAULT_RENTAL_SETTINGS)
+    ).toThrow(/cannot be in the future/);
   });
 });

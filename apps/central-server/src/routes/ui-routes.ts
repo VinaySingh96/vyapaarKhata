@@ -349,6 +349,19 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         <div class="metric-value" style="font-size: 1.1rem; padding-top: 0.5rem;" id="metricLastSync">-</div>
         <div class="metric-sub">Across all local stores</div>
       </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Sales</div>
+        <div class="metric-value" style="color: #4338ca;" id="metricTotalSales">-</div>
+        <div class="metric-sub" id="metricTotalInvoices">- invoices • all stores, all time</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <span>Monthly Sales</span>
+          <select id="metricMonthPicker" onchange="loadMetrics(this.value)" style="padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.75rem; text-transform: none;"></select>
+        </div>
+        <div class="metric-value" style="color: #1d4ed8;" id="metricMonthSales">-</div>
+        <div class="metric-sub" id="metricMonthInvoices">- invoices • all stores</div>
+      </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -610,9 +623,19 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Load Metrics
-    async function loadMetrics() {
+    function formatInr(n) {
+      return '₹ ' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatMonth(ym) {
+      return new Date(ym + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    }
+
+    async function loadMetrics(month) {
+      const picker = document.getElementById('metricMonthPicker');
+      const selected = month || (picker && picker.value) || '';
       try {
-        const res = await fetch('/api/v1/admin/metrics');
+        const res = await fetch('/api/v1/admin/metrics' + (selected ? '?month=' + encodeURIComponent(selected) : ''));
         const json = await res.json();
         if (json.success) {
           const m = json.data;
@@ -623,6 +646,20 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           document.getElementById('metricTotalSyncEvents').textContent = m.totalSyncEvents;
           document.getElementById('metricSyncEventsToday').textContent = m.syncEventsToday + ' ingested today';
           document.getElementById('metricLastSync').textContent = m.lastSyncTimestamp ? new Date(m.lastSyncTimestamp).toLocaleString() : 'No sync events yet';
+
+          document.getElementById('metricTotalSales').textContent = formatInr(m.totalSales);
+          document.getElementById('metricTotalInvoices').textContent = (m.totalInvoicesCount || 0) + ' invoices • all stores, all time';
+          document.getElementById('metricMonthSales').textContent = formatInr(m.monthSales);
+          document.getElementById('metricMonthInvoices').textContent = (m.monthInvoicesCount || 0) + ' invoices • all stores';
+
+          const months = Array.from(new Set([
+            new Date().toLocaleDateString('en-CA').slice(0, 7),
+            m.selectedMonth,
+            ...(m.salesByMonth || []).map(s => s.month)
+          ])).sort((a, b) => b.localeCompare(a));
+          picker.innerHTML = months.map(ym =>
+            '<option value="' + ym + '"' + (ym === m.selectedMonth ? ' selected' : '') + '>' + formatMonth(ym) + '</option>'
+          ).join('');
         }
       } catch (err) {
         console.error('Failed to load metrics', err);

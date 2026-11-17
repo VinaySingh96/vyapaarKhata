@@ -357,5 +357,9 @@
   "rentals.enabledToast": "किराया मॉड्यूल चालू। मेनू में 'किराया' देखें।",
   "rentals.disabledToast": "किराया मॉड्यूल बंद।",
   "rentals.alwaysOn": "✓ हमेशा चालू",
-  "rentals.settingsHelpRentalStore": "यह किराया स्टोर है, इसलिए किराया मॉड्यूल हमेशा चालू रहता है। आप POS से सामान बेच भी सकते हैं।"
+  "rentals.settingsHelpRentalStore": "यह किराया स्टोर है, इसलिए किराया मॉड्यूल हमेशा चालू रहता है। आप POS से सामान बेच भी सकते हैं।",
+  "dashboard.monthSales": "माह की बिक्री",
+  "dashboard.totalSales": "कुल बिक्री",
+  "dashboard.totalSalesSub": "{count} बिल · अब तक",
+  "dashboard.selectMonth": "माह चुनें"
 }

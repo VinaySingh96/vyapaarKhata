@@ -29,6 +29,49 @@ export const reportRoutes: FastifyPluginAsync<ReportRoutesOptions> = async (app,
     });
   });
 
+  // GET /api/v1/reports/sales-summary?month=YYYY-MM
+  // Posted (non-cancelled) sales by invoice month, plus all-time totals, for the dashboard month picker.
+  app.get<{ Querystring: { month?: string } }>('/sales-summary', async (req, reply) => {
+    const tenant = resolveTenant(req);
+    const month = /^\d{4}-\d{2}$/.test(req.query.month || '')
+      ? (req.query.month as string)
+      : new Date().toISOString().slice(0, 7);
+
+    const months = await opts.uow.runInTransaction(async (ctx) => {
+      if (!ctx.rawQuery) return [];
+      return ctx.rawQuery(
+        `SELECT to_char(invoice_date, 'YYYY-MM') AS month,
+                COALESCE(SUM(total_amount), 0) AS sales,
+                COUNT(*) AS invoices_count
+         FROM sales_invoices
+         WHERE tenant_id = $1 AND status = 'posted'
+         GROUP BY 1
+         ORDER BY 1 DESC`,
+        [tenant.tenantId]
+      );
+    });
+
+    const byMonth = (months as any[]).map((r) => ({
+      month: r.month as string,
+      sales: parseFloat(r.sales || '0'),
+      invoicesCount: parseInt(r.invoices_count || '0', 10),
+    }));
+    const selected = byMonth.find((m) => m.month === month) || { month, sales: 0, invoicesCount: 0 };
+
+    return reply.status(200).send({
+      success: true,
+      data: {
+        month,
+        monthSales: selected.sales,
+        monthInvoicesCount: selected.invoicesCount,
+        totalSales: byMonth.reduce((s, m) => s + m.sales, 0),
+        totalInvoicesCount: byMonth.reduce((s, m) => s + m.invoicesCount, 0),
+        months: byMonth,
+      },
+      requestId: req.id,
+    });
+  });
+
   // GET /api/v1/reports/stock-valuation
   app.get('/stock-valuation', async (req, reply) => {
     const tenant = resolveTenant(req);
