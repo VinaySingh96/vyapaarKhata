@@ -44,3 +44,5 @@ temp/
 scratch/
 .turbo/
 .cache/
+*.xlsx
+*.csv

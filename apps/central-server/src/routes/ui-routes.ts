@@ -1,14 +1,38 @@
 import { FastifyPluginAsync } from 'fastify';
 import { renderTenantDashboardPage } from './tenant-dashboard-html.js';
+import { renderAdminLoginPage } from './admin-login-html.js';
+import { CentralConfig } from '../config.js';
+import { isAuthorizedAdmin } from '../utils/admin-auth.js';
 
-export const uiRoutes: FastifyPluginAsync = async (app) => {
+export interface UiRoutesOptions {
+  config: CentralConfig;
+}
+
+export const uiRoutes: FastifyPluginAsync<UiRoutesOptions> = async (app, opts) => {
+  const config = opts.config;
+
   // Redirect root to /admin
   app.get('/', async (req, reply) => {
     return reply.redirect('/admin');
   });
 
+  // GET /admin/login
+  app.get<{ Querystring: { returnUrl?: string } }>('/admin/login', async (req, reply) => {
+    const auth = isAuthorizedAdmin(req, config);
+    if (auth.authorized) {
+      return reply.redirect(req.query.returnUrl || '/admin');
+    }
+    const html = renderAdminLoginPage({ returnUrl: req.query.returnUrl });
+    return reply.type('text/html').send(html);
+  });
+
   // GET /admin
   app.get('/admin', async (req, reply) => {
+    const auth = isAuthorizedAdmin(req, config);
+    if (!auth.authorized) {
+      return reply.redirect('/admin/login?returnUrl=' + encodeURIComponent(req.url));
+    }
+    const adminUsername = auth.user?.username || config.ADMIN_USERNAME;
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -320,9 +344,17 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       </div>
     </div>
     <div class="server-status">
-      <div><span class="status-dot"></span> Online (Port 5000)</div>
+      <div><span class="status-dot"></span> Online</div>
       <div>DB: <strong>vyapaarkhata_central</strong></div>
       <div id="currentTime"></div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-left: 0.5rem; border-left: 1px solid #334155; padding-left: 0.75rem;">
+        <span style="background: #1e293b; border: 1px solid #334155; padding: 3px 8px; border-radius: 6px; color: #cbd5e1; font-size: 0.8rem;">
+          🛡️ \${adminUsername}
+        </span>
+        <button type="button" onclick="handleAdminSignOut()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+          🚪 Sign Out
+        </button>
+      </div>
     </div>
   </header>
 
@@ -1033,6 +1065,26 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
+    async function handleAdminSignOut() {
+      try {
+        await fetch('/api/v1/admin/auth/logout', { method: 'POST' });
+      } catch (err) {}
+      try {
+        sessionStorage.removeItem('vk_admin_jwt');
+      } catch (err) {}
+      window.location.href = '/admin/login';
+    }
+
+    // Intercept 401 Unauthorized responses to redirect to login
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+      const res = await originalFetch(...args);
+      if (res.status === 401) {
+        window.location.href = '/admin/login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+      }
+      return res;
+    };
+
     // Initial Load
     loadMetrics();
     loadTenants();
@@ -1045,6 +1097,10 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
 
   // GET /admin/tenants/:id (Dedicated Full Page Store Dashboard)
   app.get<{ Params: { id: string } }>('/admin/tenants/:id', async (req, reply) => {
+    const auth = isAuthorizedAdmin(req, config);
+    if (!auth.authorized) {
+      return reply.redirect('/admin/login?returnUrl=' + encodeURIComponent(req.url));
+    }
     const html = renderTenantDashboardPage(req.params.id);
     return reply.type('text/html').send(html);
   });
