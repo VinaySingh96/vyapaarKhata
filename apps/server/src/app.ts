@@ -53,6 +53,18 @@ export function buildApp(config: Config, uow?: UnitOfWork): FastifyInstance {
     }
   });
 
+  // Enable CORS for Vercel, localhost, and custom domains
+  app.addHook('onRequest', async (req, reply) => {
+    reply.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-tenant-id, x-installation-id, x-user-id, idempotency-key');
+    reply.header('Access-Control-Allow-Credentials', 'true');
+
+    if (req.method === 'OPTIONS') {
+      return reply.status(204).send();
+    }
+  });
+
   // Global Error Handler
   app.setErrorHandler((error, request, reply) => {
     const requestId = request.id;

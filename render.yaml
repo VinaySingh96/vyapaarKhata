@@ -1,0 +1,61 @@
+services:
+  # 1. Store POS Backend API (Fastify + PostgreSQL)
+  - type: web
+    name: vyapaarkhata-server
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: pnpm install && pnpm build && node scripts/migrate-pg.js
+    startCommand: node apps/server/dist/index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vyapaarkhata-postgres
+          property: connectionString
+      - key: DB_DRIVER
+        value: postgres
+      - key: TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: CENTRAL_TENANT_ID
+        value: 00000000-0000-0000-0000-000000000001
+      - key: CENTRAL_SERVER_URL
+        value: https://vyapaarkhata-central.onrender.com
+      - key: JWT_SECRET
+        generateValue: true
+
+  # 2. Central Cloud Platform (Multi-Tenant Management, Licensing & Sync)
+  - type: web
+    name: vyapaarkhata-central
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: pnpm install && pnpm build
+    startCommand: node apps/central-server/dist/index.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vyapaarkhata-postgres
+          property: connectionString
+      - key: ADMIN_API_KEY
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  # Managed PostgreSQL Database
+  - name: vyapaarkhata-postgres
+    databaseName: vyapaarkhata
+    plan: free
+    region: oregon

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const configSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
-  HOST: z.string().default('127.0.0.1'),
+  HOST: z.string().default(process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1')),
   DB_DRIVER: z.enum(['postgres', 'sqlite']).default('postgres'),
   DATABASE_URL: z.string().default('postgresql://localhost:5432/vyapaarkhata_dev'),
   SQLITE_DB_PATH: z.string().default('./data/vyapaarkhata.sqlite'),

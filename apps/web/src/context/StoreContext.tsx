@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getActiveTenantId, getAuthHeaders, apiFetch } from '../utils/api.js';
+import { getActiveTenantId, getAuthHeaders, apiFetch, resolveApiUrl } from '../utils/api.js';
 
 export type StoreType = 'jewellery' | 'building_materials' | 'rental';
 
@@ -190,7 +190,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loginWithLicense = async (lic: string, secret: string): Promise<{ success: boolean; message?: string }> => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/v1/auth/license-login', {
+      const res = await fetch(resolveApiUrl('/api/v1/auth/license-login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ licenseNumber: lic.trim(), secretKey: secret.trim() }),

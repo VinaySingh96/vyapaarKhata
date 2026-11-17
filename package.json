@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r --filter='./packages/*' --filter='./apps/*' run build",
+    "build:web": "pnpm --filter @vyapaarkhata/domain build && pnpm --filter @vyapaarkhata/web build",
+    "db:migrate": "node scripts/migrate-pg.js",
     "dev:server": "pnpm --filter @vyapaarkhata/server dev",
     "dev:central": "pnpm --filter @vyapaarkhata/central-server dev",
     "dev:web": "pnpm --filter @vyapaarkhata/web dev",

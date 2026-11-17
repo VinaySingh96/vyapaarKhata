@@ -27,6 +27,14 @@ export function getAuthHeaders(customHeaders: Record<string, string> = {}): Reco
   return headers;
 }
 
+export function resolveApiUrl(input: RequestInfo | URL): RequestInfo | URL {
+  const baseUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) || '';
+  if (typeof input === 'string' && input.startsWith('/api') && baseUrl) {
+    return `${baseUrl.replace(/\/+$/, '')}${input}`;
+  }
+  return input;
+}
+
 /**
  * Enhanced fetch wrapper that ensures every request is scoped to the active tenant.
  */
@@ -54,7 +62,8 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 
   const mergedHeaders = getAuthHeaders(customHeaders);
 
-  const res = await fetch(input, {
+  const targetUrl = resolveApiUrl(input);
+  const res = await fetch(targetUrl, {
     ...init,
     headers: mergedHeaders,
   });
