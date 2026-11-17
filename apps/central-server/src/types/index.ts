@@ -143,4 +143,11 @@ export interface PlatformMetrics {
   totalSyncEvents: number;
   syncEventsToday: number;
   lastSyncTimestamp?: string;
+  /** Posted, non-cancelled sales across all stores (from synced invoice events). */
+  totalSales: number;
+  totalInvoicesCount: number;
+  selectedMonth: string; // YYYY-MM
+  monthSales: number;
+  monthInvoicesCount: number;
+  salesByMonth: { month: string; sales: number; invoicesCount: number }[];
 }

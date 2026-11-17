@@ -12,8 +12,8 @@ export const adminRoutes: FastifyPluginAsync<AdminRoutesOptions> = async (app, o
   const { tenantService, syncService } = opts;
 
   // GET /api/v1/admin/metrics
-  app.get('/metrics', async (req, reply) => {
-    const metrics = await tenantService.getPlatformMetrics();
+  app.get<{ Querystring: { month?: string } }>('/metrics', async (req, reply) => {
+    const metrics = await tenantService.getPlatformMetrics(req.query.month);
     return reply.status(200).send({
       success: true,
       data: metrics,
@@ -161,6 +161,45 @@ export const adminRoutes: FastifyPluginAsync<AdminRoutesOptions> = async (app, o
     return reply.status(200).send({
       success: true,
       message: `Tenant status updated to ${status}`,
+      requestId: req.id,
+    });
+  });
+
+  // DELETE /api/v1/admin/tenants/:id  — permanent; body.confirmName must equal the tenant's name
+  app.delete<{
+    Params: { id: string };
+    Body: { confirmName?: string };
+  }>('/tenants/:id', async (req, reply) => {
+    const tenant = await tenantService.getTenantById(req.params.id);
+    if (!tenant) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Tenant not found' },
+        requestId: req.id,
+      });
+    }
+    const confirmName = (req.body?.confirmName || '').trim();
+    if (confirmName !== tenant.name.trim()) {
+      return reply.status(400).send({
+        success: false,
+        error: { code: 'CONFIRMATION_REQUIRED', message: 'Type the exact store name to confirm deletion' },
+        requestId: req.id,
+      });
+    }
+
+    const deleted = await tenantService.deleteTenant(req.params.id);
+    if (!deleted) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Tenant not found' },
+        requestId: req.id,
+      });
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data: deleted,
+      message: `Tenant "${deleted.name}" deleted permanently`,
       requestId: req.id,
     });
   });

@@ -349,6 +349,19 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
         <div class="metric-value" style="font-size: 1.1rem; padding-top: 0.5rem;" id="metricLastSync">-</div>
         <div class="metric-sub">Across all local stores</div>
       </div>
+      <div class="metric-card">
+        <div class="metric-title">Total Sales</div>
+        <div class="metric-value" style="color: #4338ca;" id="metricTotalSales">-</div>
+        <div class="metric-sub" id="metricTotalInvoices">- invoices • all stores, all time</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+          <span>Monthly Sales</span>
+          <select id="metricMonthPicker" onchange="loadMetrics(this.value)" style="padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.75rem; text-transform: none;"></select>
+        </div>
+        <div class="metric-value" style="color: #1d4ed8;" id="metricMonthSales">-</div>
+        <div class="metric-sub" id="metricMonthInvoices">- invoices • all stores</div>
+      </div>
     </div>
 
     <!-- Navigation Tabs -->
@@ -522,6 +535,33 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     </div>
   </div>
 
+  <!-- Delete Tenant Modal (type store name to confirm) -->
+  <div class="modal-overlay" id="deleteTenantModal">
+    <div class="modal-content" style="max-width: 480px; border-radius: 12px; overflow: hidden;">
+      <div class="modal-header" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
+        <div style="font-weight: 700; font-size: 1.05rem; color: #b91c1c;">🗑 Delete Store Tenant Permanently?</div>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeDeleteTenantModal()" style="border:none; background:none; font-size:1.1rem; cursor:pointer; color: #64748b;">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1.5rem; font-size: 0.9rem; color: #475569; line-height: 1.6;">
+        <p style="margin: 0 0 0.75rem;">
+          This removes <strong id="deleteTenantName" style="color:#0f172a;"></strong>
+          (<code id="deleteTenantLicense"></code>) from Central Cloud: its license, registered terminals,
+          subscription and all synced data. <strong>This cannot be undone.</strong>
+        </p>
+        <p style="margin: 0 0 0.75rem;">
+          Data on the store's own server is not touched. To remove it there too run
+          <code>pnpm tenant:delete <span id="deleteTenantIdHint"></span> --yes</code>.
+        </p>
+        <label class="form-label" for="deleteTenantConfirmInput">Type the store name to confirm</label>
+        <input type="text" class="form-control" id="deleteTenantConfirmInput" autocomplete="off" oninput="syncDeleteTenantBtn()">
+      </div>
+      <div class="modal-footer" style="padding: 0.85rem 1.25rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.6rem;">
+        <button type="button" class="btn btn-secondary" onclick="closeDeleteTenantModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="deleteTenantBtn" disabled onclick="executeDeleteTenant()">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Reusable Custom Confirmation Modal -->
   <div class="modal-overlay" id="customConfirmModal">
     <div class="modal-content" style="max-width: 460px; border-radius: 12px; overflow: hidden;">
@@ -610,9 +650,19 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Load Metrics
-    async function loadMetrics() {
+    function formatInr(n) {
+      return '₹ ' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatMonth(ym) {
+      return new Date(ym + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    }
+
+    async function loadMetrics(month) {
+      const picker = document.getElementById('metricMonthPicker');
+      const selected = month || (picker && picker.value) || '';
       try {
-        const res = await fetch('/api/v1/admin/metrics');
+        const res = await fetch('/api/v1/admin/metrics' + (selected ? '?month=' + encodeURIComponent(selected) : ''));
         const json = await res.json();
         if (json.success) {
           const m = json.data;
@@ -623,6 +673,20 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           document.getElementById('metricTotalSyncEvents').textContent = m.totalSyncEvents;
           document.getElementById('metricSyncEventsToday').textContent = m.syncEventsToday + ' ingested today';
           document.getElementById('metricLastSync').textContent = m.lastSyncTimestamp ? new Date(m.lastSyncTimestamp).toLocaleString() : 'No sync events yet';
+
+          document.getElementById('metricTotalSales').textContent = formatInr(m.totalSales);
+          document.getElementById('metricTotalInvoices').textContent = (m.totalInvoicesCount || 0) + ' invoices • all stores, all time';
+          document.getElementById('metricMonthSales').textContent = formatInr(m.monthSales);
+          document.getElementById('metricMonthInvoices').textContent = (m.monthInvoicesCount || 0) + ' invoices • all stores';
+
+          const months = Array.from(new Set([
+            new Date().toLocaleDateString('en-CA').slice(0, 7),
+            m.selectedMonth,
+            ...(m.salesByMonth || []).map(s => s.month)
+          ])).sort((a, b) => b.localeCompare(a));
+          picker.innerHTML = months.map(ym =>
+            '<option value="' + ym + '"' + (ym === m.selectedMonth ? ' selected' : '') + '>' + formatMonth(ym) + '</option>'
+          ).join('');
         }
       } catch (err) {
         console.error('Failed to load metrics', err);
@@ -630,6 +694,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Load Tenants
+    let tenantCache = [];
     async function loadTenants() {
       const search = document.getElementById('tenantSearchInput').value;
       const status = document.getElementById('statusFilter').value;
@@ -646,6 +711,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           return;
         }
 
+        tenantCache = json.data;
         tbody.innerHTML = json.data.map(t => {
           const profile = storeProfile(t.storeType);
           return \`
@@ -686,6 +752,7 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
                 \`<button class="btn btn-danger btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'suspended')">Suspend</button>\` :
                 \`<button class="btn btn-success btn-sm" style="margin-left: 4px;" onclick="toggleTenantStatus('\${t.id}', 'active')">Activate</button>\`
               }
+              <button class="btn btn-danger btn-sm" style="margin-left: 4px;" title="Delete tenant permanently" onclick="openDeleteTenantModal('\${t.id}')">🗑 Delete</button>
             </td>
           </tr>
         \`;
@@ -764,6 +831,57 @@ export const uiRoutes: FastifyPluginAsync = async (app) => {
           }
         }
       );
+    }
+
+    // Delete Tenant (type-to-confirm)
+    let deleteTenantTarget = null;
+    function openDeleteTenantModal(id) {
+      deleteTenantTarget = tenantCache.find(t => t.id === id);
+      if (!deleteTenantTarget) return;
+      document.getElementById('deleteTenantName').textContent = deleteTenantTarget.name;
+      document.getElementById('deleteTenantLicense').textContent = deleteTenantTarget.licenseNumber || 'no license';
+      document.getElementById('deleteTenantIdHint').textContent = deleteTenantTarget.id;
+      const input = document.getElementById('deleteTenantConfirmInput');
+      input.value = '';
+      input.placeholder = deleteTenantTarget.name;
+      syncDeleteTenantBtn();
+      document.getElementById('deleteTenantModal').style.display = 'flex';
+      input.focus();
+    }
+    function closeDeleteTenantModal() {
+      document.getElementById('deleteTenantModal').style.display = 'none';
+      deleteTenantTarget = null;
+    }
+    function syncDeleteTenantBtn() {
+      const typed = document.getElementById('deleteTenantConfirmInput').value.trim();
+      document.getElementById('deleteTenantBtn').disabled = !deleteTenantTarget || typed !== deleteTenantTarget.name.trim();
+    }
+    async function executeDeleteTenant() {
+      if (!deleteTenantTarget) return;
+      const btn = document.getElementById('deleteTenantBtn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+      try {
+        const res = await fetch(\`/api/v1/admin/tenants/\${deleteTenantTarget.id}\`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmName: document.getElementById('deleteTenantConfirmInput').value.trim() })
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(json.message || 'Tenant deleted', 'success');
+          closeDeleteTenantModal();
+          loadTenants();
+          loadMetrics();
+        } else {
+          showToast('Error: ' + (json.error?.message || 'Delete failed'), 'error');
+        }
+      } catch (err) {
+        showToast('Delete failed: ' + err.message, 'error');
+      } finally {
+        btn.textContent = 'Delete Permanently';
+        syncDeleteTenantBtn();
+      }
     }
 
     // Modal Helpers

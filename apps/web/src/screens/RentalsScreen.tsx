@@ -121,7 +121,8 @@ interface ReturnPreview {
   isFinal: boolean;
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
+// Local (browser) date, not UTC
+const today = () => new Date().toLocaleDateString('en-CA');
 const outstanding = (l: IssueLine) => Math.round((l.qtyIssued - l.qtyReturned - l.qtyLost) * 10000) / 10000;
 const money = (n: number) => `₹ ${formatIndianNumber(n || 0, { decimals: 2 })}`;
 
@@ -972,6 +973,7 @@ export const RentalsScreen: React.FC = () => {
                   type="date"
                   value={returnDate}
                   min={returnIssue.issueDate}
+                  max={today()}
                   onChange={(e) => setReturnDate(e.target.value)}
                   style={inputStyle}
                 />

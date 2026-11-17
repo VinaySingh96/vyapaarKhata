@@ -1796,6 +1796,26 @@ export const ProductsScreen: React.FC = () => {
                 📋 Download Patel Centring Store Catalog (.xlsx)
               </a>
               <a
+                href="/patel_building_materials_items.xlsx"
+                download="patel_building_materials_items.xlsx"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#ffffff',
+                  color: '#1d4ed8',
+                  border: '1px solid #93c5fd',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                }}
+              >
+                🧱 Download Building Materials Catalog (.xlsx)
+              </a>
+              <a
                 href="/sample_product_import_template.xlsx"
                 download="sample_product_import_template.xlsx"
                 style={{

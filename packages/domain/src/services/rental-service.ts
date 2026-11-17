@@ -86,8 +86,20 @@ export interface RentalReturnPreview {
 const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 const EPS = 1e-9;
 
+/** Business timezone for "today" (bill dates, default issue/return dates). */
+export function businessTimeZone(): string {
+  return (typeof process !== 'undefined' && process.env?.APP_TIMEZONE) || 'Asia/Kolkata';
+}
+
+/** Today's date (YYYY-MM-DD) in the business timezone, not UTC. */
 export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: businessTimeZone() }).format(new Date());
+}
+
+function assertNotFuture(value: string, label: string): void {
+  if (value > todayIsoDate()) {
+    throw new Error(`${label} ${value} cannot be in the future`);
+  }
 }
 
 function parseIsoDate(value: string, label: string): number {
@@ -139,6 +151,7 @@ export function calculateRentalReturn(
   settings: RentalSettings
 ): RentalReturnPreview {
   const returnDate = input.returnDate || todayIsoDate();
+  assertNotFuture(returnDate, 'Return date');
   const suggestedDays = suggestRentalDays(issue.issueDate, returnDate, settings);
   const gstRate = input.gstRate ?? settings.defaultGstRate;
   if (gstRate < 0 || gstRate > 100) throw new Error(`Invalid GST rate ${gstRate}`);
@@ -231,6 +244,7 @@ export class RentalService {
     const now = command.timestamp || new Date().toISOString();
     const issueDate = command.issueDate || todayIsoDate();
     parseIsoDate(issueDate, 'issue date');
+    assertNotFuture(issueDate, 'Issue date');
 
     if (!command.lines || command.lines.length === 0) {
       throw new Error('Add at least one item to issue on rent');
@@ -762,7 +776,8 @@ function buildRentalInvoice(
     tenantId: issue.tenantId,
     businessLocationId: issue.businessLocationId,
     invoiceNumber: ids.invoiceNumber,
-    invoiceDate: calc.returnDate,
+    // Billed on the day the bill is generated; the return date only drives the rent days
+    invoiceDate: todayIsoDate(),
     customerId: issue.partyId,
     status: 'draft',
     subtotal: round2(calc.rentAmount + calc.lossAmount),

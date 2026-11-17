@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/index.js';
 import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
 import { apiFetch } from '../utils/api.js';
+import { OPEN_NEW_BILL_FLAG } from './SalesBillingScreen.js';
 
 export interface DashboardScreenProps {
   onNavigate?: (nav: string) => void;
@@ -19,10 +20,42 @@ interface LiveMetrics {
   recentInvoices: any[];
 }
 
+interface SalesSummary {
+  month: string;
+  monthSales: number;
+  monthInvoicesCount: number;
+  totalSales: number;
+  totalInvoicesCount: number;
+  months: { month: string; sales: number; invoicesCount: number }[];
+}
+
+// Local (browser) date, not UTC, so the current month flips at local midnight
+const currentMonth = () => new Date().toLocaleDateString('en-CA').slice(0, 7);
+const monthLabel = (ym: string, locale: string) =>
+  new Date(`${ym}-01T00:00:00`).toLocaleDateString(locale, { month: 'short', year: 'numeric' });
+
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { tenantId } = useStore();
   const [metrics, setMetrics] = useState<LiveMetrics | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth());
+  const [salesSummary, setSalesSummary] = useState<SalesSummary | null>(null);
+
+  useEffect(() => {
+    apiFetch(`/api/v1/reports/sales-summary?month=${selectedMonth}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data) {
+          setSalesSummary(json.data);
+        }
+      })
+      .catch((err) => console.warn('Could not fetch sales summary:', err));
+  }, [tenantId, selectedMonth]);
+
+  const monthOptions = Array.from(
+    new Set([currentMonth(), selectedMonth, ...(salesSummary?.months || []).map((m) => m.month)])
+  ).sort((a, b) => b.localeCompare(a));
+  const dateLocale = language === 'hi' ? 'hi-IN' : 'en-IN';
 
   useEffect(() => {
     apiFetch('/api/v1/reports/dashboard')
@@ -37,12 +70,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
       });
   }, [tenantId]);
 
+  const openNewBill = () => {
+    try {
+      sessionStorage.setItem(OPEN_NEW_BILL_FLAG, '1');
+    } catch {
+      // storage unavailable: POS opens on the invoice list instead
+    }
+    onNavigate?.('sales');
+  };
+
   // Keyboard shortcut F2 for New Sales Bill
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'F2') {
         e.preventDefault();
-        onNavigate?.('sales');
+        openNewBill();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -55,12 +97,25 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
   const receivablesVal = `₹ ${formatIndianNumber(metrics?.totalReceivables ?? 0, { decimals: 2 })}`;
   const valuationVal = `₹ ${formatIndianNumber(metrics?.totalStockValuation ?? 0, { decimals: 2 })}`;
 
-  const kpis = [
+  const kpis: { label: string; value: string; subtitle: string; color: string; monthPicker?: boolean }[] = [
     {
       label: t('dashboard.todaySales'),
       value: todaySalesVal,
       subtitle: t('dashboard.invoicesPosted', { count: invoicesCount }),
       color: '#10b981',
+    },
+    {
+      label: t('dashboard.monthSales'),
+      value: `₹ ${formatIndianNumber(salesSummary?.monthSales ?? 0, { decimals: 2 })}`,
+      subtitle: t('dashboard.invoicesPosted', { count: salesSummary?.monthInvoicesCount ?? 0 }),
+      color: '#2563eb',
+      monthPicker: true,
+    },
+    {
+      label: t('dashboard.totalSales'),
+      value: `₹ ${formatIndianNumber(salesSummary?.totalSales ?? 0, { decimals: 2 })}`,
+      subtitle: t('dashboard.totalSalesSub', { count: salesSummary?.totalInvoicesCount ?? 0 }),
+      color: '#7c3aed',
     },
     {
       label: t('dashboard.lowStock'),
@@ -96,7 +151,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
             }}
           >
-            <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{kpi.label}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{kpi.label}</div>
+              {kpi.monthPicker && (
+                <select
+                  id="dashboard-month-picker"
+                  aria-label={t('dashboard.selectMonth')}
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  style={{
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    fontSize: '12px',
+                    backgroundColor: '#ffffff',
+                    color: '#374151',
+                  }}
+                >
+                  {monthOptions.map((m) => (
+                    <option key={m} value={m}>
+                      {monthLabel(m, dateLocale)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
             <div style={{ fontSize: '24px', fontWeight: 700, color: kpi.color, margin: '8px 0 4px 0' }}>
               {kpi.value}
             </div>
@@ -118,7 +197,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate }) 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
           <button
             id="btn-quick-new-sale"
-            onClick={() => onNavigate?.('sales')}
+            onClick={openNewBill}
             style={{
               padding: '12px 20px',
               backgroundColor: '#2563eb',

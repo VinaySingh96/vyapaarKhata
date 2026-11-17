@@ -357,5 +357,9 @@
   "rentals.enabledToast": "Rental module enabled. Find it under Rentals in the menu.",
   "rentals.disabledToast": "Rental module turned off.",
   "rentals.alwaysOn": "✓ Always ON",
-  "rentals.settingsHelpRentalStore": "This is a Rental Store, so the rental module is always on. You can still sell items from POS & Billing."
+  "rentals.settingsHelpRentalStore": "This is a Rental Store, so the rental module is always on. You can still sell items from POS & Billing.",
+  "dashboard.monthSales": "Month's Sales",
+  "dashboard.totalSales": "Total Sales",
+  "dashboard.totalSalesSub": "{count} invoices · all time",
+  "dashboard.selectMonth": "Select month"
 }
