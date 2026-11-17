@@ -120,25 +120,42 @@ export async function ensureLocalTenantProvisioned(
       );
     }
 
-    // 7. Standard Indian Units of Measure
-    const uRows = await ctx.rawQuery(
-      `SELECT id FROM units WHERE tenant_id = $1 LIMIT 1`,
-      [tenantId]
-    );
-    if (!uRows.length) {
-      const unitsList = [
-        { name: 'Pieces', symbol: 'pcs', dimension: 'count', dec: 0 },
-        { name: 'Numbers', symbol: 'nos', dimension: 'count', dec: 0 },
-        { name: 'Kilograms', symbol: 'kg', dimension: 'weight', dec: 3 },
-        { name: 'Grams', symbol: 'g', dimension: 'weight', dec: 2 },
-        { name: 'Meters', symbol: 'm', dimension: 'length', dec: 2 },
-        { name: 'Square Feet', symbol: 'sqft', dimension: 'area', dec: 2 },
-        { name: 'Cubic Feet', symbol: 'cft', dimension: 'volume', dec: 3 },
-        { name: 'Boxes', symbol: 'box', dimension: 'packaging', dec: 0 },
-        { name: 'Bags', symbol: 'bag', dimension: 'packaging', dec: 0 },
-        { name: 'Metric Tonnes', symbol: 't', dimension: 'weight', dec: 3 },
-      ];
-      for (const u of unitsList) {
+    // 7. Standard Indian Commercial & Building Materials Units of Measure
+    const unitsList = [
+      { name: 'Pieces', symbol: 'pcs', dimension: 'count', dec: 0 },
+      { name: 'Numbers', symbol: 'nos', dimension: 'count', dec: 0 },
+      { name: 'Boxes', symbol: 'box', dimension: 'packaging', dec: 0 },
+      { name: 'Bags', symbol: 'bag', dimension: 'packaging', dec: 0 },
+      { name: 'Packets', symbol: 'pkt', dimension: 'packaging', dec: 0 },
+      { name: 'Bundles', symbol: 'bdl', dimension: 'packaging', dec: 0 },
+      { name: 'Pairs', symbol: 'pr', dimension: 'count', dec: 0 },
+      { name: 'Sets', symbol: 'set', dimension: 'count', dec: 0 },
+      { name: 'Rolls', symbol: 'roll', dimension: 'count', dec: 0 },
+      { name: 'Cubic Feet', symbol: 'cft', dimension: 'volume', dec: 3 },
+      { name: 'Cubic Meters', symbol: 'cum', dimension: 'volume', dec: 3 },
+      { name: 'Brass (100 cft)', symbol: 'brass', dimension: 'volume', dec: 2 },
+      { name: 'Liters', symbol: 'ltr', dimension: 'volume', dec: 2 },
+      { name: 'Milliliters', symbol: 'ml', dimension: 'volume', dec: 0 },
+      { name: 'Kilograms', symbol: 'kg', dimension: 'weight', dec: 3 },
+      { name: 'Grams', symbol: 'g', dimension: 'weight', dec: 2 },
+      { name: 'Quintals (100 kg)', symbol: 'qtl', dimension: 'weight', dec: 3 },
+      { name: 'Metric Tonnes', symbol: 't', dimension: 'weight', dec: 3 },
+      { name: 'Meters', symbol: 'm', dimension: 'length', dec: 2 },
+      { name: 'Feet', symbol: 'ft', dimension: 'length', dec: 2 },
+      { name: 'Inches', symbol: 'in', dimension: 'length', dec: 2 },
+      { name: 'Square Feet', symbol: 'sqft', dimension: 'area', dec: 2 },
+      { name: 'Square Meters', symbol: 'sqm', dimension: 'area', dec: 2 },
+      { name: 'Trips / Loads', symbol: 'trip', dimension: 'transport', dec: 0 },
+      { name: 'Days', symbol: 'day', dimension: 'time', dec: 0 },
+      { name: 'Months', symbol: 'month', dimension: 'time', dec: 0 },
+      { name: 'Hours', symbol: 'hr', dimension: 'time', dec: 1 },
+    ];
+    for (const u of unitsList) {
+      const uExists = await ctx.rawQuery(
+        `SELECT id FROM units WHERE tenant_id = $1 AND symbol = $2 LIMIT 1`,
+        [tenantId, u.symbol]
+      );
+      if (!uExists.length) {
         await ctx.rawQuery(
           `INSERT INTO units (id, tenant_id, name, symbol, dimension, decimal_places, is_system, is_active)
            VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE)`,

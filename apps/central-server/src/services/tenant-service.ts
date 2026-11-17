@@ -587,15 +587,35 @@ export class TenantService {
         );
       }
 
-      // 5. Units
+      // 5. Units (Comprehensive Indian Commercial & Building Materials Units)
       const units = [
         { name: 'Pieces', symbol: 'pcs', dim: 'count', dec: 0 },
         { name: 'Numbers', symbol: 'nos', dim: 'count', dec: 0 },
-        { name: 'Kilograms', symbol: 'kg', dim: 'weight', dec: 3 },
-        { name: 'Meters', symbol: 'm', dim: 'length', dec: 2 },
         { name: 'Boxes', symbol: 'box', dim: 'packaging', dec: 0 },
         { name: 'Bags', symbol: 'bag', dim: 'packaging', dec: 0 },
+        { name: 'Packets', symbol: 'pkt', dim: 'packaging', dec: 0 },
+        { name: 'Bundles', symbol: 'bdl', dim: 'packaging', dec: 0 },
+        { name: 'Pairs', symbol: 'pr', dim: 'count', dec: 0 },
+        { name: 'Sets', symbol: 'set', dim: 'count', dec: 0 },
+        { name: 'Rolls', symbol: 'roll', dim: 'count', dec: 0 },
+        { name: 'Cubic Feet', symbol: 'cft', dim: 'volume', dec: 3 },
+        { name: 'Cubic Meters', symbol: 'cum', dim: 'volume', dec: 3 },
+        { name: 'Brass (100 cft)', symbol: 'brass', dim: 'volume', dec: 2 },
+        { name: 'Liters', symbol: 'ltr', dim: 'volume', dec: 2 },
+        { name: 'Milliliters', symbol: 'ml', dim: 'volume', dec: 0 },
+        { name: 'Kilograms', symbol: 'kg', dim: 'weight', dec: 3 },
+        { name: 'Grams', symbol: 'g', dim: 'weight', dec: 2 },
+        { name: 'Quintals (100 kg)', symbol: 'qtl', dim: 'weight', dec: 3 },
+        { name: 'Metric Tonnes', symbol: 't', dim: 'weight', dec: 3 },
+        { name: 'Meters', symbol: 'm', dim: 'length', dec: 2 },
+        { name: 'Feet', symbol: 'ft', dim: 'length', dec: 2 },
+        { name: 'Inches', symbol: 'in', dim: 'length', dec: 2 },
+        { name: 'Square Feet', symbol: 'sqft', dim: 'area', dec: 2 },
+        { name: 'Square Meters', symbol: 'sqm', dim: 'area', dec: 2 },
+        { name: 'Trips / Loads', symbol: 'trip', dim: 'transport', dec: 0 },
         { name: 'Days', symbol: 'day', dim: 'time', dec: 0 },
+        { name: 'Months', symbol: 'month', dim: 'time', dec: 0 },
+        { name: 'Hours', symbol: 'hr', dim: 'time', dec: 1 },
       ];
       for (const u of units) {
         const uCheck = await client.query(

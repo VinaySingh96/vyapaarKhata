@@ -7,6 +7,36 @@ export interface ProductRoutesOptions {
   uow: UnitOfWork;
 }
 
+export const STANDARD_UNITS = [
+  { name: 'Pieces', symbol: 'pcs', dim: 'count', dec: 0 },
+  { name: 'Numbers', symbol: 'nos', dim: 'count', dec: 0 },
+  { name: 'Boxes', symbol: 'box', dim: 'packaging', dec: 0 },
+  { name: 'Bags', symbol: 'bag', dim: 'packaging', dec: 0 },
+  { name: 'Packets', symbol: 'pkt', dim: 'packaging', dec: 0 },
+  { name: 'Bundles', symbol: 'bdl', dim: 'packaging', dec: 0 },
+  { name: 'Pairs', symbol: 'pr', dim: 'count', dec: 0 },
+  { name: 'Sets', symbol: 'set', dim: 'count', dec: 0 },
+  { name: 'Rolls', symbol: 'roll', dim: 'count', dec: 0 },
+  { name: 'Cubic Feet', symbol: 'cft', dim: 'volume', dec: 3 },
+  { name: 'Cubic Meters', symbol: 'cum', dim: 'volume', dec: 3 },
+  { name: 'Brass (100 cft)', symbol: 'brass', dim: 'volume', dec: 2 },
+  { name: 'Liters', symbol: 'ltr', dim: 'volume', dec: 2 },
+  { name: 'Milliliters', symbol: 'ml', dim: 'volume', dec: 0 },
+  { name: 'Kilograms', symbol: 'kg', dim: 'weight', dec: 3 },
+  { name: 'Grams', symbol: 'g', dim: 'weight', dec: 2 },
+  { name: 'Quintals (100 kg)', symbol: 'qtl', dim: 'weight', dec: 3 },
+  { name: 'Metric Tonnes', symbol: 't', dim: 'weight', dec: 3 },
+  { name: 'Meters', symbol: 'm', dim: 'length', dec: 2 },
+  { name: 'Feet', symbol: 'ft', dim: 'length', dec: 2 },
+  { name: 'Inches', symbol: 'in', dim: 'length', dec: 2 },
+  { name: 'Square Feet', symbol: 'sqft', dim: 'area', dec: 2 },
+  { name: 'Square Meters', symbol: 'sqm', dim: 'area', dec: 2 },
+  { name: 'Trips / Loads', symbol: 'trip', dim: 'transport', dec: 0 },
+  { name: 'Days', symbol: 'day', dim: 'time', dec: 0 },
+  { name: 'Months', symbol: 'month', dim: 'time', dec: 0 },
+  { name: 'Hours', symbol: 'hr', dim: 'time', dec: 1 },
+];
+
 export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (app, opts) => {
   function resolveTenant(req: any): TenantContext {
     return {
@@ -173,6 +203,28 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
   app.get('/units', async (req, reply) => {
     const tenant = resolveTenant(req);
     const units = await opts.uow.runInTransaction(async (ctx) => {
+      // Ensure missing standard units (like cft, sqft, ltr, t) are auto-populated
+      if (ctx.rawQuery) {
+        const hasCft = await ctx.rawQuery(
+          `SELECT id FROM units WHERE (tenant_id = $1 OR tenant_id IS NULL) AND symbol = 'cft' LIMIT 1`,
+          [tenant.tenantId]
+        );
+        if (!hasCft || hasCft.length === 0) {
+          for (const u of STANDARD_UNITS) {
+            const exists = await ctx.rawQuery(
+              `SELECT id FROM units WHERE (tenant_id = $1 OR tenant_id IS NULL) AND symbol = $2 LIMIT 1`,
+              [tenant.tenantId, u.symbol]
+            );
+            if (!exists || exists.length === 0) {
+              await ctx.rawQuery(
+                `INSERT INTO units (id, tenant_id, name, symbol, dimension, decimal_places, is_system, is_active)
+                 VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE)`,
+                [randomUUID(), tenant.tenantId, u.name, u.symbol, u.dim, u.dec]
+              );
+            }
+          }
+        }
+      }
       return ctx.products.listUnits(tenant.tenantId);
     });
 
@@ -472,6 +524,27 @@ export const productRoutes: FastifyPluginAsync<ProductRoutesOptions> = async (ap
         const unitsMap = new Map<string, string>();
         let defaultUnitId = '10000000-0000-0000-0000-000000000001';
         if (ctx.rawQuery) {
+          // Self-heal standard units like cft, sqft if missing
+          const hasCft = await ctx.rawQuery(
+            `SELECT id FROM units WHERE (tenant_id = $1 OR tenant_id IS NULL) AND symbol = 'cft' LIMIT 1`,
+            [tenant.tenantId]
+          );
+          if (!hasCft || hasCft.length === 0) {
+            for (const u of STANDARD_UNITS) {
+              const exists = await ctx.rawQuery(
+                `SELECT id FROM units WHERE (tenant_id = $1 OR tenant_id IS NULL) AND symbol = $2 LIMIT 1`,
+                [tenant.tenantId, u.symbol]
+              );
+              if (!exists || exists.length === 0) {
+                await ctx.rawQuery(
+                  `INSERT INTO units (id, tenant_id, name, symbol, dimension, decimal_places, is_system, is_active)
+                   VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE)`,
+                  [randomUUID(), tenant.tenantId, u.name, u.symbol, u.dim, u.dec]
+                );
+              }
+            }
+          }
+
           const uRows = await ctx.rawQuery(
             `SELECT id, name, symbol FROM units WHERE tenant_id = $1`,
             [tenant.tenantId]
