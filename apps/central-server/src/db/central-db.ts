@@ -8,13 +8,15 @@ export class CentralDatabase {
   private pool: pg.Pool;
 
   constructor(private config: CentralConfig) {
+    const isLocal = config.DATABASE_URL.includes('localhost') || config.DATABASE_URL.includes('127.0.0.1');
     this.pool = new Pool({
       connectionString: config.DATABASE_URL,
       // Business timezone for CURRENT_DATE and month grouping (stores are in India by default)
       options: `-c TimeZone=${process.env.APP_TIMEZONE || 'Asia/Kolkata'}`,
+      ssl: isLocal ? false : { rejectUnauthorized: false },
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
     });
 
     this.pool.on('error', (err) => {

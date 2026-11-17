@@ -1,5 +1,5 @@
 services:
-  # 1. Store POS Backend API (Fastify + PostgreSQL)
+  # 1. Store POS Backend API (Fastify + PostgreSQL on Neon)
   - type: web
     name: vyapaarkhata-server
     env: node
@@ -15,9 +15,7 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: vyapaarkhata-postgres
-          property: connectionString
+        sync: false # Paste your Neon PostgreSQL connection string here in Render Dashboard
       - key: DB_DRIVER
         value: postgres
       - key: TENANT_ID
@@ -45,17 +43,8 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: DATABASE_URL
-        fromDatabase:
-          name: vyapaarkhata-postgres
-          property: connectionString
+        sync: false # Paste your Neon PostgreSQL connection string here in Render Dashboard
       - key: ADMIN_API_KEY
         generateValue: true
       - key: JWT_SECRET
         generateValue: true
-
-databases:
-  # Managed PostgreSQL Database
-  - name: vyapaarkhata-postgres
-    databaseName: vyapaarkhata
-    plan: free
-    region: oregon
