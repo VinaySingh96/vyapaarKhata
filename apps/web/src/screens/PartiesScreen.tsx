@@ -3,7 +3,6 @@ import * as XLSX from 'xlsx';
 import { useI18n } from '../i18n/index.js';
 import { Modal } from '../components/Modal.js';
 import { useToast } from '../components/Toast.js';
-import { generateUuid } from '../utils/uuid.js';
 import { useStore } from '../context/StoreContext.js';
 import { formatIndianNumber } from '../utils/currency.js';
 import { apiFetch } from '../utils/api.js';
@@ -108,7 +107,7 @@ export const PartiesScreen: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const partyId = generateUuid();
+      const partyId = crypto.randomUUID();
       const res = await apiFetch('/api/v1/parties', {
         method: 'POST',
         headers: {
