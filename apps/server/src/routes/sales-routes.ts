@@ -7,6 +7,12 @@ import {
   SalesInvoice,
   Payment,
   Party,
+  InvoiceShareDetailsDto,
+  InvoiceCustomerContactDto,
+  InvoiceShareActionPayload,
+  InvoiceShareActionType,
+  InvoicePaymentStatus,
+  normalizePhoneNumber,
 } from '@vyapaarkhata/domain';
 import { randomUUID } from 'node:crypto';
 import { AppError } from '../errors/app-error.js';
@@ -76,6 +82,178 @@ export const salesRoutes: FastifyPluginAsync<SalesRoutesOptions> = async (app, o
     return reply.status(200).send({
       success: true,
       data: invoice,
+      requestId: req.id,
+    });
+  });
+
+  // GET /api/v1/sales/invoices/:id/share-details (FR-COMMS-001 §9)
+  app.get<{ Params: { id: string } }>('/invoices/:id/share-details', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const invoiceId = req.params.id;
+
+    const data = await opts.uow.runInTransaction(async (ctx) => {
+      const invoice = await ctx.invoices.findById(tenantContext.tenantId, invoiceId);
+      if (!invoice) return null;
+
+      // FR-COMMS-001 §5.3 & §13: Sharing is only allowed for finalized posted invoices
+      if (invoice.status !== 'posted') {
+        throw new AppError(
+          `Cannot share invoice in '${invoice.status}' status. Only posted invoices can be shared.`,
+          400,
+          'VALIDATION_ERROR'
+        );
+      }
+
+      const customer = await ctx.parties.findById(tenantContext.tenantId, invoice.customerId);
+      const settings = await ctx.settings.getSettings(tenantContext.tenantId);
+
+      const contacts: InvoiceCustomerContactDto[] = [];
+
+      // 1. Dedicated WhatsApp number if present (FR-COMMS-001 §6.2 rule 1)
+      if (customer?.whatsappPhone) {
+        const norm = normalizePhoneNumber(customer.whatsappPhone, 'IN');
+        contacts.push({
+          id: `${customer.id}-wa`,
+          displayName: customer.displayName,
+          phone: customer.whatsappPhone,
+          phoneE164: norm.phoneE164,
+          isPrimary: true,
+          isDedicatedWhatsApp: true,
+          whatsappPreference: (customer.whatsappOptIn as any) || 'unknown',
+        });
+      }
+
+      // 2. Primary customer phone (FR-COMMS-001 §6.2 rule 2)
+      if (customer?.phone) {
+        const norm = normalizePhoneNumber(customer.phone, 'IN');
+        contacts.push({
+          id: `${customer.id}-primary`,
+          displayName: customer.displayName,
+          phone: customer.phone,
+          phoneE164: norm.phoneE164,
+          isPrimary: !customer.whatsappPhone,
+          isDedicatedWhatsApp: false,
+          whatsappPreference: (customer.whatsappOptIn as any) || 'unknown',
+        });
+      }
+
+      // 3. Alternate phone if present (FR-COMMS-001 §6.2 rule 3)
+      if (customer?.alternatePhone) {
+        const norm = normalizePhoneNumber(customer.alternatePhone, 'IN');
+        contacts.push({
+          id: `${customer.id}-alt`,
+          displayName: `${customer.displayName} (Alternate)`,
+          phone: customer.alternatePhone,
+          phoneE164: norm.phoneE164,
+          isPrimary: false,
+          isDedicatedWhatsApp: false,
+          whatsappPreference: 'unknown',
+        });
+      }
+
+      const amountPaid = invoice.amountPaid || 0;
+      const adjustmentAmount = invoice.adjustmentAmount || 0;
+      const balanceDue =
+        invoice.balanceDue !== undefined
+          ? invoice.balanceDue
+          : Math.max(0, invoice.grandTotal - (amountPaid + adjustmentAmount));
+
+      const paymentStatus: InvoicePaymentStatus =
+        invoice.paymentStatus || (balanceDue <= 0.005 ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid');
+
+      const invoiceDate =
+        invoice.invoiceDate ||
+        (invoice.postedAt ? invoice.postedAt.split('T')[0] : new Date().toISOString().split('T')[0]);
+
+      const shareDetails: InvoiceShareDetailsDto = {
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        status: invoice.status,
+        invoiceDate,
+        businessName: settings?.storeName || settings?.legalName || 'vyapaarKhata Store',
+        businessGstin: settings?.gstin || undefined,
+        businessPhone: settings?.phone || undefined,
+        businessAddress: settings?.address || undefined,
+        customer: {
+          id: customer?.id || invoice.customerId,
+          displayName: customer?.displayName || invoice.customerName || 'Customer',
+          contacts,
+        },
+        currency: settings?.currency || 'INR',
+        currencySymbol: '₹',
+        grandTotal: invoice.grandTotal,
+        amountPaid,
+        balanceDue,
+        paymentStatus,
+        pdfAvailable: true,
+      };
+
+      return shareDetails;
+    });
+
+    if (!data) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: `Invoice ${invoiceId} not found` },
+        requestId: req.id,
+      });
+    }
+
+    return reply.status(200).send({
+      success: true,
+      data,
+      requestId: req.id,
+    });
+  });
+
+  // POST /api/v1/sales/invoices/:id/share-actions (FR-COMMS-001 §8.3 & §9)
+  app.post<{
+    Params: { id: string };
+    Body: InvoiceShareActionPayload;
+  }>('/invoices/:id/share-actions', async (req, reply) => {
+    const tenantContext = resolveTenantContext(req);
+    const invoiceId = req.params.id;
+    const body = req.body || {};
+
+    const validActions: InvoiceShareActionType[] = [
+      'WHATSAPP_CHAT_OPEN_REQUESTED',
+      'PDF_SHARE_REQUESTED',
+      'PDF_DOWNLOADED',
+      'SHARE_SHEET_OPENED',
+      'CANCELLED',
+    ];
+
+    if (!body.action || !validActions.includes(body.action)) {
+      return reply.status(400).send({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Invalid share action: "${body.action}". Must be one of ${validActions.join(', ')}`,
+        },
+        requestId: req.id,
+      });
+    }
+
+    await opts.uow.runInTransaction(async (ctx) => {
+      await ctx.audit.record({
+        tenantId: tenantContext.tenantId,
+        userId: tenantContext.userId,
+        entityType: 'sales_invoice',
+        entityId: invoiceId,
+        action: `sales.invoice.share.${body.action.toLowerCase()}`,
+        newValues: {
+          action: body.action,
+          maskedDestination: body.maskedDestination,
+          platform: body.platform,
+          timestamp: new Date().toISOString(),
+        },
+        deviceId: tenantContext.installationId,
+      });
+    });
+
+    return reply.status(200).send({
+      success: true,
+      message: 'Share action recorded successfully',
       requestId: req.id,
     });
   });

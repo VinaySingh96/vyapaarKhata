@@ -283,6 +283,23 @@ export class InMemoryUnitOfWork implements UnitOfWork {
         expenses: expenseRepo,
         reports: reportRepo,
         rentals: rentalRepo,
+        settings: {
+          getSettings: async (tenantId: string) => ({
+            tenantId,
+            storeName: 'Patel Building Materials',
+            legalName: 'Patel Building Materials Pvt Ltd',
+            gstin: '24AAAAA0000A1Z5',
+            phone: '+919876543210',
+            currency: 'INR',
+            address: 'Plot 42, GIDC, Vadodara, Gujarat',
+            storeType: 'building_materials',
+          }),
+          updateSettings: async (tenantId: string, s: any) => s,
+        },
+        audit: {
+          record: async (entry: any) => {},
+          list: async () => [],
+        },
       });
     } catch (error) {
       // Rollback: restore snapshots

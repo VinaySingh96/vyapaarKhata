@@ -6,6 +6,9 @@ import { useStore } from '../context/StoreContext.js';
 import { SearchableSelect, SelectOption } from '../components/SearchableSelect.js';
 import { formatIndianNumber } from '../utils/currency.js';
 import { apiFetch, getActiveTenantId } from '../utils/api.js';
+import { WhatsAppShareModal } from '../components/WhatsAppShareModal.js';
+import { generateInvoicePdf } from '../utils/invoicePdfGenerator.js';
+import { canShareFiles, shareFile } from '../utils/browserShare.js';
 
 export interface BillingLine {
   id: string;
@@ -72,7 +75,8 @@ interface InvoiceRecord {
 export const OPEN_NEW_BILL_FLAG = 'vk_pos_open_new_bill';
 
 export const SalesBillingScreen: React.FC = () => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const isHi = language === 'hi';
   const toast = useToast();
   const { storeSettings, tenantId } = useStore();
   const isJewelleryShop =
@@ -131,6 +135,10 @@ export const SalesBillingScreen: React.FC = () => {
   // Print/Download Modal State
   const [selectedInvoiceForModal, setSelectedInvoiceForModal] = useState<any | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
+  // WhatsApp Share Modal State (FR-COMMS-001)
+  const [whatsAppModalInvoiceId, setWhatsAppModalInvoiceId] = useState<string | null>(null);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // Cancellation Modal State
   const [invoiceToCancel, setInvoiceToCancel] = useState<InvoiceRecord | null>(null);
@@ -913,40 +921,102 @@ export const SalesBillingScreen: React.FC = () => {
     }
   };
 
-  // Download invoice as standalone printable HTML
+  // Download invoice as a real PDF (FR-COMMS-001 §7.3)
   const handleDownloadInvoice = () => {
-    const printContent = document.getElementById('printable-invoice-content');
-    if (!printContent) return;
+    if (!selectedInvoiceForModal) return;
 
-    const fullHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Tax Invoice - ${selectedInvoiceForModal?.invoiceNumber || 'Document'}</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 32px; color: #111827; max-width: 820px; margin: auto; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { border: 1px solid #d1d5db; padding: 8px 12px; font-size: 13px; }
-    th { background-color: #f9fafb; font-weight: 600; }
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-  </style>
-</head>
-<body>
-  ${printContent.innerHTML}
-</body>
-</html>`;
+    try {
+      const pdf = generateInvoicePdf({
+        invoiceNumber: selectedInvoiceForModal.invoiceNumber,
+        invoiceDate: selectedInvoiceForModal.invoiceDate || new Date().toISOString().split('T')[0],
+        businessName: storeSettings.storeName || 'vyapaarKhata Store',
+        businessAddress: storeSettings.address,
+        businessPhone: storeSettings.phone,
+        businessGstin: storeSettings.gstin,
+        customerName: selectedInvoiceForModal.customerName || 'Customer',
+        customerPhone: selectedInvoiceForModal.customerPhone,
+        customerAddress: selectedInvoiceForModal.customerAddress,
+        currencySymbol: '₹',
+        subtotal: selectedInvoiceForModal.subtotal || 0,
+        taxTotal: selectedInvoiceForModal.taxTotal || Math.max(0, (selectedInvoiceForModal.grandTotal || 0) - (selectedInvoiceForModal.subtotal || 0)),
+        grandTotal: selectedInvoiceForModal.grandTotal || 0,
+        amountPaid: selectedInvoiceForModal.amountPaid,
+        balanceDue: selectedInvoiceForModal.balanceDue,
+        lines: (selectedInvoiceForModal.lines || []).map((l: any, i: number) => ({
+          sno: l.sno || (i + 1),
+          name: l.name || l.productName || 'Catalog Item',
+          quantity: l.quantity,
+          unit: l.unit || l.unitSymbol || 'pcs',
+          price: l.price || l.unitPrice || 0,
+          taxRate: l.taxRate,
+          taxAmount: l.taxAmount,
+          lineTotal: l.lineTotal || (l.quantity * (l.price || l.unitPrice || 0)),
+        })),
+      });
 
-    const blob = new Blob([fullHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Invoice-${selectedInvoiceForModal?.invoiceNumber || 'receipt'}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success(`Invoice ${selectedInvoiceForModal?.invoiceNumber} downloaded!`);
+      pdf.download();
+      toast.success(isHi ? '📄 बिल पीडीएफ सफलतापूर्वक डाउनलोड हो गया!' : `Invoice ${selectedInvoiceForModal?.invoiceNumber} PDF downloaded!`);
+    } catch (err: any) {
+      toast.error('Failed to generate PDF document');
+    }
+  };
+
+  // Share invoice PDF via Web Share API or download fallback (FR-COMMS-001 §7.1 - §7.3)
+  const handleSharePdfInvoice = async () => {
+    if (!selectedInvoiceForModal) return;
+    try {
+      const pdf = generateInvoicePdf({
+        invoiceNumber: selectedInvoiceForModal.invoiceNumber,
+        invoiceDate: selectedInvoiceForModal.invoiceDate || new Date().toISOString().split('T')[0],
+        businessName: storeSettings.storeName || 'vyapaarKhata Store',
+        businessAddress: storeSettings.address,
+        businessPhone: storeSettings.phone,
+        businessGstin: storeSettings.gstin,
+        customerName: selectedInvoiceForModal.customerName || 'Customer',
+        customerPhone: selectedInvoiceForModal.customerPhone,
+        customerAddress: selectedInvoiceForModal.customerAddress,
+        currencySymbol: '₹',
+        subtotal: selectedInvoiceForModal.subtotal || 0,
+        taxTotal: selectedInvoiceForModal.taxTotal || Math.max(0, (selectedInvoiceForModal.grandTotal || 0) - (selectedInvoiceForModal.subtotal || 0)),
+        grandTotal: selectedInvoiceForModal.grandTotal || 0,
+        amountPaid: selectedInvoiceForModal.amountPaid,
+        balanceDue: selectedInvoiceForModal.balanceDue,
+        lines: (selectedInvoiceForModal.lines || []).map((l: any, i: number) => ({
+          sno: l.sno || (i + 1),
+          name: l.name || l.productName || 'Catalog Item',
+          quantity: l.quantity,
+          unit: l.unit || l.unitSymbol || 'pcs',
+          price: l.price || l.unitPrice || 0,
+          taxRate: l.taxRate,
+          taxAmount: l.taxAmount,
+          lineTotal: l.lineTotal || (l.quantity * (l.price || l.unitPrice || 0)),
+        })),
+      });
+
+      if (canShareFiles(pdf.file)) {
+        const result = await shareFile({
+          file: pdf.file,
+          title: `Invoice ${selectedInvoiceForModal.invoiceNumber}`,
+          text: `Invoice from ${storeSettings.storeName || 'vyapaarKhata Store'}`,
+        });
+
+        if (result.status === 'shared') {
+          toast.success(isHi ? 'पीडीएफ शेयर किया गया!' : 'Invoice PDF shared successfully!');
+        } else if (result.status === 'unsupported' || result.status === 'error') {
+          pdf.download();
+          toast.info(isHi ? 'पीडीएफ डाउनलोड हो गया।' : 'PDF downloaded.');
+        }
+      } else {
+        pdf.download();
+        toast.info(
+          isHi
+            ? '📄 बिल पीडीएफ डाउनलोड हो गया! ग्राहक का व्हाट्सएप चैट खोलकर फाइल अटैच करें।'
+            : '📄 Invoice PDF downloaded! Open customer WhatsApp chat and attach the downloaded file.'
+        );
+      }
+    } catch {
+      toast.error('Failed to share PDF');
+    }
   };
 
   return (
@@ -1868,6 +1938,32 @@ export const SalesBillingScreen: React.FC = () => {
                               👁️ View
                             </button>
 
+                            {inv.status === 'posted' && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWhatsAppModalInvoiceId(inv.id);
+                                  setIsWhatsAppModalOpen(true);
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #bbf7d0',
+                                  backgroundColor: '#f0fdf4',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                  color: '#15803d',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                }}
+                                title="Share Invoice on WhatsApp"
+                              >
+                                💬 WA
+                              </button>
+                            )}
+
                             {inv.status === 'posted' && balDue > 0.001 && (
                               <button
                                 type="button"
@@ -1936,7 +2032,55 @@ export const SalesBillingScreen: React.FC = () => {
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: '#6b7280' }}>Status: {selectedInvoiceForModal?.status?.toUpperCase()}</span>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                id="btn-modal-share-whatsapp"
+                onClick={() => {
+                  if (selectedInvoiceForModal?.id) {
+                    setWhatsAppModalInvoiceId(selectedInvoiceForModal.id);
+                    setIsWhatsAppModalOpen(true);
+                  }
+                }}
+                style={{
+                  backgroundColor: '#25d366',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Share invoice on WhatsApp"
+              >
+                <span>💬</span>
+                <span>{isHi ? 'व्हाट्सएप शेयर' : 'Send WhatsApp'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSharePdfInvoice}
+                style={{
+                  backgroundColor: '#4f46e5',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 14px',
+                  borderRadius: '6px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Share Invoice PDF"
+              >
+                <span>📄</span>
+                <span>{isHi ? 'शेयर पीडीएफ' : 'Share PDF'}</span>
+              </button>
               <button
                 type="button"
                 onClick={handlePrint}
@@ -1944,7 +2088,7 @@ export const SalesBillingScreen: React.FC = () => {
                   backgroundColor: '#2563eb',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '8px 16px',
+                  padding: '8px 14px',
                   borderRadius: '6px',
                   fontWeight: 600,
                   fontSize: '13px',
@@ -1960,14 +2104,14 @@ export const SalesBillingScreen: React.FC = () => {
                   backgroundColor: '#059669',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '8px 16px',
+                  padding: '8px 14px',
                   borderRadius: '6px',
                   fontWeight: 600,
                   fontSize: '13px',
                   cursor: 'pointer',
                 }}
               >
-                {t('sales.downloadInvoice')}
+                {isHi ? 'डाउनलोड पीडीएफ' : 'Download PDF'}
               </button>
               <button
                 type="button"
@@ -2582,6 +2726,13 @@ export const SalesBillingScreen: React.FC = () => {
       </Modal>
     );
   })()}
+
+  {/* WHATSAPP SHARE MODAL (FR-COMMS-001) */}
+  <WhatsAppShareModal
+    isOpen={isWhatsAppModalOpen}
+    onClose={() => setIsWhatsAppModalOpen(false)}
+    invoiceId={whatsAppModalInvoiceId || ''}
+  />
 </div>
 );
 };

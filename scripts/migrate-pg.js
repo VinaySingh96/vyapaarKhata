@@ -41,6 +41,7 @@ async function migrate() {
       const migrationFiles = [
         { name: '001_initial_schema.sql', path: 'packages/db/migrations/pg/001_initial_schema.sql' },
         { name: '002_rental_module.sql', path: 'packages/db/migrations/pg/002_rental_module.sql' },
+        { name: '003_whatsapp_sharing.sql', path: 'packages/db/migrations/pg/003_whatsapp_sharing.sql' },
         { name: '001_reference_seeds.sql', path: 'packages/db/src/seeds/001_reference_seeds.sql' },
         { name: '002_patel_building_materials_seed.sql', path: 'packages/db/src/seeds/002_patel_building_materials_seed.sql' },
       ];
@@ -70,6 +71,15 @@ async function migrate() {
       } else {
         console.log('✅ Rental module tables already verified.');
       }
+
+      // Ensure WhatsApp sharing columns exist on parties table (FR-COMMS-001)
+      await client.query(`
+        ALTER TABLE "parties" ADD COLUMN IF NOT EXISTS "whatsapp_phone" VARCHAR(255);
+        ALTER TABLE "parties" ADD COLUMN IF NOT EXISTS "whatsapp_opt_in" VARCHAR(50) NOT NULL DEFAULT 'unknown';
+        ALTER TABLE "parties" ADD COLUMN IF NOT EXISTS "whatsapp_opt_in_at" TIMESTAMPTZ;
+        ALTER TABLE "parties" ADD COLUMN IF NOT EXISTS "whatsapp_opt_in_source" VARCHAR(100);
+      `);
+      console.log('✅ WhatsApp contact columns verified on parties.');
     }
 
     // 2. Also ensure Central Cloud tables exist if this database hosts Central Cloud

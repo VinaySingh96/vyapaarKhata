@@ -417,6 +417,11 @@ export interface Party {
   displayName: string;
   legalName?: string;
   phone?: string;
+  alternatePhone?: string;
+  whatsappPhone?: string;
+  whatsappOptIn?: 'opted_in' | 'opted_out' | 'unknown';
+  whatsappOptInAt?: string;
+  whatsappOptInSource?: string;
   email?: string;
   pan?: string;
   gstin?: string;

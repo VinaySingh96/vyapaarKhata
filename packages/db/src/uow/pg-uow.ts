@@ -1108,7 +1108,9 @@ export class PgUnitOfWork implements UnitOfWork {
       const partyRepo: PartyRepository = {
         list: async (tenantId: EntityId, partyType?: PartyType): Promise<Party[]> => {
           const res = await client.query(
-            `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
+            `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone,
+                    p.alternate_phone, p.whatsapp_phone, p.whatsapp_opt_in, p.whatsapp_opt_in_at, p.whatsapp_opt_in_source,
+                    p.is_active, p.created_at,
                     (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as billing_address,
                     COALESCE((SELECT (ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id AND ple.document_type = 'opening_balance' LIMIT 1), 0) as opening_balance,
                     COALESCE((SELECT SUM(ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id), 0) as current_balance
@@ -1130,6 +1132,11 @@ export class PgUnitOfWork implements UnitOfWork {
               pan: r.pan || undefined,
               email: r.email || undefined,
               phone: r.phone || undefined,
+              alternatePhone: r.alternate_phone || undefined,
+              whatsappPhone: r.whatsapp_phone || undefined,
+              whatsappOptIn: (r.whatsapp_opt_in as any) || 'unknown',
+              whatsappOptInAt: r.whatsapp_opt_in_at ? new Date(r.whatsapp_opt_in_at).toISOString() : undefined,
+              whatsappOptInSource: r.whatsapp_opt_in_source || undefined,
               billingAddress: r.billing_address || undefined,
               openingBalance: Math.abs(obVal),
               openingBalanceType: obVal < 0 ? 'credit' : 'debit',
@@ -1142,7 +1149,9 @@ export class PgUnitOfWork implements UnitOfWork {
 
         findById: async (tenantId: EntityId, id: EntityId): Promise<Party | null> => {
           const res = await client.query(
-            `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone, p.is_active, p.created_at,
+            `SELECT p.id, p.tenant_id, p.party_type, p.display_name, p.legal_name, p.gstin, p.pan, p.email, p.phone,
+                    p.alternate_phone, p.whatsapp_phone, p.whatsapp_opt_in, p.whatsapp_opt_in_at, p.whatsapp_opt_in_source,
+                    p.is_active, p.created_at,
                     (SELECT pa.address_line_1 FROM party_addresses pa WHERE pa.party_id = p.id AND pa.is_default = true LIMIT 1) as billing_address,
                     COALESCE((SELECT (ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id AND ple.document_type = 'opening_balance' LIMIT 1), 0) as opening_balance,
                     COALESCE((SELECT SUM(ple.debit_amount - ple.credit_amount) FROM party_ledger_entries ple WHERE ple.party_id = p.id), 0) as current_balance
@@ -1165,6 +1174,11 @@ export class PgUnitOfWork implements UnitOfWork {
             pan: r.pan || undefined,
             email: r.email || undefined,
             phone: r.phone || undefined,
+            alternatePhone: r.alternate_phone || undefined,
+            whatsappPhone: r.whatsapp_phone || undefined,
+            whatsappOptIn: (r.whatsapp_opt_in as any) || 'unknown',
+            whatsappOptInAt: r.whatsapp_opt_in_at ? new Date(r.whatsapp_opt_in_at).toISOString() : undefined,
+            whatsappOptInSource: r.whatsapp_opt_in_source || undefined,
             billingAddress: r.billing_address || undefined,
             openingBalance: Math.abs(obVal),
             openingBalanceType: obVal < 0 ? 'credit' : 'debit',
@@ -1178,8 +1192,10 @@ export class PgUnitOfWork implements UnitOfWork {
           const partyId = ensureUuid(party.id);
           await client.query(
             `INSERT INTO parties (
-               id, tenant_id, party_type, display_name, legal_name, gstin, pan, email, phone, is_active, created_at
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+               id, tenant_id, party_type, display_name, legal_name, gstin, pan, email, phone,
+               alternate_phone, whatsapp_phone, whatsapp_opt_in, whatsapp_opt_in_at, whatsapp_opt_in_source,
+               is_active, created_at
+             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())
              ON CONFLICT (id) DO UPDATE SET
                party_type = EXCLUDED.party_type,
                display_name = EXCLUDED.display_name,
@@ -1188,6 +1204,11 @@ export class PgUnitOfWork implements UnitOfWork {
                pan = EXCLUDED.pan,
                email = EXCLUDED.email,
                phone = EXCLUDED.phone,
+               alternate_phone = EXCLUDED.alternate_phone,
+               whatsapp_phone = EXCLUDED.whatsapp_phone,
+               whatsapp_opt_in = EXCLUDED.whatsapp_opt_in,
+               whatsapp_opt_in_at = EXCLUDED.whatsapp_opt_in_at,
+               whatsapp_opt_in_source = EXCLUDED.whatsapp_opt_in_source,
                is_active = EXCLUDED.is_active,
                updated_at = NOW()`,
             [
@@ -1200,6 +1221,11 @@ export class PgUnitOfWork implements UnitOfWork {
               party.pan || null,
               party.email || null,
               party.phone || null,
+              party.alternatePhone || null,
+              party.whatsappPhone || null,
+              party.whatsappOptIn || 'unknown',
+              party.whatsappOptInAt || null,
+              party.whatsappOptInSource || null,
               party.isActive !== false,
             ]
           );

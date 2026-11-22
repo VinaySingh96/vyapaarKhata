@@ -14,6 +14,9 @@ interface PartyItem {
   displayName: string;
   legalName?: string;
   phone?: string;
+  alternatePhone?: string;
+  whatsappPhone?: string;
+  whatsappOptIn?: 'opted_in' | 'opted_out' | 'unknown';
   email?: string;
   gstin?: string;
   pan?: string;
@@ -43,6 +46,8 @@ export const PartiesScreen: React.FC = () => {
   const [newLegalName, setNewLegalName] = useState('');
   const [newType, setNewType] = useState<'customer' | 'supplier'>('customer');
   const [newPhone, setNewPhone] = useState('');
+  const [newWhatsappPhone, setNewWhatsappPhone] = useState('');
+  const [newWhatsappOptIn, setNewWhatsappOptIn] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [newGstin, setNewGstin] = useState('');
   const [newAddress, setNewAddress] = useState('');
@@ -114,6 +119,10 @@ export const PartiesScreen: React.FC = () => {
           displayName: newName.trim(),
           legalName: newLegalName.trim() || newName.trim(),
           phone: newPhone.trim() || undefined,
+          whatsappPhone: newWhatsappPhone.trim() || undefined,
+          whatsappOptIn: newWhatsappOptIn ? 'opted_in' : 'unknown',
+          whatsappOptInAt: newWhatsappOptIn ? new Date().toISOString() : undefined,
+          whatsappOptInSource: newWhatsappOptIn ? 'manual_operator' : undefined,
           email: newEmail.trim() || undefined,
           gstin: newGstin.trim().toUpperCase() || undefined,
           billingAddress: newAddress.trim() || undefined,
@@ -132,6 +141,8 @@ export const PartiesScreen: React.FC = () => {
       setNewName('');
       setNewLegalName('');
       setNewPhone('');
+      setNewWhatsappPhone('');
+      setNewWhatsappOptIn(false);
       setNewEmail('');
       setNewGstin('');
       setNewAddress('');
@@ -738,6 +749,29 @@ export const PartiesScreen: React.FC = () => {
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
               />
             </div>
+            <div>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+                💬 WhatsApp Phone (Optional)
+              </label>
+              <input
+                type="tel"
+                placeholder="Leave blank to use primary phone"
+                value={newWhatsappPhone}
+                onChange={(e) => setNewWhatsappPhone(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '13.5px' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12.5px', color: '#4b5563', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={newWhatsappOptIn}
+                onChange={(e) => setNewWhatsappOptIn(e.target.checked)}
+              />
+              <span>Customer consented to receive invoices via WhatsApp (सहमति दर्ज करें)</span>
+            </label>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
