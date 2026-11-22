@@ -9,6 +9,7 @@ import { apiFetch, getActiveTenantId } from '../utils/api.js';
 import { WhatsAppShareModal } from '../components/WhatsAppShareModal.js';
 import { generateInvoicePdf } from '../utils/invoicePdfGenerator.js';
 import { canShareFiles, shareFile } from '../utils/browserShare.js';
+import { generateUuid } from '../utils/uuid.js';
 
 export interface BillingLine {
   id: string;
@@ -331,7 +332,7 @@ export const SalesBillingScreen: React.FC = () => {
     setIsSavingCustomer(true);
 
     try {
-      const newCustId = crypto.randomUUID();
+      const newCustId = generateUuid();
       const res = await apiFetch('/api/v1/parties', {
         method: 'POST',
         headers: {
@@ -561,7 +562,7 @@ export const SalesBillingScreen: React.FC = () => {
 
       // If customer is new or not in database, create party dynamically first
       if (customerMode === 'new' || !finalCustomerId || finalCustomerId === '__new__') {
-        const generatedPartyId = crypto.randomUUID();
+        const generatedPartyId = generateUuid();
         const partyName = customCustomerName.trim() || 'Counter Customer';
 
         const partyRes = await apiFetch('/api/v1/parties', {
@@ -599,7 +600,7 @@ export const SalesBillingScreen: React.FC = () => {
         }
       }
 
-      const invoiceId = crypto.randomUUID();
+      const invoiceId = generateUuid();
       const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       // 1. Create draft invoice
@@ -617,7 +618,7 @@ export const SalesBillingScreen: React.FC = () => {
           taxTotal: gst,
           grandTotal,
           lines: lines.map((l) => ({
-            id: crypto.randomUUID(),
+            id: generateUuid(),
             productId: l.productId,
             variantId: l.variantId,
             locationId: defaultLocationId,
