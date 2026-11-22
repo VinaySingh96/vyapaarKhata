@@ -79,11 +79,11 @@ export function buildCentralApp(config: CentralConfig, db: CentralDatabase): Fas
   });
 
   // Register UI Routes
-  app.register(uiRoutes);
+  app.register(uiRoutes, { config });
 
   // Register API Routes
   app.register(authRoutes, { prefix: '/api/v1/auth', tenantService, jwtSecret: config.JWT_SECRET });
-  app.register(adminRoutes, { prefix: '/api/v1/admin', tenantService, syncService });
+  app.register(adminRoutes, { prefix: '/api/v1/admin', tenantService, syncService, config });
   app.register(syncRoutes, { prefix: '/api/v1/sync', syncService });
   app.register(installationRoutes, { prefix: '/api/v1/installations', db });
 

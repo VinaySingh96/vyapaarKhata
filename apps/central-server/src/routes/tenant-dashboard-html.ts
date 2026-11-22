@@ -227,6 +227,9 @@ export function renderTenantDashboardPage(tenantId: string): string {
         ← Back to Tenants Directory
       </a>
       <div style="font-size: 0.8rem; color: #94a3b8; font-family: monospace;" id="pageTime"></div>
+      <button type="button" onclick="handleAdminSignOut()" class="btn btn-secondary btn-sm" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+        🚪 Sign Out
+      </button>
     </div>
   </header>
 
@@ -261,6 +264,26 @@ export function renderTenantDashboardPage(tenantId: string): string {
 
   <script>
     const tenantId = "${tenantId}";
+
+    async function handleAdminSignOut() {
+      try {
+        await fetch('/api/v1/admin/auth/logout', { method: 'POST' });
+      } catch (err) {}
+      try {
+        sessionStorage.removeItem('vk_admin_jwt');
+      } catch (err) {}
+      window.location.href = '/admin/login';
+    }
+
+    // Intercept 401 Unauthorized responses to redirect to login
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+      const res = await originalFetch(...args);
+      if (res.status === 401) {
+        window.location.href = '/admin/login?returnUrl=' + encodeURIComponent(window.location.pathname + window.location.search);
+      }
+      return res;
+    };
 
     setInterval(() => {
       document.getElementById('pageTime').textContent = new Date().toLocaleTimeString();
