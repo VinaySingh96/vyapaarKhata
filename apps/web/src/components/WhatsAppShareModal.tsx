@@ -43,6 +43,10 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
   const [hasConfirmedConsent, setHasConfirmedConsent] = useState(true);
   const [messageText, setMessageText] = useState<string>('');
   const [isPdfSharing, setIsPdfSharing] = useState(false);
+  const [autoDownloadPdf, setAutoDownloadPdf] = useState(true);
+
+  // Check if browser supports native file sharing
+  const supportsNativeShare = useMemo(() => canShareFiles(), []);
 
   // Fetch share details when modal opens
   useEffect(() => {
@@ -157,6 +161,44 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
     }
   };
 
+  // Reusable PDF generator
+  const buildInvoicePdf = async () => {
+    if (!shareDetails) return null;
+    const fullRes = await apiFetch(`/api/v1/sales/invoices/${invoiceId}`);
+    const fullJson = await fullRes.json();
+    const invoiceData = fullJson.data || {};
+
+    const pdfInput: InvoicePdfData = {
+      invoiceNumber: shareDetails.invoiceNumber,
+      invoiceDate: shareDetails.invoiceDate,
+      businessName: shareDetails.businessName,
+      businessAddress: shareDetails.businessAddress,
+      businessPhone: shareDetails.businessPhone,
+      businessGstin: shareDetails.businessGstin,
+      customerName: shareDetails.customer.displayName,
+      customerPhone: phoneValidation.valid ? phoneValidation.phoneE164 : undefined,
+      customerAddress: invoiceData.customerAddress,
+      currencySymbol: shareDetails.currencySymbol,
+      subtotal: shareDetails.grandTotal - (invoiceData.taxTotal || 0),
+      taxTotal: invoiceData.taxTotal || 0,
+      grandTotal: shareDetails.grandTotal,
+      amountPaid: shareDetails.amountPaid,
+      balanceDue: shareDetails.balanceDue,
+      lines: (invoiceData.lines || []).map((l: any, i: number) => ({
+        sno: i + 1,
+        name: l.productName || l.descriptionSnapshot || 'Item',
+        quantity: l.quantity,
+        unit: l.unitSymbol || 'pcs',
+        price: l.unitPrice,
+        taxRate: l.taxRate || 18,
+        taxAmount: l.taxAmount,
+        lineTotal: l.lineTotal,
+      })),
+    };
+
+    return generateInvoicePdf(pdfInput);
+  };
+
   // Open WhatsApp Click to Chat
   const handleOpenWhatsApp = async () => {
     if (!phoneValidation.valid || !phoneValidation.waDigits) {
@@ -178,6 +220,19 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
     }
 
     try {
+      // If auto-download is enabled, download the PDF bill to operator's device first
+      if (autoDownloadPdf) {
+        try {
+          const pdfResult = await buildInvoicePdf();
+          if (pdfResult) {
+            pdfResult.download();
+            recordShareAction('PDF_DOWNLOADED');
+          }
+        } catch (pdfErr) {
+          console.warn('Auto PDF download skipped:', pdfErr);
+        }
+      }
+
       const url = buildWhatsAppClickToChatUrl(phoneValidation.waDigits, messageText);
 
       // Record audit action
@@ -193,11 +248,19 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
             : 'Popup blocked by browser. Please allow popups or copy the message text.'
         );
       } else {
-        toast.success(
-          isHi
-            ? 'व्हाट्सएप खुल गया है। कृपया संदेश देखें और वहां "Send" दबाएं।'
-            : 'WhatsApp opened. Review the message and press Send inside WhatsApp.'
-        );
+        if (autoDownloadPdf) {
+          toast.success(
+            isHi
+              ? 'व्हाट्सएप खुल गया और बिल पीडीएफ डाउनलोड हो गया! व्हाट्सएप में 📎 (अटैच) > डॉक्यूमेंट दबाकर बिल संलग्न करें।'
+              : 'WhatsApp opened & PDF downloaded! In WhatsApp, click 📎 Attach > Document to attach the invoice.'
+          );
+        } else {
+          toast.success(
+            isHi
+              ? 'व्हाट्सएप खुल गया है। कृपया संदेश देखें और वहां "Send" दबाएं।'
+              : 'WhatsApp opened. Review the message and press Send inside WhatsApp.'
+          );
+        }
       }
 
       onClose();
@@ -222,40 +285,8 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
     setIsPdfSharing(true);
 
     try {
-      // Fetch full invoice lines if needed
-      const fullRes = await apiFetch(`/api/v1/sales/invoices/${invoiceId}`);
-      const fullJson = await fullRes.json();
-      const invoiceData = fullJson.data || {};
-
-      const pdfInput: InvoicePdfData = {
-        invoiceNumber: shareDetails.invoiceNumber,
-        invoiceDate: shareDetails.invoiceDate,
-        businessName: shareDetails.businessName,
-        businessAddress: shareDetails.businessAddress,
-        businessPhone: shareDetails.businessPhone,
-        businessGstin: shareDetails.businessGstin,
-        customerName: shareDetails.customer.displayName,
-        customerPhone: phoneValidation.valid ? phoneValidation.phoneE164 : undefined,
-        customerAddress: invoiceData.customerAddress,
-        currencySymbol: shareDetails.currencySymbol,
-        subtotal: shareDetails.grandTotal - (invoiceData.taxTotal || 0),
-        taxTotal: invoiceData.taxTotal || 0,
-        grandTotal: shareDetails.grandTotal,
-        amountPaid: shareDetails.amountPaid,
-        balanceDue: shareDetails.balanceDue,
-        lines: (invoiceData.lines || []).map((l: any, i: number) => ({
-          sno: i + 1,
-          name: l.productName || l.descriptionSnapshot || 'Item',
-          quantity: l.quantity,
-          unit: l.unitSymbol || 'pcs',
-          price: l.unitPrice,
-          taxRate: l.taxRate || 18,
-          taxAmount: l.taxAmount,
-          lineTotal: l.lineTotal,
-        })),
-      };
-
-      const pdfResult = generateInvoicePdf(pdfInput);
+      const pdfResult = await buildInvoicePdf();
+      if (!pdfResult) throw new Error('Could not generate PDF');
 
       // Check if Web Share API file sharing is supported
       if (canShareFiles(pdfResult.file)) {
@@ -287,8 +318,8 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
         recordShareAction('PDF_DOWNLOADED');
         toast.info(
           isHi
-            ? '📄 बिल पीडीएफ डाउनलोड हो गया! ग्राहक का व्हाट्सएप चैट खोलकर फाइल अटैच करें।'
-            : '📄 Invoice PDF downloaded! Open customer WhatsApp chat and attach the downloaded file.'
+            ? '📄 बिल पीडीएफ डाउनलोड हो गया! ग्राहक का व्हाट्सएप चैट खोलकर 📎 (अटैच) > डॉक्यूमेंट से फाइल संलग्न करें।'
+            : '📄 Invoice PDF downloaded! Open WhatsApp chat and attach via 📎 (Attach) > Document.'
         );
       }
 
@@ -307,7 +338,7 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
       title={isHi ? '💬 व्हाट्सएप पर बिल शेयर करें' : '💬 Share Invoice via WhatsApp'}
       size="md"
       footer={
-        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <button
             type="button"
             onClick={handleCopyMessage}
@@ -339,9 +370,23 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
                 fontSize: '13px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              📄 {isPdfSharing ? '...' : isHi ? 'पीडीएफ शेयर करें' : 'Share PDF'}
+              <span>{supportsNativeShare ? '📱' : '💾'}</span>
+              <span>
+                {isPdfSharing
+                  ? '...'
+                  : supportsNativeShare
+                  ? isHi
+                    ? 'पीडीएफ शेयर करें'
+                    : 'Share PDF Sheet'
+                  : isHi
+                  ? 'पीडीएफ डाउनलोड करें'
+                  : 'Download PDF'}
+              </span>
             </button>
 
             <button
@@ -364,7 +409,15 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
               }}
             >
               <span>💬</span>
-              <span>{isHi ? 'व्हाट्सएप में खोलें ➔' : 'Open WhatsApp ➔'}</span>
+              <span>
+                {autoDownloadPdf
+                  ? isHi
+                    ? 'व्हाट्सएप में खोलें + पीडीएफ ➔'
+                    : 'Open WhatsApp & Download PDF ➔'
+                  : isHi
+                  ? 'व्हाट्सएप में खोलें ➔'
+                  : 'Open WhatsApp ➔'}
+              </span>
             </button>
           </div>
         </div>
@@ -608,6 +661,43 @@ export const WhatsAppShareModal: React.FC<WhatsAppShareModalProps> = ({
                 boxSizing: 'border-box',
               }}
             />
+          </div>
+
+          {/* PDF Attachment Guidance Box (FR-COMMS-001 §7.3) */}
+          <div
+            style={{
+              padding: '12px 14px',
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: '8px',
+              fontSize: '12px',
+              color: '#166534',
+              lineHeight: '1.45',
+            }}
+          >
+            <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📎</span>
+              <span>
+                {isHi ? 'व्हाट्सएप पर पीडीएफ बिल कैसे भेजें?' : 'How to send the PDF invoice in WhatsApp:'}
+              </span>
+            </div>
+            <div style={{ color: '#15803d', fontSize: '11.5px', marginBottom: '8px' }}>
+              {isHi
+                ? 'व्हाट्सएप वेब लिंक (wa.me) केवल टेक्स्ट संदेश भेजता है। जब आप नीचे "व्हाट्सएप में खोलें" दबाएंगे, तो पीडीएफ आपके कंप्यूटर पर डाउनलोड हो जाएगा — व्हाट्सएप में केवल 📎 (अटैच) > डॉक्यूमेंट चुनकर पीडीएफ भेज दें।'
+                : 'WhatsApp web links (wa.me) only prefill text messages. When you click "Open WhatsApp & Download PDF", the invoice PDF is saved to your computer — simply click 📎 (Attach) > Document in WhatsApp to send it.'}
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '12px', color: '#14532d' }}>
+              <input
+                type="checkbox"
+                checked={autoDownloadPdf}
+                onChange={(e) => setAutoDownloadPdf(e.target.checked)}
+              />
+              <span>
+                {isHi
+                  ? 'व्हाट्सएप खोलते समय बिल पीडीएफ अपने आप डाउनलोड करें'
+                  : 'Auto-download PDF invoice when opening WhatsApp'}
+              </span>
+            </label>
           </div>
 
           {/* Clear Operational Guidance Note */}
